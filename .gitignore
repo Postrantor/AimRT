@@ -4,6 +4,7 @@
 _deps/
 build/
 cmake-build*/
+install/
 
 document/doxygen/html
 document/doxygen/doxygen.log
