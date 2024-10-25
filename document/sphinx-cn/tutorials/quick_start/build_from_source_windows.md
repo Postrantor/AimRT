@@ -1,4 +1,3 @@
-
 # Windows 源码构建
 
 注意 Windows 平台下部分插件未经过实际测试，其编译选项在 build.bat 中默认关闭，启用后可能存在问题，如果遇到问题请及时反馈。
@@ -12,7 +11,6 @@
 ### CMake
 
 当前 AimRT 支持的最低 CMake 版本为 3.24，可以通过 [CMake 官方网站](https://cmake.org/download/)下载合适的版本进行安装：
-
 
 ## 最小化构建
 

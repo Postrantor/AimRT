@@ -4,21 +4,20 @@
 
 `aimrt.module`配置项主要用于配置模块的加载信息，以及模块对各个其他组件的特殊配置。这是一个可选配置项，其中的细节配置项说明如下：
 
-
-| 节点                      | 类型          | 是否可选| 默认值 | 作用 |
-| ----                      | ----          | ----  | ----  | ---- |
-| pkgs                     | array         | 可选  | []    | 要加载的 Pkg 动态库配置 |
-| pkgs[i].path             | string        | 必选  | ""    | 要加载的 Pkg 动态库路径 |
-| pkgs[i].enable_modules   | string array  | 可选  | []    | 此动态库中要加载的模块名称，不可与 disable_modules 选项同时使用 |
-| pkgs[i].disable_modules  | string array  | 可选  | []    | 此动态库中要屏蔽的模块名称，不可与 enable_modules 选项同时使用 |
-| modules                  | array         | 可选  | []    | 模块详细配置 |
-| modules[i].name          | string        | 必选  | ""    | 模块名称 |
-| modules[i].enable        | bool          | 可选  | True  | 是否启用 |
-| modules[i].log_lvl       | string        | 可选  | ${aimrt.log.default_module_lvl}    | 模块日志级别 |
-| modules[i].cfg_file_path | string        | 可选  | ""    | 自定义模块配置文件路径 |
-
+| 节点                     | 类型         | 是否可选 | 默认值                          | 作用                                                            |
+| ------------------------ | ------------ | -------- | ------------------------------- | --------------------------------------------------------------- |
+| pkgs                     | array        | 可选     | []                              | 要加载的 Pkg 动态库配置                                         |
+| pkgs[i].path             | string       | 必选     | ""                              | 要加载的 Pkg 动态库路径                                         |
+| pkgs[i].enable_modules   | string array | 可选     | []                              | 此动态库中要加载的模块名称，不可与 disable_modules 选项同时使用 |
+| pkgs[i].disable_modules  | string array | 可选     | []                              | 此动态库中要屏蔽的模块名称，不可与 enable_modules 选项同时使用  |
+| modules                  | array        | 可选     | []                              | 模块详细配置                                                    |
+| modules[i].name          | string       | 必选     | ""                              | 模块名称                                                        |
+| modules[i].enable        | bool         | 可选     | True                            | 是否启用                                                        |
+| modules[i].log_lvl       | string       | 可选     | ${aimrt.log.default_module_lvl} | 模块日志级别                                                    |
+| modules[i].cfg_file_path | string       | 可选     | ""                              | 自定义模块配置文件路径                                          |
 
 使用时请注意，在`aimrt.module`节点下：
+
 - `pkg`是一个数组，用于要加载的 Pkg 动态库。
   - `pkgs[i].path`用于配置要加载的 Pkg 动态库路径。不允许出现重复的 Pkg 路径。如果 Pkg 文件不存在，AimRT 进程会抛出异常。
   - `pkgs[i].enable_modules`和`pkgs[i].disable_modules`用于配置要加载/屏蔽的模块，其生效逻辑如下：
@@ -39,6 +38,7 @@
 ## 使用示例
 
 以下是一个简单的示例：
+
 ```yaml
 aimrt:
   module:

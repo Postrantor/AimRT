@@ -27,7 +27,10 @@ sudo bash cmake-3.30.4-linux-x86_64.sh --prefix=/usr/local --skip-license
 Ubuntu 22.04 中 apt 源自带的 gcc 版本为 11.4，适用于 AimRT 构建所用，可以直接安装
 
 ```bash
-sudo apt install make gcc g++
+apt install \
+    make \
+    gcc \
+    g++
 ```
 
 ## 最小化构建
@@ -39,28 +42,31 @@ cmake -B build \
     -DCMAKE_BUILD_TYPE=Release \
     -DAIMRT_INSTALL=ON \
     -DCMAKE_INSTALL_PREFIX=./build/install \
-    -DAIMRT_BUILD_TESTS=OFF \
     -DAIMRT_BUILD_EXAMPLES=ON \
-    -DAIMRT_BUILD_DOCUMENT=OFF \
+
     -DAIMRT_BUILD_RUNTIME=ON \
+    -DAIMRT_USE_FMT_LIB=ON \
+    -DAIMRT_BUILD_RECORD_PLAYBACK_PLUGIN=ON \
+    -DAIMRT_BUILD_TIME_MANIPULATOR_PLUGIN=ON \
+    -DAIMRT_BUILD_LOG_CONTROL_PLUGIN=ON \
+
+    -DAIMRT_BUILD_PARAMETER_PLUGIN=ON \
+    -DAIMRT_BUILD_WITH_PROTOBUF=ON \
+    -DAIMRT_BUILD_NET_PLUGIN=ON \
+    -DAIMRT_BUILD_OPENTELEMETRY_PLUGIN=ON \
+    -DAIMRT_BUILD_GRPC_PLUGIN=ON \
+
+    -DAIMRT_BUILD_TESTS=OFF \
+    -DAIMRT_BUILD_DOCUMENT=OFF \
     -DAIMRT_BUILD_CLI_TOOLS=OFF \
     -DAIMRT_BUILD_PYTHON_RUNTIME=OFF \
-    -DAIMRT_USE_FMT_LIB=ON \
-    -DAIMRT_BUILD_WITH_PROTOBUF=ON \
     -DAIMRT_USE_LOCAL_PROTOC_COMPILER=OFF \
     -DAIMRT_USE_PROTOC_PYTHON_PLUGIN=OFF \
     -DAIMRT_BUILD_WITH_ROS2=OFF \
-    -DAIMRT_BUILD_NET_PLUGIN=ON \
+    -DAIMRT_BUILD_ROS2_PLUGIN=OFF \
     -DAIMRT_BUILD_MQTT_PLUGIN=OFF \
     -DAIMRT_BUILD_ZENOH_PLUGIN=OFF \
     -DAIMRT_BUILD_ICEORYX_PLUGIN=OFF \
-    -DAIMRT_BUILD_ROS2_PLUGIN=OFF \
-    -DAIMRT_BUILD_RECORD_PLAYBACK_PLUGIN=ON \
-    -DAIMRT_BUILD_TIME_MANIPULATOR_PLUGIN=ON \
-    -DAIMRT_BUILD_PARAMETER_PLUGIN=ON \
-    -DAIMRT_BUILD_LOG_CONTROL_PLUGIN=ON \
-    -DAIMRT_BUILD_OPENTELEMETRY_PLUGIN=ON \
-    -DAIMRT_BUILD_GRPC_PLUGIN=ON \
     -DAIMRT_BUILD_PYTHON_PACKAGE=OFF
 
 cmake --build build --config Release --target all -j
@@ -80,14 +86,14 @@ AimRT 的 Python 接口依赖 Python 3。
 sudo apt install python3
 ```
 
-aimrt_cli 工具依赖 Python 3 以及 pyinstaller jinja2 pyyaml 三个库，可以通过以下命令进行安装
+aimrt_cli 工具依赖 Python 3 以及 `pyinstaller` `jinja2` `pyyaml` 三个库，可以通过以下命令进行安装
 
 ```bash
 sudo apt install python3 python3-pip
 pip install pyinstaller jinja2 pyyaml --upgrade
 ```
 
-打包生成 aimrt_py 的 whl 包功能依赖 Python 3 以及 build setuptools wheel 等库，可以通过以下命令进行安装
+打包生成 aimrt_py 的 whl 包功能依赖 Python 3 以及 `build` `setuptools` `wheel` 等库，可以通过以下命令进行安装
 
 ```bash
 sudo apt install python3 python3-pip

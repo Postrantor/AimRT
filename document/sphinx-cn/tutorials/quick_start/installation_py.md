@@ -8,7 +8,7 @@ AimRT Python 接口通过 `aimrt_py` 包来使用。您可以通过三种方式�
 
 ## Python 环境要求
 
-AimRT官方测试过的最低 Python 版本是 3.10，Linux 系统 glibc 的最低版本为 2.28（可以使用 `ldd --version` 命令查看）。
+AimRT 官方测试过的最低 Python 版本是 3.10，Linux 系统 glibc 的最低版本为 2.28（可以使用 `ldd --version` 命令查看）。
 
 我们在以下系统和 python 版本上测试过 `aimrt_py` 包：
 
@@ -17,12 +17,11 @@ AimRT官方测试过的最低 Python 版本是 3.10，Linux 系统 glibc 的最�
 - Windows 10
   - python 3.11
 
-
 请注意，如果您想要使用 AimRT-Python 中的 RPC 或 Channel 功能，当前只支持以 protobuf 作为协议，在使用时需要在本地安装有 protobuf python 包，您可以通过 `pip install protobuf` 来安装。
 
 ## PyPI 安装
 
-***TODO***
+**_TODO_**
 
 <!-- 您可以直接通过 `pip install aimrt_py` 来安装。 -->
 

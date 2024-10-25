@@ -1,16 +1,14 @@
-
 # HelloWorld Python
 
 本章将以一个简单的 Demo 来介绍如何建立一个最基本的 AimRT Python 工程。
 
-
 AimRT 基于 pybind11，在 CPP 接口层之上包装了一层 python 接口。本 Demo 将演示以下几项基本功能：
+
 - 基于 pip 安装 AimRT；
 - 基于 App 模式，直接在 Main 方法中创建 AimRT 实例并使用其中的功能；
 - 使用基础的日志功能；
 - 使用基础的配置功能；
 - 运行 Python 脚本以体验 AimRT 的功能。
-
 
 ## STEP1：确保本地环境符合要求
 
@@ -74,15 +72,14 @@ def main():
 
 if __name__ == '__main__':
     main()
-
 ```
 
-
 ## STEP3: 编写配置文件
+
 以下是一个简单的示例配置文件`helloworld_cfg.yaml`。这个配置文件中的其他内容将在后续章节中介绍，这里关注两个地方：
+
 - `aimrt.log`节点：此处指定了日志的一些细节。
 - `HelloWorldPyModule`节点：此处为`HelloWorldPyModule`的配置，可以在模块中读取到。
-
 
 ```yaml
 aimrt:
@@ -100,7 +97,7 @@ HelloWorldPyModule:
 ## STEP4: 启动并测试
 
 将 python 代码执行文件`helloworld_app.py`和配置文件`helloworld_cfg.yaml`拷贝到一个目录下，然后执行以下命令运行脚本，观察打印出来的日志：
+
 ```shell
 python3 ./helloworld_app.py --cfg_file_path=./helloworld_cfg.yaml
 ```
-

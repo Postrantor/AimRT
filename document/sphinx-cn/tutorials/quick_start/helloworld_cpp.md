@@ -1,9 +1,9 @@
-
 # HelloWorld CPP
 
 本章将以一个简单的 Demo 来介绍如何建立一个最基本的 AimRT CPP 工程。
 
 本 Demo 将演示以下几项基本功能：
+
 - 基于 CMake FetchContent 通过源码引用 AimRT；
 - 编写一个基础的基于 AimRT CPP 接口的`Module`；
 - 使用基础的日志功能；
@@ -11,21 +11,18 @@
 - 以 App 模式集成`Module`；
 - 编译项目，并运行进程以执行`Module`中的逻辑。
 
-
 请注意：本文档演示的 APP 模式，仅能在源码引用 AimRT 这种方式下构建，无法在二进制安装、find_package 引用方式下构建。
-
 
 ## STEP1: 确保本地环境符合要求
 
 请先确保本地的编译环境、网络环境符合要求，具体请参考[引用与安装（CPP）](installation_cpp.md)中的要求。
 
-
 注意，示例本身是跨平台的，但本文档基于 linux 进行演示。
-
 
 ## STEP2: 创建目录结构，添加基本文件
 
 参照以下目录结构创建文件：
+
 ```
 ├── CMakeLists.txt
 ├── cmake
@@ -47,14 +44,16 @@
 ```
 
 请注意，此处仅是一个供参考的路径结构，并非强制要求。但推荐您在搭建自己的工程时，为以下几个领域单独建立文件夹：
+
 - install：存放部署时的一些配置、启动脚本等；
 - module：存放业务逻辑代码；
 - app：app 模式下，main 函数存放处，在 main 函数中注册业务 module；
 - pkg：pkg 模式下，pkg 动态库入口方法存放处，在 pkg 中注册业务 module；
 
-
 ### File 1 : /CMakeLists.txt
+
 根 CMake ，用于构建工程。
+
 ```cmake
 cmake_minimum_required(VERSION 3.24)
 
@@ -70,6 +69,7 @@ add_subdirectory(src)
 ```
 
 ### File 2 : /cmake/GetAimRT.cmake
+
 此文件用于获取 AimRT，注意需要将`GIT_TAG`版本改为你想引用的版本：
 
 ```cmake
@@ -88,14 +88,18 @@ endif()
 ```
 
 ### File 3 : /src/CMakeLists.txt
+
 引用 src 下的各个子目录。
+
 ```cmake
 add_subdirectory(module/helloworld_module)
 add_subdirectory(app/helloworld_app)
 ```
 
 ### File 4 : /src/module/helloworld_module/CMakeLists.txt
+
 创建`helloworld_module`静态库。
+
 ```cmake
 file(GLOB_RECURSE src ${CMAKE_CURRENT_SOURCE_DIR}/*.cc)
 
@@ -116,7 +120,9 @@ target_link_libraries(
 ```
 
 ### File 5 : /src/app/helloworld_app/CMakeLists.txt
+
 创建`helloworld_app`可执行文件。
+
 ```cmake
 file(GLOB_RECURSE src ${CMAKE_CURRENT_SOURCE_DIR}/*.cc)
 
@@ -139,6 +145,7 @@ target_link_libraries(
 业务逻辑主要通过 Module 来承载，参考以下代码实现一个简单的 Module，解析传入的配置文件并打印一些简单的日志。
 
 ### File 6 : /src/module/helloworld_module/helloworld_module.h
+
 ```cpp
 #pragma once
 
@@ -163,6 +170,7 @@ private:
 ```
 
 ### File 7 : /src/module/helloworld_module/helloworld_module.cc
+
 ```cpp
 #include "helloworld_module/helloworld_module.h"
 
@@ -212,7 +220,9 @@ void HelloWorldModule::Shutdown() {
 我们使用 App 模式，手动编写 Main 函数，将 HelloWorldModule 通过硬编码的方式注册到 AimRT 框架中。然后编写一份配置，以确定一些运行时细节。
 
 ### File 8 : /src/app/helloworld_app/main.cc
+
 在以下示例 main 函数中，我们捕获了 kill 信号，以完成优雅退出。
+
 ```cpp
 #include <csignal>
 #include <iostream>
@@ -266,7 +276,9 @@ int32_t main(int32_t argc, char **argv) {
 ```
 
 ### File 9 : /src/install/cfg/helloworld_cfg.yaml
+
 以下是一个简单的示例配置文件。这个配置文件中的其他内容将在后续章节中介绍，这里关注两个地方：
+
 - `aimrt.log`节点：此处指定了日志的一些细节。
 - `HelloWorldModule`节点：此处为`HelloWorldModule`的配置，可以在模块中读取到。
 
@@ -286,14 +298,15 @@ HelloWorldModule:
 ## STEP5: 启动并测试
 
 完善代码之后，在 linux 上执行以下命令完成编译：
+
 ```shell
 # cd to root path of project
 cmake -B build
-cd build
-make -j
+cmake --build build
 ```
 
 编译完成后，将生成的可执行文件`helloworld_app`和配置文件`helloworld_cfg.yaml`拷贝到一个目录下，然后执行以下命令运行进程，观察打印出来的日志：
+
 ```shell
 ./helloworld_app ./helloworld_cfg.yaml
 ```
