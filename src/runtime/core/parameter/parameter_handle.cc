@@ -19,8 +19,7 @@ std::shared_ptr<const std::string> ParameterHandle::GetParameter(std::string_vie
   return std::shared_ptr<std::string>();
 }
 
-void ParameterHandle::SetParameter(
-    std::string_view key, const std::shared_ptr<std::string>& value_ptr) {
+void ParameterHandle::SetParameter(std::string_view key, const std::shared_ptr<std::string>& value_ptr) {
   std::lock_guard<std::mutex> lck(parameter_map_mutex_);
 
   auto find_itr = parameter_map_.find(key);

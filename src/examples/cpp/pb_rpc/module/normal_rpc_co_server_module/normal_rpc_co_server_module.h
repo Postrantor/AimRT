@@ -11,13 +11,11 @@
 namespace aimrt::examples::cpp::pb_rpc::normal_rpc_co_server_module {
 
 class NormalRpcCoServerModule : public aimrt::ModuleBase {
- public:
+public:
   NormalRpcCoServerModule() = default;
   ~NormalRpcCoServerModule() override = default;
 
-  ModuleInfo Info() const override {
-    return ModuleInfo{.name = "NormalRpcCoServerModule"};
-  }
+  ModuleInfo Info() const override { return ModuleInfo{.name = "NormalRpcCoServerModule"}; }
 
   bool Initialize(aimrt::CoreRef core) override;
 
@@ -25,7 +23,7 @@ class NormalRpcCoServerModule : public aimrt::ModuleBase {
 
   void Shutdown() override;
 
- private:
+private:
   aimrt::CoreRef core_;
   std::shared_ptr<ExampleServiceImpl> service_ptr_;
 };

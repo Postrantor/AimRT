@@ -6,11 +6,7 @@
 
 extern "C" {
 
-aimrt::AimRTCorePluginBase* AimRTDynlibCreateCorePluginHandle() {
-  return new aimrt::plugins::grpc_plugin::GrpcPlugin();
-}
+aimrt::AimRTCorePluginBase* AimRTDynlibCreateCorePluginHandle() { return new aimrt::plugins::grpc_plugin::GrpcPlugin(); }
 
-void AimRTDynlibDestroyCorePluginHandle(const aimrt::AimRTCorePluginBase* plugin) {
-  delete plugin;
-}
+void AimRTDynlibDestroyCorePluginHandle(const aimrt::AimRTCorePluginBase* plugin) { delete plugin; }
 }

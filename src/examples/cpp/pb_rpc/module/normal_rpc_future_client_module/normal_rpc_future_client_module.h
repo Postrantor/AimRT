@@ -14,13 +14,11 @@
 namespace aimrt::examples::cpp::pb_rpc::normal_rpc_future_client_module {
 
 class NormalRpcFutureClientModule : public aimrt::ModuleBase {
- public:
+public:
   NormalRpcFutureClientModule() = default;
   ~NormalRpcFutureClientModule() override = default;
 
-  ModuleInfo Info() const override {
-    return ModuleInfo{.name = "NormalRpcFutureClientModule"};
-  }
+  ModuleInfo Info() const override { return ModuleInfo{.name = "NormalRpcFutureClientModule"}; }
 
   bool Initialize(aimrt::CoreRef core) override;
 
@@ -28,12 +26,12 @@ class NormalRpcFutureClientModule : public aimrt::ModuleBase {
 
   void Shutdown() override;
 
- private:
+private:
   auto GetLogger() { return core_.GetLogger(); }
 
   void MainLoop();
 
- private:
+private:
   aimrt::CoreRef core_;
   aimrt::executor::ExecutorRef executor_;
 

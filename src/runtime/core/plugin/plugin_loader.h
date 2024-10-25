@@ -12,9 +12,8 @@
 namespace aimrt::runtime::core::plugin {
 
 class PluginLoader {
- public:
-  PluginLoader()
-      : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
+public:
+  PluginLoader() : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
   ~PluginLoader() { UnLoadPlugin(); }
 
   PluginLoader(const PluginLoader&) = delete;
@@ -31,7 +30,7 @@ class PluginLoader {
 
   auto& GetDynamicLib() { return dynamic_lib_; }
 
- private:
+private:
   std::shared_ptr<aimrt::common::util::LoggerWrapper> logger_ptr_;
 
   std::string plugin_path_;

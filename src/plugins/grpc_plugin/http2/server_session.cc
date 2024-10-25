@@ -23,13 +23,19 @@ namespace {
 
 int OnBeginHeadersCallback(nghttp2_session* session, const nghttp2_frame* frame, void* user_data);
 
-int OnHeaderCallback(nghttp2_session* session, const nghttp2_frame* frame, const uint8_t* name, size_t name_len,
-                     const uint8_t* value, size_t value_len, uint8_t flags, void* user_data);
+int OnHeaderCallback(
+    nghttp2_session* session,
+    const nghttp2_frame* frame,
+    const uint8_t* name,
+    size_t name_len,
+    const uint8_t* value,
+    size_t value_len,
+    uint8_t flags,
+    void* user_data);
 
 int OnFrameRecvCallback(nghttp2_session* session, const nghttp2_frame* frame, void* user_data);
 
-int OnDataChunkRecvCallback(nghttp2_session* session, uint8_t flags, int32_t stream_id, const uint8_t* data, size_t len,
-                            void* user_data);
+int OnDataChunkRecvCallback(nghttp2_session* session, uint8_t flags, int32_t stream_id, const uint8_t* data, size_t len, void* user_data);
 
 int OnStreamCloseCallback(nghttp2_session* session, int32_t stream_id, uint32_t error_code, void* user_data);
 
@@ -45,8 +51,7 @@ int ServerSession::InitSession(Http2Settings settings) {
     return -1;
   }
 
-  auto callbacks_defer_deleter =
-      common::util::Deferred([callbacks]() { nghttp2_session_callbacks_del(callbacks); });
+  auto callbacks_defer_deleter = common::util::Deferred([callbacks]() { nghttp2_session_callbacks_del(callbacks); });
 
   nghttp2_session_callbacks_set_on_begin_headers_callback(callbacks, OnBeginHeadersCallback);
   nghttp2_session_callbacks_set_on_header_callback(callbacks, OnHeaderCallback);
@@ -102,8 +107,8 @@ int ServerSession::SubmitResponse(const ResponsePtr& response_ptr) {
 
   nghttp2_data_provider content_provider{};
   content_provider.source.ptr = stream.get();
-  content_provider.read_callback = [](nghttp2_session* session, int32_t stream_id, uint8_t* buf, size_t length,
-                                      uint32_t* data_flags, nghttp2_data_source* source, void* user_data) -> ssize_t {
+  content_provider.read_callback = [](nghttp2_session* session, int32_t stream_id, uint8_t* buf, size_t length, uint32_t* data_flags, nghttp2_data_source* source,
+                                      void* user_data) -> ssize_t {
     const auto* stream = static_cast<Stream*>(source->ptr);
     auto& body = stream->GetResponse()->GetMutableBody();
     auto readable_size = body.GetReadableSize();
@@ -159,8 +164,7 @@ int ServerSession::SubmitSettings(Http2Settings settings) {
     return -1;
   }
 
-  auto set_ok = nghttp2_session_set_local_window_size(session_, NGHTTP2_FLAG_NONE, 0,
-                                                      static_cast<int32_t>(settings.initial_window_size));
+  auto set_ok = nghttp2_session_set_local_window_size(session_, NGHTTP2_FLAG_NONE, 0, static_cast<int32_t>(settings.initial_window_size));
   if (set_ok != 0) {
     AIMRT_ERROR("nghttp2_session_set_local_window_size failed: {}", set_ok);
     return -1;
@@ -191,13 +195,9 @@ int ServerSession::HandleClientMagic(std::string_view in) {
   return 0;
 }
 
-void ServerSession::OnFullRequest(const RequestPtr& request_ptr) {
-  full_request_list_.push_front(request_ptr);
-}
+void ServerSession::OnFullRequest(const RequestPtr& request_ptr) { full_request_list_.push_front(request_ptr); }
 
-std::forward_list<RequestPtr> ServerSession::GetFullRequestList() {
-  return std::move(full_request_list_);
-}
+std::forward_list<RequestPtr> ServerSession::GetFullRequestList() { return std::move(full_request_list_); }
 
 // Nghttp2 callbacks which will be called by nghttp2_session_mem_recv
 namespace {
@@ -219,11 +219,18 @@ int OnBeginHeadersCallback(nghttp2_session* session, const nghttp2_frame* frame,
   return 0;
 }
 
-int OnHeaderCallback(nghttp2_session* session, const nghttp2_frame* frame, const uint8_t* name, size_t name_len,
-                     const uint8_t* value, size_t value_len, uint8_t flags, void* user_data) {
-  AIMRT_TRACE("stream on header, stream id: {}, name: {}, value: {}", frame->hd.stream_id,
-              std::string_view(reinterpret_cast<const char*>(name), name_len),
-              std::string_view(reinterpret_cast<const char*>(value), value_len));
+int OnHeaderCallback(
+    nghttp2_session* session,
+    const nghttp2_frame* frame,
+    const uint8_t* name,
+    size_t name_len,
+    const uint8_t* value,
+    size_t value_len,
+    uint8_t flags,
+    void* user_data) {
+  AIMRT_TRACE(
+      "stream on header, stream id: {}, name: {}, value: {}", frame->hd.stream_id, std::string_view(reinterpret_cast<const char*>(name), name_len),
+      std::string_view(reinterpret_cast<const char*>(value), value_len));
   if (frame->hd.type != NGHTTP2_HEADERS || frame->headers.cat != NGHTTP2_HCAT_REQUEST) {
     return 0;
   }
@@ -302,8 +309,7 @@ int OnFrameRecvCallback(nghttp2_session* session, const nghttp2_frame* frame, vo
   return 0;
 }
 
-int OnDataChunkRecvCallback(nghttp2_session* session, uint8_t flags, int32_t stream_id, const uint8_t* data, size_t len,
-                            void* user_data) {
+int OnDataChunkRecvCallback(nghttp2_session* session, uint8_t flags, int32_t stream_id, const uint8_t* data, size_t len, void* user_data) {
   AIMRT_TRACE("stream recv data chunk, stream id: {}, chunk size: {}", stream_id, len);
   auto* server_session = static_cast<ServerSession*>(user_data);
   auto stream = server_session->FindStream(stream_id);
@@ -325,8 +331,7 @@ int OnStreamCloseCallback(nghttp2_session* session, int32_t stream_id, uint32_t 
 }
 
 int OnFrameNotSendCallback(nghttp2_session* session, const nghttp2_frame* frame, int32_t error_code, void* user_data) {
-  AIMRT_ERROR("stream not send frame, stream id: {}, frame type: {}, error: {}, {}",
-              frame->hd.stream_id, frame->hd.type, error_code, nghttp2_strerror(error_code));
+  AIMRT_ERROR("stream not send frame, stream id: {}, frame type: {}, error: {}, {}", frame->hd.stream_id, frame->hd.type, error_code, nghttp2_strerror(error_code));
   return 0;
 }
 

@@ -32,11 +32,9 @@ struct convert<aimrt::plugins::grpc_plugin::GrpcPlugin::Options> {
   static bool decode(const Node& node, Options& rhs) {
     if (!node.IsMap()) return false;
 
-    if (node["thread_num"])
-      rhs.thread_num = node["thread_num"].as<uint32_t>();
+    if (node["thread_num"]) rhs.thread_num = node["thread_num"].as<uint32_t>();
 
-    if (node["listen_ip"])
-      rhs.listen_ip = node["listen_ip"].as<std::string>();
+    if (node["listen_ip"]) rhs.listen_ip = node["listen_ip"].as<std::string>();
 
     rhs.listen_port = node["listen_port"].as<uint16_t>();
 
@@ -47,22 +45,12 @@ struct convert<aimrt::plugins::grpc_plugin::GrpcPlugin::Options> {
 
 namespace aimrt::plugins::grpc_plugin {
 
-auto WrapAimRTLoggerRef(aimrt::logger::LoggerRef logger_ref)
-    -> std::shared_ptr<aimrt::common::util::LoggerWrapper> {
-  return std::make_shared<aimrt::common::util::LoggerWrapper>(
-      aimrt::common::util::LoggerWrapper{
-          .get_log_level_func = [logger_ref]() -> uint32_t {
-            return logger_ref.GetLogLevel();
-          },
-          .log_func = [logger_ref](uint32_t lvl,
-                                   uint32_t line,
-                                   uint32_t column,
-                                   const char* file_name,
-                                   const char* function_name,
-                                   const char* log_data,
-                                   size_t log_data_size) {
-            logger_ref.Log(
-                lvl, line, column, file_name, function_name, log_data, log_data_size);  //
+auto WrapAimRTLoggerRef(aimrt::logger::LoggerRef logger_ref) -> std::shared_ptr<aimrt::common::util::LoggerWrapper> {
+  return std::make_shared<aimrt::common::util::LoggerWrapper>(aimrt::common::util::LoggerWrapper{
+      .get_log_level_func = [logger_ref]() -> uint32_t { return logger_ref.GetLogLevel(); },
+      .log_func =
+          [logger_ref](uint32_t lvl, uint32_t line, uint32_t column, const char* file_name, const char* function_name, const char* log_data, size_t log_data_size) {
+            logger_ref.Log(lvl, line, column, file_name, function_name, log_data, log_data_size);  //
           }});
 }
 
@@ -80,14 +68,12 @@ bool GrpcPlugin::Initialize(runtime::core::AimRTCore* core_ptr) noexcept {
 
     asio_executor_ptr_ = std::make_shared<aimrt::common::net::AsioExecutor>(options_.thread_num);
 
-    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPostInitLog,
-                                [this] { SetPluginLogger(); });
+    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPostInitLog, [this] { SetPluginLogger(); });
 
     http2_svr_ptr_ = std::make_shared<server::AsioHttp2Server>(asio_executor_ptr_->IO());
     http2_cli_pool_ptr_ = std::make_shared<client::AsioHttp2ClientPool>(asio_executor_ptr_->IO());
 
-    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPreInitRpc,
-                                [this] { RegisterGrpcRpcBackend(); });
+    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPreInitRpc, [this] { RegisterGrpcRpcBackend(); });
 
     core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPreStart, [this] {
       http2_cli_pool_ptr_->SetLogger(WrapAimRTLoggerRef(GetLogger()));
@@ -96,8 +82,7 @@ bool GrpcPlugin::Initialize(runtime::core::AimRTCore* core_ptr) noexcept {
 
       http2_svr_ptr_->SetLogger(WrapAimRTLoggerRef(GetLogger()));
       http2_svr_ptr_->Initialize(server::ServerOptions{
-          .ep = {boost::asio::ip::make_address_v4(options_.listen_ip),
-                 options_.listen_port},
+          .ep = {boost::asio::ip::make_address_v4(options_.listen_ip), options_.listen_port},
           .http2_settings = {
               .max_concurrent_streams = 100,
               .initial_window_size = (1U << 31) - 1,
@@ -150,15 +135,10 @@ void GrpcPlugin::Shutdown() noexcept {
   }
 }
 
-void GrpcPlugin::SetPluginLogger() {
-  SetLogger(aimrt::logger::LoggerRef(core_ptr_->GetLoggerManager().GetLoggerProxy().NativeHandle()));
-}
+void GrpcPlugin::SetPluginLogger() { SetLogger(aimrt::logger::LoggerRef(core_ptr_->GetLoggerManager().GetLoggerProxy().NativeHandle())); }
 
 void GrpcPlugin::RegisterGrpcRpcBackend() {
-  std::unique_ptr<runtime::core::rpc::RpcBackendBase> grpc_rpc_backend_ptr =
-      std::make_unique<GrpcRpcBackend>(asio_executor_ptr_->IO(),
-                                       http2_svr_ptr_,
-                                       http2_cli_pool_ptr_);
+  std::unique_ptr<runtime::core::rpc::RpcBackendBase> grpc_rpc_backend_ptr = std::make_unique<GrpcRpcBackend>(asio_executor_ptr_->IO(), http2_svr_ptr_, http2_cli_pool_ptr_);
 
   core_ptr_->GetRpcManager().RegisterRpcBackend(std::move(grpc_rpc_backend_ptr));
 }

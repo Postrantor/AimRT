@@ -18,7 +18,7 @@
 namespace aimrt::common::net {
 
 class AsioTcpClient : public std::enable_shared_from_this<AsioTcpClient> {
- public:
+public:
   using IOCtx = boost::asio::io_context;
   using Tcp = boost::asio::ip::tcp;
   using Strand = boost::asio::strand<IOCtx::executor_type>;
@@ -44,8 +44,7 @@ class AsioTcpClient : public std::enable_shared_from_this<AsioTcpClient> {
     static Options Verify(const Options& verify_options) {
       Options options(verify_options);
 
-      if (options.heart_beat_time < std::chrono::milliseconds(100))
-        options.heart_beat_time = std::chrono::milliseconds(100);
+      if (options.heart_beat_time < std::chrono::milliseconds(100)) options.heart_beat_time = std::chrono::milliseconds(100);
 
       return options;
     }
@@ -62,9 +61,7 @@ class AsioTcpClient : public std::enable_shared_from_this<AsioTcpClient> {
   AsioTcpClient& operator=(const AsioTcpClient&) = delete;
 
   void SetLogger(const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr) {
-    AIMRT_CHECK_ERROR_THROW(
-        state_.load() == State::kPreInit,
-        "Method can only be called when state is 'PreInit'.");
+    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
     logger_ptr_ = logger_ptr;
   }
@@ -72,31 +69,22 @@ class AsioTcpClient : public std::enable_shared_from_this<AsioTcpClient> {
   template <typename... Args>
     requires std::constructible_from<MsgHandle, Args...>
   void RegisterMsgHandle(Args&&... args) {
-    AIMRT_CHECK_ERROR_THROW(
-        state_.load() == State::kPreInit,
-        "Method can only be called when state is 'PreInit'.");
+    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
     msg_handle_ptr_ = std::make_shared<MsgHandle>(std::forward<Args>(args)...);
   }
 
   void Initialize(const Options& options) {
-    AIMRT_CHECK_ERROR_THROW(
-        std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-        "Method can only be called when state is 'PreInit'.");
+    AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
     options_ = Options::Verify(options);
     session_options_ptr_ = std::make_shared<SessionOptions>(options_);
   }
 
-  void Start() {
-    AIMRT_CHECK_ERROR_THROW(
-        std::atomic_exchange(&state_, State::kStart) == State::kInit,
-        "Method can only be called when state is 'Init'.");
-  }
+  void Start() { AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'."); }
 
   void Shutdown() {
-    if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-      return;
+    if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 
     auto self = shared_from_this();
     boost::asio::dispatch(mgr_strand_, [this, self]() {
@@ -129,17 +117,14 @@ class AsioTcpClient : public std::enable_shared_from_this<AsioTcpClient> {
 
   bool IsRunning() const { return state_.load() == State::kStart; }
 
- private:
+private:
   // 包头结构：| 2byte magicnum | 4byte msglen |
   static constexpr size_t kHeadSize = 6;
   static constexpr char kHeadByte1 = 'Y';
   static constexpr char kHeadByte2 = 'T';
 
   struct SessionOptions {
-    explicit SessionOptions(const Options& options)
-        : svr_ep(options.svr_ep),
-          heart_beat_time(options.heart_beat_time),
-          max_recv_size(options.max_recv_size) {}
+    explicit SessionOptions(const Options& options) : svr_ep(options.svr_ep), heart_beat_time(options.heart_beat_time), max_recv_size(options.max_recv_size) {}
 
     Tcp::endpoint svr_ep;
     std::chrono::nanoseconds heart_beat_time;
@@ -147,10 +132,8 @@ class AsioTcpClient : public std::enable_shared_from_this<AsioTcpClient> {
   };
 
   class Session : public std::enable_shared_from_this<Session> {
-   public:
-    Session(const std::shared_ptr<IOCtx>& io_ptr,
-            const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr,
-            const std::shared_ptr<MsgHandle>& msg_handle_ptr)
+  public:
+    Session(const std::shared_ptr<IOCtx>& io_ptr, const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr, const std::shared_ptr<MsgHandle>& msg_handle_ptr)
         : io_ptr_(io_ptr),
           session_socket_strand_(boost::asio::make_strand(*io_ptr)),
           sock_(session_socket_strand_),
@@ -164,17 +147,13 @@ class AsioTcpClient : public std::enable_shared_from_this<AsioTcpClient> {
     Session& operator=(const Session&) = delete;
 
     void Initialize(const std::shared_ptr<const SessionOptions>& session_options_ptr) {
-      AIMRT_CHECK_ERROR_THROW(
-          std::atomic_exchange(&state_, SessionState::kInit) == SessionState::kPreInit,
-          "Method can only be called when state is 'PreInit'.");
+      AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, SessionState::kInit) == SessionState::kPreInit, "Method can only be called when state is 'PreInit'.");
 
       session_options_ptr_ = session_options_ptr;
     }
 
     void Start() {
-      AIMRT_CHECK_ERROR_THROW(
-          std::atomic_exchange(&state_, SessionState::kStart) == SessionState::kInit,
-          "Method can only be called when state is 'Init'.");
+      AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, SessionState::kStart) == SessionState::kInit, "Method can only be called when state is 'Init'.");
 
       auto self = shared_from_this();
 
@@ -186,8 +165,7 @@ class AsioTcpClient : public std::enable_shared_from_this<AsioTcpClient> {
               remote_addr_ = aimrt::common::util::SSToString(session_options_ptr_->svr_ep);
 
               AIMRT_TRACE("Tcp cli session create a new connect to {}.", RemoteAddr());
-              co_await sock_.async_connect(session_options_ptr_->svr_ep,
-                                           boost::asio::use_awaitable);
+              co_await sock_.async_connect(session_options_ptr_->svr_ep, boost::asio::use_awaitable);
 
               // 发送协程
               boost::asio::co_spawn(
@@ -207,21 +185,15 @@ class AsioTcpClient : public std::enable_shared_from_this<AsioTcpClient> {
                           for (auto& itr : tmp_data_list) {
                             head_buf[ct * kHeadSize] = kHeadByte1;
                             head_buf[ct * kHeadSize + 1] = kHeadByte2;
-                            aimrt::common::util::SetBufFromUint32(
-                                &head_buf[ct * kHeadSize + 2],
-                                static_cast<uint32_t>(itr->size()));
-                            data_buf_vec.emplace_back(
-                                boost::asio::const_buffer(&head_buf[ct * kHeadSize], kHeadSize));
+                            aimrt::common::util::SetBufFromUint32(&head_buf[ct * kHeadSize + 2], static_cast<uint32_t>(itr->size()));
+                            data_buf_vec.emplace_back(boost::asio::const_buffer(&head_buf[ct * kHeadSize], kHeadSize));
                             ++ct;
 
                             data_buf_vec.emplace_back(itr->data());
                           }
 
-                          size_t write_data_size = co_await boost::asio::async_write(
-                              sock_, data_buf_vec, boost::asio::use_awaitable);
-                          AIMRT_TRACE(
-                              "Tcp cli session async write {} bytes to {}.",
-                              write_data_size, RemoteAddr());
+                          size_t write_data_size = co_await boost::asio::async_write(sock_, data_buf_vec, boost::asio::use_awaitable);
+                          AIMRT_TRACE("Tcp cli session async write {} bytes to {}.", write_data_size, RemoteAddr());
                         }
 
                         bool heartbeat_flag = false;
@@ -230,31 +202,20 @@ class AsioTcpClient : public std::enable_shared_from_this<AsioTcpClient> {
                           co_await send_sig_timer_.async_wait(boost::asio::use_awaitable);
                           heartbeat_flag = true;
                         } catch (const std::exception& e) {
-                          AIMRT_TRACE(
-                              "Tcp cli session timer canceled, remote addr {}, exception info: {}",
-                              RemoteAddr(), e.what());
+                          AIMRT_TRACE("Tcp cli session timer canceled, remote addr {}, exception info: {}", RemoteAddr(), e.what());
                         }
 
                         if (heartbeat_flag) {
                           // 心跳包仅用来保活，不传输业务/管理信息
-                          static constexpr char kHeartbeatPkg[kHeadSize] = {
-                              kHeadByte1, kHeadByte2, 0, 0, 0, 0};
-                          static const boost::asio::const_buffer kHeartbeatBuf(
-                              kHeartbeatPkg, kHeadSize);
+                          static constexpr char kHeartbeatPkg[kHeadSize] = {kHeadByte1, kHeadByte2, 0, 0, 0, 0};
+                          static const boost::asio::const_buffer kHeartbeatBuf(kHeartbeatPkg, kHeadSize);
 
-                          size_t write_data_size =
-                              co_await boost::asio::async_write(
-                                  sock_, kHeartbeatBuf,
-                                  boost::asio::use_awaitable);
-                          AIMRT_TRACE(
-                              "Tcp cli session async write {} bytes to {} for heartbeat.",
-                              write_data_size, RemoteAddr());
+                          size_t write_data_size = co_await boost::asio::async_write(sock_, kHeartbeatBuf, boost::asio::use_awaitable);
+                          AIMRT_TRACE("Tcp cli session async write {} bytes to {} for heartbeat.", write_data_size, RemoteAddr());
                         }
                       }
                     } catch (const std::exception& e) {
-                      AIMRT_TRACE(
-                          "Tcp cli session send co get exception and exit, remote addr {}, exception info: {}",
-                          RemoteAddr(), e.what());
+                      AIMRT_TRACE("Tcp cli session send co get exception and exit, remote addr {}, exception info: {}", RemoteAddr(), e.what());
                     }
 
                     Shutdown();
@@ -272,50 +233,31 @@ class AsioTcpClient : public std::enable_shared_from_this<AsioTcpClient> {
                       boost::asio::mutable_buffer asio_head_buf(head_buf.data(), kHeadSize);
 
                       while (state_.load() == SessionState::kStart) {
-                        size_t read_data_size = co_await boost::asio::async_read(
-                            sock_, asio_head_buf,
-                            boost::asio::transfer_exactly(kHeadSize),
-                            boost::asio::use_awaitable);
-                        AIMRT_TRACE(
-                            "Tcp cli session async read {} bytes from {} for head.",
-                            read_data_size, RemoteAddr());
+                        size_t read_data_size = co_await boost::asio::async_read(sock_, asio_head_buf, boost::asio::transfer_exactly(kHeadSize), boost::asio::use_awaitable);
+                        AIMRT_TRACE("Tcp cli session async read {} bytes from {} for head.", read_data_size, RemoteAddr());
 
                         AIMRT_CHECK_WARN_THROW(
                             read_data_size == kHeadSize && head_buf[0] == kHeadByte1 && head_buf[1] == kHeadByte2,
-                            "Get an invalid head, remote addr {}, read_data_size: {}, head_buf[0]: {}, head_buf[1]: {}.",
-                            RemoteAddr(), read_data_size,
-                            static_cast<uint8_t>(head_buf[0]),
-                            static_cast<uint8_t>(head_buf[1]));
+                            "Get an invalid head, remote addr {}, read_data_size: {}, head_buf[0]: {}, head_buf[1]: {}.", RemoteAddr(), read_data_size,
+                            static_cast<uint8_t>(head_buf[0]), static_cast<uint8_t>(head_buf[1]));
 
                         uint32_t msg_len = aimrt::common::util::GetUint32FromBuf(&head_buf[2]);
 
-                        AIMRT_CHECK_WARN_THROW(
-                            msg_len <= session_options_ptr_->max_recv_size,
-                            "Msg too large, remote addr {}, size: {}.",
-                            RemoteAddr(), msg_len);
+                        AIMRT_CHECK_WARN_THROW(msg_len <= session_options_ptr_->max_recv_size, "Msg too large, remote addr {}, size: {}.", RemoteAddr(), msg_len);
 
                         auto msg_buf = std::make_shared<Streambuf>();
 
-                        read_data_size = co_await boost::asio::async_read(
-                            sock_, msg_buf->prepare(msg_len),
-                            boost::asio::transfer_exactly(msg_len),
-                            boost::asio::use_awaitable);
-                        AIMRT_TRACE(
-                            "Tcp cli session async read {} bytes from {}.",
-                            read_data_size, RemoteAddr());
+                        read_data_size = co_await boost::asio::async_read(sock_, msg_buf->prepare(msg_len), boost::asio::transfer_exactly(msg_len), boost::asio::use_awaitable);
+                        AIMRT_TRACE("Tcp cli session async read {} bytes from {}.", read_data_size, RemoteAddr());
 
                         msg_buf->commit(msg_len);
 
                         if (msg_handle_ptr_) {
-                          boost::asio::post(
-                              *io_ptr_,
-                              [this, msg_buf]() { (*msg_handle_ptr_)(msg_buf); });
+                          boost::asio::post(*io_ptr_, [this, msg_buf]() { (*msg_handle_ptr_)(msg_buf); });
                         }
                       }
                     } catch (const std::exception& e) {
-                      AIMRT_TRACE(
-                          "Tcp cli session recv co get exception and exit, remote addr {}, exception info: {}",
-                          RemoteAddr(), e.what());
+                      AIMRT_TRACE("Tcp cli session recv co get exception and exit, remote addr {}, exception info: {}", RemoteAddr(), e.what());
                     }
 
                     Shutdown();
@@ -325,9 +267,7 @@ class AsioTcpClient : public std::enable_shared_from_this<AsioTcpClient> {
                   boost::asio::detached);
 
             } catch (const std::exception& e) {
-              AIMRT_TRACE(
-                  "Tcp cli session start co get exception and exit, remote addr {}, exception info: {}",
-                  RemoteAddr(), e.what());
+              AIMRT_TRACE("Tcp cli session start co get exception and exit, remote addr {}, exception info: {}", RemoteAddr(), e.what());
               Shutdown();
             }
 
@@ -337,8 +277,7 @@ class AsioTcpClient : public std::enable_shared_from_this<AsioTcpClient> {
     }
 
     void Shutdown() {
-      if (std::atomic_exchange(&state_, SessionState::kShutdown) == SessionState::kShutdown)
-        return;
+      if (std::atomic_exchange(&state_, SessionState::kShutdown) == SessionState::kShutdown) return;
 
       auto self = shared_from_this();
       boost::asio::dispatch(session_socket_strand_, [this, self]() {
@@ -366,9 +305,7 @@ class AsioTcpClient : public std::enable_shared_from_this<AsioTcpClient> {
                 break;
             }
           } catch (const std::exception& e) {
-            AIMRT_TRACE(
-                "Tcp cli session stop get exception at step {}, remote addr {}, exception info: {}",
-                stop_step, RemoteAddr(), e.what());
+            AIMRT_TRACE("Tcp cli session stop get exception at step {}, remote addr {}, exception info: {}", stop_step, RemoteAddr(), e.what());
             ++stop_step;
           }
         }
@@ -377,17 +314,15 @@ class AsioTcpClient : public std::enable_shared_from_this<AsioTcpClient> {
 
     void SendMsg(const std::shared_ptr<Streambuf>& msg_buf_ptr) {
       auto self = shared_from_this();
-      boost::asio::dispatch(
-          session_socket_strand_,
-          [this, self, msg_buf_ptr]() {
-            if (state_.load() != SessionState::kStart) [[unlikely]] {
-              AIMRT_WARN("Tcp cli session is closed, will not send current msg.");
-              return;
-            }
+      boost::asio::dispatch(session_socket_strand_, [this, self, msg_buf_ptr]() {
+        if (state_.load() != SessionState::kStart) [[unlikely]] {
+          AIMRT_WARN("Tcp cli session is closed, will not send current msg.");
+          return;
+        }
 
-            data_list_.emplace_back(msg_buf_ptr);
-            send_sig_timer_.cancel();
-          });
+        data_list_.emplace_back(msg_buf_ptr);
+        send_sig_timer_.cancel();
+      });
     }
 
     const aimrt::common::util::LoggerWrapper& GetLogger() const { return *logger_ptr_; }
@@ -396,7 +331,7 @@ class AsioTcpClient : public std::enable_shared_from_this<AsioTcpClient> {
 
     bool IsRunning() const { return state_.load() == SessionState::kStart; }
 
-   private:
+  private:
     enum class SessionState : uint32_t {
       kPreInit,
       kInit,
@@ -427,7 +362,7 @@ class AsioTcpClient : public std::enable_shared_from_this<AsioTcpClient> {
     std::list<std::shared_ptr<Streambuf>> data_list_;
   };
 
- private:
+private:
   enum class State : uint32_t {
     kPreInit,
     kInit,
@@ -456,9 +391,8 @@ class AsioTcpClient : public std::enable_shared_from_this<AsioTcpClient> {
   std::shared_ptr<Session> session_ptr_;
 };
 
-class AsioTcpClientPool
-    : public std::enable_shared_from_this<AsioTcpClientPool> {
- public:
+class AsioTcpClientPool : public std::enable_shared_from_this<AsioTcpClientPool> {
+public:
   using IOCtx = boost::asio::io_context;
   using Strand = boost::asio::strand<IOCtx::executor_type>;
 
@@ -490,30 +424,21 @@ class AsioTcpClientPool
   AsioTcpClientPool& operator=(const AsioTcpClientPool&) = delete;
 
   void SetLogger(const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr) {
-    AIMRT_CHECK_ERROR_THROW(
-        state_.load() == State::kPreInit,
-        "Method can only be called when state is 'PreInit'.");
+    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
     logger_ptr_ = logger_ptr;
   }
 
   void Initialize(const Options& options) {
-    AIMRT_CHECK_ERROR_THROW(
-        std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-        "Method can only be called when state is 'PreInit'.");
+    AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
     options_ = Options::Verify(options);
   }
 
-  void Start() {
-    AIMRT_CHECK_ERROR_THROW(
-        std::atomic_exchange(&state_, State::kStart) == State::kInit,
-        "Method can only be called when state is 'Init'.");
-  }
+  void Start() { AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'."); }
 
   void Shutdown() {
-    if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-      return;
+    if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 
     auto self = shared_from_this();
     boost::asio::dispatch(mgr_strand_, [this, self]() {
@@ -523,8 +448,7 @@ class AsioTcpClientPool
     });
   }
 
-  Awaitable<std::shared_ptr<AsioTcpClient>> GetClient(
-      const AsioTcpClient::Options& client_options) {
+  Awaitable<std::shared_ptr<AsioTcpClient>> GetClient(const AsioTcpClient::Options& client_options) {
     return boost::asio::co_spawn(
         mgr_strand_,
         [this, &client_options]() -> Awaitable<std::shared_ptr<AsioTcpClient>> {
@@ -533,8 +457,7 @@ class AsioTcpClientPool
             co_return std::shared_ptr<AsioTcpClient>();
           }
 
-          const size_t client_hash =
-              std::hash<boost::asio::ip::tcp::endpoint>{}(client_options.svr_ep);
+          const size_t client_hash = std::hash<boost::asio::ip::tcp::endpoint>{}(client_options.svr_ep);
 
           auto itr = client_map_.find(client_hash);
           if (itr != client_map_.end()) {
@@ -550,8 +473,7 @@ class AsioTcpClientPool
                 client_map_.erase(itr++);
             }
 
-            AIMRT_CHECK_WARN_THROW(client_map_.size() < options_.max_client_num,
-                                   "Tcp client num reach the upper limit.");
+            AIMRT_CHECK_WARN_THROW(client_map_.size() < options_.max_client_num, "Tcp client num reach the upper limit.");
           }
 
           auto client_ptr = std::make_shared<AsioTcpClient>(io_ptr_);
@@ -567,7 +489,7 @@ class AsioTcpClientPool
 
   const aimrt::common::util::LoggerWrapper& GetLogger() const { return *logger_ptr_; }
 
- private:
+private:
   enum class State : uint32_t {
     kPreInit,
     kInit,

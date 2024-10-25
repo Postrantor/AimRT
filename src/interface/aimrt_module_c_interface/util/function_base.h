@@ -8,7 +8,7 @@ extern "C" {
 #endif
 
 #ifndef AIMRT_FUNCTION_LOCAL_BUF_SIZE
-  #define AIMRT_FUNCTION_LOCAL_BUF_SIZE (3 * sizeof(void*))
+#define AIMRT_FUNCTION_LOCAL_BUF_SIZE (3 * sizeof(void*))
 #endif
 
 /**

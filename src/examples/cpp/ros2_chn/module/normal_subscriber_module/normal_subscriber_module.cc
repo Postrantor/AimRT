@@ -23,9 +23,7 @@ bool NormalSubscriberModule::Initialize(aimrt::CoreRef core) {
     subscriber_ = core_.GetChannelHandle().GetSubscriber(topic_name_);
     AIMRT_CHECK_ERROR_THROW(subscriber_, "Get subscriber for topic '{}' failed.", topic_name_);
 
-    bool ret = aimrt::channel::Subscribe<example_ros2::msg::RosTestMsg>(
-        subscriber_,
-        std::bind(&NormalSubscriberModule::EventHandle, this, std::placeholders::_1));
+    bool ret = aimrt::channel::Subscribe<example_ros2::msg::RosTestMsg>(subscriber_, std::bind(&NormalSubscriberModule::EventHandle, this, std::placeholders::_1));
     AIMRT_CHECK_ERROR_THROW(ret, "Subscribe failed.");
 
   } catch (const std::exception& e) {

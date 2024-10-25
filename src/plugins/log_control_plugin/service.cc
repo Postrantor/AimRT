@@ -16,9 +16,7 @@ aimrt::co::Task<aimrt::rpc::Status> LogControlServiceImpl::GetModuleLogLevel(
   // if empty, then get all module
   if (req.module_names().empty()) {
     for (const auto& itr : log_lvl_map) {
-      rsp.mutable_module_log_level_map()->emplace(
-          itr.first,
-          std::string(aimrt::runtime::core::logger::LogLevelTool::GetLogLevelName(itr.second)));
+      rsp.mutable_module_log_level_map()->emplace(itr.first, std::string(aimrt::runtime::core::logger::LogLevelTool::GetLogLevelName(itr.second)));
     }
 
     co_return aimrt::rpc::Status();
@@ -31,9 +29,7 @@ aimrt::co::Task<aimrt::rpc::Status> LogControlServiceImpl::GetModuleLogLevel(
       co_return aimrt::rpc::Status();
     }
 
-    rsp.mutable_module_log_level_map()->emplace(
-        finditr->first,
-        std::string(aimrt::runtime::core::logger::LogLevelTool::GetLogLevelName(finditr->second)));
+    rsp.mutable_module_log_level_map()->emplace(finditr->first, std::string(aimrt::runtime::core::logger::LogLevelTool::GetLogLevelName(finditr->second)));
   }
 
   co_return aimrt::rpc::Status();
@@ -46,9 +42,7 @@ aimrt::co::Task<aimrt::rpc::Status> LogControlServiceImpl::SetModuleLogLevel(
   std::unordered_map<std::string, aimrt_log_level_t> log_lvl_settings;
 
   for (const auto& itr : req.module_log_level_map()) {
-    log_lvl_settings.emplace(
-        itr.first,
-        aimrt::runtime::core::logger::LogLevelTool::GetLogLevelFromName(itr.second));
+    log_lvl_settings.emplace(itr.first, aimrt::runtime::core::logger::LogLevelTool::GetLogLevelFromName(itr.second));
   }
 
   logger_manager_ptr_->SetLoggerLevels(log_lvl_settings);

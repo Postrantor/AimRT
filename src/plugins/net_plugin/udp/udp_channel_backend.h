@@ -14,7 +14,7 @@
 namespace aimrt::plugins::net_plugin {
 
 class UdpChannelBackend : public runtime::core::channel::ChannelBackendBase {
- public:
+public:
   using UdpMsgHandleRegistry = MsgHandleRegistry<boost::asio::ip::udp::endpoint>;
 
   struct Options {
@@ -26,7 +26,7 @@ class UdpChannelBackend : public runtime::core::channel::ChannelBackendBase {
     std::vector<PubTopicOptions> pub_topics_options;
   };
 
- public:
+public:
   UdpChannelBackend(
       const std::shared_ptr<boost::asio::io_context>& io_ptr,
       const std::shared_ptr<aimrt::common::net::AsioUdpClientPool>& udp_cli_pool_ptr,
@@ -45,16 +45,13 @@ class UdpChannelBackend : public runtime::core::channel::ChannelBackendBase {
   void Start() override;
   void Shutdown() override;
 
-  void SetChannelRegistry(const runtime::core::channel::ChannelRegistry* channel_registry_ptr) noexcept override {
-    channel_registry_ptr_ = channel_registry_ptr;
-  }
+  void SetChannelRegistry(const runtime::core::channel::ChannelRegistry* channel_registry_ptr) noexcept override { channel_registry_ptr_ = channel_registry_ptr; }
 
-  bool RegisterPublishType(
-      const runtime::core::channel::PublishTypeWrapper& publish_type_wrapper) noexcept override;
+  bool RegisterPublishType(const runtime::core::channel::PublishTypeWrapper& publish_type_wrapper) noexcept override;
   bool Subscribe(const runtime::core::channel::SubscribeWrapper& subscribe_wrapper) noexcept override;
   void Publish(runtime::core::channel::MsgWrapper& msg_wrapper) noexcept override;
 
- private:
+private:
   enum class State : uint32_t {
     kPreInit,
     kInit,
@@ -72,10 +69,7 @@ class UdpChannelBackend : public runtime::core::channel::ChannelBackendBase {
   std::shared_ptr<UdpMsgHandleRegistry> msg_handle_registry_ptr_;
   std::shared_ptr<aimrt::common::net::AsioUdpServer> udp_svr_ptr_;
 
-  std::unordered_map<
-      std::string,
-      std::unique_ptr<aimrt::runtime::core::channel::SubscribeTool>>
-      udp_subscribe_wrapper_map_;
+  std::unordered_map<std::string, std::unique_ptr<aimrt::runtime::core::channel::SubscribeTool>> udp_subscribe_wrapper_map_;
 
   struct PubCfgInfo {
     std::vector<boost::asio::ip::udp::endpoint> server_ep_vec;

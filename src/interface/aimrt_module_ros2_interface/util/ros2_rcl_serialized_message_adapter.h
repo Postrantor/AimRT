@@ -11,7 +11,7 @@
 namespace aimrt {
 
 class Ros2RclSerializedMessageAdapter {
- public:
+public:
   explicit Ros2RclSerializedMessageAdapter(aimrt_buffer_array_with_allocator_t* bawa)
       : serialized_msg_(rcutils_uint8_array_t{
             .buffer = nullptr,
@@ -24,19 +24,20 @@ class Ros2RclSerializedMessageAdapter {
                   aimrt_buffer_t buffer = allocator->allocate(allocator->impl, bawa->buffer_array, size);
                   return buffer.data;
                 },
-                .deallocate = [](void* pointer, void* state) {  //
-                  if (pointer == nullptr) [[unlikely]]
-                    return;
+                .deallocate =
+                    [](void* pointer, void* state) {  //
+                      if (pointer == nullptr) [[unlikely]]
+                        return;
 
-                  auto* bawa = static_cast<aimrt_buffer_array_with_allocator_t*>(state);
-                  for (size_t ii = 0; ii < bawa->buffer_array->len; ++ii) {
-                    if (bawa->buffer_array->data[ii].data == pointer) {
-                      bawa->buffer_array->data[ii].len = 0;
-                      return;
-                    }
-                  }
-                  fprintf(stderr, "Invalid pointer for deallocate. Warning by Ros2RclSerializedMessageAdapter.\n");
-                },
+                      auto* bawa = static_cast<aimrt_buffer_array_with_allocator_t*>(state);
+                      for (size_t ii = 0; ii < bawa->buffer_array->len; ++ii) {
+                        if (bawa->buffer_array->data[ii].data == pointer) {
+                          bawa->buffer_array->data[ii].len = 0;
+                          return;
+                        }
+                      }
+                      fprintf(stderr, "Invalid pointer for deallocate. Warning by Ros2RclSerializedMessageAdapter.\n");
+                    },
                 .reallocate = [](void* pointer, size_t size, void* state) -> void* {
                   auto* bawa = static_cast<aimrt_buffer_array_with_allocator_t*>(state);
 
@@ -75,7 +76,7 @@ class Ros2RclSerializedMessageAdapter {
 
   rcl_serialized_message_t* GetRclSerializedMessage() { return &serialized_msg_; }
 
- private:
+private:
   rcl_serialized_message_t serialized_msg_;
 };
 

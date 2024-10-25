@@ -97,8 +97,7 @@ void NormalRpcSyncClientModule::MainLoop() {
 
       // Check result
       if (status.OK()) {
-        AIMRT_INFO("Client get rpc ret, status: {}, rsp: {}", status.ToString(),
-                   aimrt::Pb2CompactJson(rsp));
+        AIMRT_INFO("Client get rpc ret, status: {}, rsp: {}", status.ToString(), aimrt::Pb2CompactJson(rsp));
       } else {
         AIMRT_WARN("Client get rpc error ret, status: {}", status.ToString());
       }

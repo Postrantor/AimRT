@@ -19,7 +19,7 @@
 namespace aimrt::common::net {
 
 class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
- public:
+public:
   using IOCtx = boost::asio::io_context;
   using Tcp = boost::asio::ip::tcp;
   using Strand = boost::asio::strand<IOCtx::executor_type>;
@@ -68,36 +68,26 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
   AsioHttpClient& operator=(const AsioHttpClient&) = delete;
 
   void SetLogger(const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr) {
-    AIMRT_CHECK_ERROR_THROW(
-        state_.load() == State::kPreInit,
-        "Method can only be called when state is 'PreInit'.");
+    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
     logger_ptr_ = logger_ptr;
   }
 
   void Initialize(const Options& options) {
-    AIMRT_CHECK_ERROR_THROW(
-        std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-        "Method can only be called when state is 'PreInit'.");
+    AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
     options_ = Options::Verify(options);
     session_options_ptr_ = std::make_shared<SessionOptions>(options_);
   }
 
-  void Start() {
-    AIMRT_CHECK_ERROR_THROW(
-        std::atomic_exchange(&state_, State::kStart) == State::kInit,
-        "Method can only be called when state is 'Init'.");
-  }
+  void Start() { AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'."); }
 
   void Shutdown() {
-    if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-      return;
+    if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 
     auto self = shared_from_this();
     boost::asio::dispatch(mgr_strand_, [this, self]() {
-      for (auto& session_ptr : session_ptr_list_)
-        session_ptr->Shutdown();
+      for (auto& session_ptr : session_ptr_list_) session_ptr->Shutdown();
 
       session_ptr_list_.clear();
     });
@@ -112,17 +102,12 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
    * @param timeout 超时时间
    * @return 返回包
    */
-  template <typename ReqBodyType = boost::beast::http::string_body,
-            typename RspBodyType = boost::beast::http::string_body>
-  Awaitable<Response<RspBodyType>> HttpSendRecvCo(
-      const Request<ReqBodyType>& req,
-      std::chrono::nanoseconds timeout = std::chrono::seconds(5)) {
+  template <typename ReqBodyType = boost::beast::http::string_body, typename RspBodyType = boost::beast::http::string_body>
+  Awaitable<Response<RspBodyType>> HttpSendRecvCo(const Request<ReqBodyType>& req, std::chrono::nanoseconds timeout = std::chrono::seconds(5)) {
     return boost::asio::co_spawn(
         mgr_strand_,
         [this, &req, timeout]() -> Awaitable<Response<RspBodyType>> {
-          AIMRT_CHECK_WARN_THROW(
-              state_.load() == State::kStart,
-              "Http cli is closed, will not send request.");
+          AIMRT_CHECK_WARN_THROW(state_.load() == State::kStart, "Http cli is closed, will not send request.");
 
           // 找可用session，没有就新建一个。同时清理已失效session
           std::shared_ptr<Session> session_ptr;
@@ -140,8 +125,7 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
           }
 
           if (!session_ptr) {
-            AIMRT_CHECK_ERROR_THROW(session_ptr_list_.size() < options_.max_session_num,
-                                    "Http client session num reach the upper limit.");
+            AIMRT_CHECK_ERROR_THROW(session_ptr_list_.size() < options_.max_session_num, "Http client session num reach the upper limit.");
 
             session_ptr = std::make_shared<Session>(io_ptr_, logger_ptr_);
             session_ptr->Initialize(session_options_ptr_);
@@ -159,12 +143,9 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
 
   bool IsRunning() const { return state_.load() == State::kStart; }
 
- private:
+private:
   struct SessionOptions {
-    explicit SessionOptions(const Options& options)
-        : host(options.host),
-          service(options.service),
-          max_no_data_duration(options.max_no_data_duration) {}
+    explicit SessionOptions(const Options& options) : host(options.host), service(options.service), max_no_data_duration(options.max_no_data_duration) {}
 
     std::string host;
     std::string service;
@@ -172,9 +153,8 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
   };
 
   class Session : public std::enable_shared_from_this<Session> {
-   public:
-    Session(const std::shared_ptr<IOCtx>& io_ptr,
-            const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr)
+  public:
+    Session(const std::shared_ptr<IOCtx>& io_ptr, const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr)
         : io_ptr_(io_ptr),
           session_mgr_strand_(boost::asio::make_strand(*io_ptr)),
           timer_(session_mgr_strand_),
@@ -188,17 +168,13 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
     Session& operator=(const Session&) = delete;
 
     void Initialize(const std::shared_ptr<const SessionOptions>& session_options_ptr) {
-      AIMRT_CHECK_ERROR_THROW(
-          std::atomic_exchange(&state_, SessionState::kInit) == SessionState::kPreInit,
-          "Method can only be called when state is 'PreInit'.");
+      AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, SessionState::kInit) == SessionState::kPreInit, "Method can only be called when state is 'PreInit'.");
 
       session_options_ptr_ = session_options_ptr;
     }
 
     void Start() {
-      AIMRT_CHECK_ERROR_THROW(
-          std::atomic_exchange(&state_, SessionState::kStart) == SessionState::kInit,
-          "Method can only be called when state is 'Init'.");
+      AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, SessionState::kStart) == SessionState::kInit, "Method can only be called when state is 'Init'.");
 
       auto self = shared_from_this();
 
@@ -216,15 +192,12 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
                 } else {
                   AIMRT_TRACE(
                       "Http cli session exit due to timeout({} ms), remote addr {}.",
-                      std::chrono::duration_cast<std::chrono::milliseconds>(session_options_ptr_->max_no_data_duration).count(),
-                      RemoteAddr());
+                      std::chrono::duration_cast<std::chrono::milliseconds>(session_options_ptr_->max_no_data_duration).count(), RemoteAddr());
                   break;
                 }
               }
             } catch (const std::exception& e) {
-              AIMRT_TRACE(
-                  "Http cli session timer get exception and exit, remote addr {}, exception info: {}",
-                  RemoteAddr(), e.what());
+              AIMRT_TRACE("Http cli session timer get exception and exit, remote addr {}, exception info: {}", RemoteAddr(), e.what());
             }
 
             Shutdown();
@@ -235,8 +208,7 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
     }
 
     void Shutdown() {
-      if (std::atomic_exchange(&state_, SessionState::kShutdown) == SessionState::kShutdown)
-        return;
+      if (std::atomic_exchange(&state_, SessionState::kShutdown) == SessionState::kShutdown) return;
 
       auto self = shared_from_this();
       boost::asio::dispatch(session_socket_strand_, [this, self]() {
@@ -270,9 +242,7 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
                 break;
             }
           } catch (const std::exception& e) {
-            AIMRT_TRACE(
-                "Http cli session stop get exception at step {}, remote addr {}, exception info: {}",
-                stop_step, RemoteAddr(), e.what());
+            AIMRT_TRACE("Http cli session stop get exception at step {}, remote addr {}, exception info: {}", stop_step, RemoteAddr(), e.what());
             ++stop_step;
           }
         }
@@ -291,25 +261,19 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
                 break;
             }
           } catch (const std::exception& e) {
-            AIMRT_TRACE(
-                "Http cli session mgr stop get exception at step {}, remote addr {}, exception info: {}",
-                stop_step, RemoteAddr(), e.what());
+            AIMRT_TRACE("Http cli session mgr stop get exception at step {}, remote addr {}, exception info: {}", stop_step, RemoteAddr(), e.what());
             ++stop_step;
           }
         }
       });
     }
 
-    template <typename ReqBodyType = boost::beast::http::string_body,
-              typename RspBodyType = boost::beast::http::string_body>
-    Awaitable<Response<RspBodyType>> HttpSendRecvCo(
-        const Request<ReqBodyType>& req, std::chrono::nanoseconds timeout) {
+    template <typename ReqBodyType = boost::beast::http::string_body, typename RspBodyType = boost::beast::http::string_body>
+    Awaitable<Response<RspBodyType>> HttpSendRecvCo(const Request<ReqBodyType>& req, std::chrono::nanoseconds timeout) {
       return boost::asio::co_spawn(
           session_socket_strand_,
           [this, &req, timeout]() -> Awaitable<Response<RspBodyType>> {
-            AIMRT_CHECK_WARN_THROW(
-                state_.load() == SessionState::kStart,
-                "Http cli session is closed, will not send request.");
+            AIMRT_CHECK_WARN_THROW(state_.load() == SessionState::kStart, "Http cli session is closed, will not send request.");
 
             try {
               namespace chrono = std::chrono;
@@ -322,16 +286,11 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
               if (first_time_entry_) [[unlikely]] {
                 first_time_entry_ = false;
 
-                AIMRT_TRACE("Http cli session create a new connect to {}:{}",
-                            session_options_ptr_->host,
-                            session_options_ptr_->service);
+                AIMRT_TRACE("Http cli session create a new connect to {}:{}", session_options_ptr_->host, session_options_ptr_->service);
 
                 // resolve
                 asio::ip::tcp::resolver resolver(session_socket_strand_);
-                auto const dst = co_await resolver.async_resolve(
-                    session_options_ptr_->host,
-                    session_options_ptr_->service,
-                    asio::use_awaitable);
+                auto const dst = co_await resolver.async_resolve(session_options_ptr_->host, session_options_ptr_->service, asio::use_awaitable);
 
                 // connect
                 cur_duration = chrono::steady_clock::now() - start_time_point;
@@ -348,10 +307,7 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
               cur_duration = chrono::steady_clock::now() - start_time_point;
               AIMRT_CHECK_ERROR_THROW(cur_duration < timeout, "Timeout.");
 
-              AIMRT_TRACE(
-                  "Http cli session async write, remote addr {}, timeout {}ms.",
-                  RemoteAddr(),
-                  chrono::duration_cast<chrono::milliseconds>(timeout - cur_duration).count());
+              AIMRT_TRACE("Http cli session async write, remote addr {}, timeout {}ms.", RemoteAddr(), chrono::duration_cast<chrono::milliseconds>(timeout - cur_duration).count());
               stream_.expires_after(timeout - cur_duration);
               size_t write_size = co_await http::async_write(stream_, req, asio::use_awaitable);
               AIMRT_TRACE("Http cli session write {} bytes to {}.", write_size, RemoteAddr());
@@ -361,16 +317,12 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
               cur_duration = chrono::steady_clock::now() - start_time_point;
               AIMRT_CHECK_ERROR_THROW(cur_duration < timeout, "Timeout.");
 
-              AIMRT_TRACE(
-                  "Http cli session async read, remote addr {}, timeout {}ms.",
-                  RemoteAddr(),
-                  chrono::duration_cast<chrono::milliseconds>(timeout - cur_duration).count());
+              AIMRT_TRACE("Http cli session async read, remote addr {}, timeout {}ms.", RemoteAddr(), chrono::duration_cast<chrono::milliseconds>(timeout - cur_duration).count());
               stream_.expires_after(timeout - cur_duration);
               http::response_parser<RspBodyType> rsp_parser;
               rsp_parser.eager(true);
               rsp_parser.body_limit(1024 * 1024 * 16);
-              size_t read_size = co_await http::async_read(
-                  stream_, buffer_, rsp_parser, asio::use_awaitable);
+              size_t read_size = co_await http::async_read(stream_, buffer_, rsp_parser, asio::use_awaitable);
               AIMRT_TRACE("Http cli session read {} bytes from {}.", read_size, RemoteAddr());
               tick_has_data_ = true;
               Response<RspBodyType> rsp = rsp_parser.release();
@@ -385,9 +337,7 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
               co_return rsp;
 
             } catch (const std::exception& e) {
-              AIMRT_WARN(
-                  "Http cli session send recv co get exception and exit, remote addr {}, exception info: {}",
-                  RemoteAddr(), e.what());
+              AIMRT_WARN("Http cli session send recv co get exception and exit, remote addr {}, exception info: {}", RemoteAddr(), e.what());
             }
 
             Shutdown();
@@ -409,7 +359,7 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
 
     bool IsRunning() const { return state_.load() == SessionState::kStart; }
 
-   private:
+  private:
     enum class SessionState : uint32_t {
       kPreInit,
       kInit,
@@ -441,7 +391,7 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
     bool first_time_entry_ = true;
   };
 
- private:
+private:
   enum class State : uint32_t {
     kPreInit,
     kInit,
@@ -467,9 +417,8 @@ class AsioHttpClient : public std::enable_shared_from_this<AsioHttpClient> {
   std::list<std::shared_ptr<Session>> session_ptr_list_;
 };
 
-class AsioHttpClientPool
-    : public std::enable_shared_from_this<AsioHttpClientPool> {
- public:
+class AsioHttpClientPool : public std::enable_shared_from_this<AsioHttpClientPool> {
+public:
   using IOCtx = boost::asio::io_context;
   using Strand = boost::asio::strand<IOCtx::executor_type>;
 
@@ -501,30 +450,21 @@ class AsioHttpClientPool
   AsioHttpClientPool& operator=(const AsioHttpClientPool&) = delete;
 
   void SetLogger(const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr) {
-    AIMRT_CHECK_ERROR_THROW(
-        state_.load() == State::kPreInit,
-        "Method can only be called when state is 'PreInit'.");
+    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
     logger_ptr_ = logger_ptr;
   }
 
   void Initialize(const Options& options) {
-    AIMRT_CHECK_ERROR_THROW(
-        std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-        "Method can only be called when state is 'PreInit'.");
+    AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
     options_ = Options::Verify(options);
   }
 
-  void Start() {
-    AIMRT_CHECK_ERROR_THROW(
-        std::atomic_exchange(&state_, State::kStart) == State::kInit,
-        "Method can only be called when state is 'Init'.");
-  }
+  void Start() { AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'."); }
 
   void Shutdown() {
-    if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-      return;
+    if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 
     auto self = shared_from_this();
     boost::asio::dispatch(mgr_strand_, [this, self]() {
@@ -540,8 +480,7 @@ class AsioHttpClientPool
    * @param options http client的配置
    * @return http client
    */
-  Awaitable<std::shared_ptr<AsioHttpClient>> GetClient(
-      const AsioHttpClient::Options& client_options) {
+  Awaitable<std::shared_ptr<AsioHttpClient>> GetClient(const AsioHttpClient::Options& client_options) {
     return boost::asio::co_spawn(
         mgr_strand_,
         [this, &client_options]() -> Awaitable<std::shared_ptr<AsioHttpClient>> {
@@ -566,8 +505,7 @@ class AsioHttpClientPool
                 client_map_.erase(itr++);
             }
 
-            AIMRT_CHECK_WARN_THROW(client_map_.size() < options_.max_client_num,
-                                   "Http client num reach the upper limit.");
+            AIMRT_CHECK_WARN_THROW(client_map_.size() < options_.max_client_num, "Http client num reach the upper limit.");
           }
 
           auto client_ptr = std::make_shared<AsioHttpClient>(io_ptr_);
@@ -583,7 +521,7 @@ class AsioHttpClientPool
 
   const aimrt::common::util::LoggerWrapper& GetLogger() const { return *logger_ptr_; }
 
- private:
+private:
   enum class State : uint32_t {
     kPreInit,
     kInit,

@@ -31,11 +31,9 @@ struct convert<aimrt::plugins::mqtt_plugin::MqttPlugin::Options> {
     rhs.broker_addr = node["broker_addr"].as<std::string>();
     rhs.client_id = node["client_id"].as<std::string>();
 
-    if (node["max_pkg_size_k"])
-      rhs.max_pkg_size_k = node["max_pkg_size_k"].as<uint32_t>();
+    if (node["max_pkg_size_k"]) rhs.max_pkg_size_k = node["max_pkg_size_k"].as<uint32_t>();
 
-    if (node["truststore"])
-      rhs.truststore = node["truststore"].as<std::string>();
+    if (node["truststore"]) rhs.truststore = node["truststore"].as<std::string>();
 
     return true;
   }
@@ -57,18 +55,11 @@ bool MqttPlugin::Initialize(runtime::core::AimRTCore *core_ptr) noexcept {
     init_flag_ = true;
 
     // initialize mqtt
-    MQTTAsync_create(
-        &client_, options_.broker_addr.c_str(), options_.client_id.c_str(), MQTTCLIENT_PERSISTENCE_NONE, NULL);
+    MQTTAsync_create(&client_, options_.broker_addr.c_str(), options_.client_id.c_str(), MQTTCLIENT_PERSISTENCE_NONE, NULL);
 
     MQTTAsync_setCallbacks(
-        client_,
-        this,
-        [](void *context, char *cause) {
-          static_cast<MqttPlugin *>(context)->OnConnectLost(cause);
-        },
-        [](void *context, char *topicName, int topicLen, MQTTAsync_message *message) -> int {
-          return static_cast<MqttPlugin *>(context)->OnMsgRecv(topicName, topicLen, message);
-        },
+        client_, this, [](void *context, char *cause) { static_cast<MqttPlugin *>(context)->OnConnectLost(cause); },
+        [](void *context, char *topicName, int topicLen, MQTTAsync_message *message) -> int { return static_cast<MqttPlugin *>(context)->OnMsgRecv(topicName, topicLen, message); },
         NULL);
 
     // connect to broker
@@ -93,12 +84,9 @@ bool MqttPlugin::Initialize(runtime::core::AimRTCore *core_ptr) noexcept {
       AIMRT_CHECK_WARN(options_.truststore.empty(), "Broker protocol is not ssl/mqtts, the truststore you set will be ignored.");
     }
 
-    conn_opts.onSuccess = [](void *context, MQTTAsync_successData *response) {
-      static_cast<std::promise<bool> *>(context)->set_value(true);
-    };
+    conn_opts.onSuccess = [](void *context, MQTTAsync_successData *response) { static_cast<std::promise<bool> *>(context)->set_value(true); };
     conn_opts.onFailure = [](void *context, MQTTAsync_failureData *response) {
-      AIMRT_ERROR("Failed to connect mqtt broker, code: {}, msg: {}",
-                  response->code, response->message);
+      AIMRT_ERROR("Failed to connect mqtt broker, code: {}, msg: {}", response->code, response->message);
       static_cast<std::promise<bool> *>(context)->set_value(false);
     };
     conn_opts.context = &connect_ret_promise;
@@ -110,14 +98,11 @@ bool MqttPlugin::Initialize(runtime::core::AimRTCore *core_ptr) noexcept {
 
     msg_handle_registry_ptr_ = std::make_shared<MsgHandleRegistry>();
 
-    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPostInitLog,
-                                [this] { SetPluginLogger(); });
+    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPostInitLog, [this] { SetPluginLogger(); });
 
-    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPreInitRpc,
-                                [this] { RegisterMqttRpcBackend(); });
+    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPreInitRpc, [this] { RegisterMqttRpcBackend(); });
 
-    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPreInitChannel,
-                                [this] { RegisterMqttChannelBackend(); });
+    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPreInitChannel, [this] { RegisterMqttChannelBackend(); });
 
     plugin_options_node = options_;
     core_ptr_->GetPluginManager().UpdatePluginOptionsNode(Name(), plugin_options_node);
@@ -147,43 +132,26 @@ void MqttPlugin::Shutdown() noexcept {
   }
 }
 
-void MqttPlugin::SetPluginLogger() {
-  SetLogger(aimrt::logger::LoggerRef(
-      core_ptr_->GetLoggerManager().GetLoggerProxy().NativeHandle()));
-}
+void MqttPlugin::SetPluginLogger() { SetLogger(aimrt::logger::LoggerRef(core_ptr_->GetLoggerManager().GetLoggerProxy().NativeHandle())); }
 
 void MqttPlugin::RegisterMqttChannelBackend() {
   std::unique_ptr<runtime::core::channel::ChannelBackendBase> mqtt_channel_backend_ptr =
-      std::make_unique<MqttChannelBackend>(
-          client_,
-          options_.max_pkg_size_k * 1024,
-          msg_handle_registry_ptr_);
+      std::make_unique<MqttChannelBackend>(client_, options_.max_pkg_size_k * 1024, msg_handle_registry_ptr_);
 
-  reconnect_hook_.emplace_back(
-      [ptr = static_cast<MqttChannelBackend *>(mqtt_channel_backend_ptr.get())]() {
-        ptr->SubscribeMqttTopic();
-      });
+  reconnect_hook_.emplace_back([ptr = static_cast<MqttChannelBackend *>(mqtt_channel_backend_ptr.get())]() { ptr->SubscribeMqttTopic(); });
 
   core_ptr_->GetChannelManager().RegisterChannelBackend(std::move(mqtt_channel_backend_ptr));
 }
 
 void MqttPlugin::RegisterMqttRpcBackend() {
   std::unique_ptr<runtime::core::rpc::RpcBackendBase> mqtt_rpc_backend_ptr =
-      std::make_unique<MqttRpcBackend>(
-          options_.client_id, client_,
-          options_.max_pkg_size_k * 1024,
-          msg_handle_registry_ptr_);
+      std::make_unique<MqttRpcBackend>(options_.client_id, client_, options_.max_pkg_size_k * 1024, msg_handle_registry_ptr_);
 
-  static_cast<MqttRpcBackend *>(mqtt_rpc_backend_ptr.get())
-      ->RegisterGetExecutorFunc(
-          [this](std::string_view executor_name) -> aimrt::executor::ExecutorRef {
-            return core_ptr_->GetExecutorManager().GetExecutor(executor_name);
-          });
+  static_cast<MqttRpcBackend *>(mqtt_rpc_backend_ptr.get())->RegisterGetExecutorFunc([this](std::string_view executor_name) -> aimrt::executor::ExecutorRef {
+    return core_ptr_->GetExecutorManager().GetExecutor(executor_name);
+  });
 
-  reconnect_hook_.emplace_back(
-      [ptr = static_cast<MqttRpcBackend *>(mqtt_rpc_backend_ptr.get())]() {
-        ptr->SubscribeMqttTopic();
-      });
+  reconnect_hook_.emplace_back([ptr = static_cast<MqttRpcBackend *>(mqtt_rpc_backend_ptr.get())]() { ptr->SubscribeMqttTopic(); });
 
   core_ptr_->GetRpcManager().RegisterRpcBackend(std::move(mqtt_rpc_backend_ptr));
 }
@@ -201,12 +169,9 @@ void MqttPlugin::OnConnectLost(const char *cause) {
 
     auto *mqtt_plugin_ptr = static_cast<MqttPlugin *>(context);
 
-    for (const auto &f : mqtt_plugin_ptr->reconnect_hook_)
-      f();
+    for (const auto &f : mqtt_plugin_ptr->reconnect_hook_) f();
   };
-  conn_opts.onFailure = [](void *context, MQTTAsync_failureData *response) {
-    static_cast<MqttPlugin *>(context)->OnConnectLost("Reconnect failed");
-  };
+  conn_opts.onFailure = [](void *context, MQTTAsync_failureData *response) { static_cast<MqttPlugin *>(context)->OnConnectLost("Reconnect failed"); };
   conn_opts.context = this;
   int rc = MQTTAsync_connect(client_, &conn_opts);
 

@@ -6,11 +6,7 @@
 
 extern "C" {
 
-aimrt::AimRTCorePluginBase* AimRTDynlibCreateCorePluginHandle() {
-  return new aimrt::plugins::ros2_plugin::Ros2Plugin();
-}
+aimrt::AimRTCorePluginBase* AimRTDynlibCreateCorePluginHandle() { return new aimrt::plugins::ros2_plugin::Ros2Plugin(); }
 
-void AimRTDynlibDestroyCorePluginHandle(const aimrt::AimRTCorePluginBase* plugin) {
-  delete plugin;
-}
+void AimRTDynlibDestroyCorePluginHandle(const aimrt::AimRTCorePluginBase* plugin) { delete plugin; }
 }

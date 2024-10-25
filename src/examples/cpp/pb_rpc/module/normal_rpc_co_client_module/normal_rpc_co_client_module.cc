@@ -26,8 +26,7 @@ bool NormalRpcCoClientModule::Initialize(aimrt::CoreRef core) {
 
     // Get executor handle
     executor_ = core_.GetExecutorManager().GetExecutor("work_thread_pool");
-    AIMRT_CHECK_ERROR_THROW(executor_ && executor_.SupportTimerSchedule(),
-                            "Get executor 'work_thread_pool' failed.");
+    AIMRT_CHECK_ERROR_THROW(executor_ && executor_.SupportTimerSchedule(), "Get executor 'work_thread_pool' failed.");
 
     // Get rpc handle
     auto rpc_handle = core_.GetRpcHandle();
@@ -41,17 +40,12 @@ bool NormalRpcCoClientModule::Initialize(aimrt::CoreRef core) {
     proxy_ = std::make_shared<aimrt::protocols::example::ExampleServiceCoProxy>(rpc_handle);
 
     // Register filter
-    proxy_->RegisterFilter([this](aimrt::rpc::ContextRef ctx,
-                                  const void* req_ptr, void* rsp_ptr,
-                                  const aimrt::rpc::CoRpcHandle& next)
-                               -> co::Task<aimrt::rpc::Status> {
+    proxy_->RegisterFilter([this](aimrt::rpc::ContextRef ctx, const void* req_ptr, void* rsp_ptr, const aimrt::rpc::CoRpcHandle& next) -> co::Task<aimrt::rpc::Status> {
       // debuglog
-      AIMRT_INFO("Client start new rpc call. context: {}, req: {}",
-                 ctx.ToString(), aimrt::Pb2CompactJson(*static_cast<const google::protobuf::Message*>(req_ptr)));
+      AIMRT_INFO("Client start new rpc call. context: {}, req: {}", ctx.ToString(), aimrt::Pb2CompactJson(*static_cast<const google::protobuf::Message*>(req_ptr)));
       const auto& status = co_await next(ctx, req_ptr, rsp_ptr);
       if (status.OK()) {
-        AIMRT_INFO("Client get rpc ret, status: {}, rsp: {}", status.ToString(),
-                   aimrt::Pb2CompactJson(*static_cast<const google::protobuf::Message*>(rsp_ptr)));
+        AIMRT_INFO("Client get rpc ret, status: {}, rsp: {}", status.ToString(), aimrt::Pb2CompactJson(*static_cast<const google::protobuf::Message*>(rsp_ptr)));
       } else {
         AIMRT_WARN("Client get rpc error ret, status: {}", status.ToString());
       }
@@ -59,17 +53,13 @@ bool NormalRpcCoClientModule::Initialize(aimrt::CoreRef core) {
       co_return status;
     });
 
-    proxy_->RegisterFilter([this](aimrt::rpc::ContextRef ctx,
-                                  const void* req_ptr, void* rsp_ptr,
-                                  const aimrt::rpc::CoRpcHandle& next)
-                               -> co::Task<aimrt::rpc::Status> {
+    proxy_->RegisterFilter([this](aimrt::rpc::ContextRef ctx, const void* req_ptr, void* rsp_ptr, const aimrt::rpc::CoRpcHandle& next) -> co::Task<aimrt::rpc::Status> {
       // timecost count
       auto begin_time = std::chrono::steady_clock::now();
       const auto& status = co_await next(ctx, req_ptr, rsp_ptr);
       auto end_time = std::chrono::steady_clock::now();
 
-      AIMRT_INFO("Client rpc time cost {} us",
-                 std::chrono::duration_cast<std::chrono::microseconds>(end_time - begin_time).count());
+      AIMRT_INFO("Client rpc time cost {} us", std::chrono::duration_cast<std::chrono::microseconds>(end_time - begin_time).count());
 
       co_return status;
     });
@@ -118,9 +108,7 @@ co::Task<void> NormalRpcCoClientModule::MainLoop() {
     uint32_t count = 0;
     while (run_flag_) {
       // Sleep
-      co_await co::ScheduleAfter(
-          work_thread_pool_scheduler,
-          std::chrono::milliseconds(static_cast<uint32_t>(1000 / rpc_frq_)));
+      co_await co::ScheduleAfter(work_thread_pool_scheduler, std::chrono::milliseconds(static_cast<uint32_t>(1000 / rpc_frq_)));
       count++;
       AIMRT_INFO("Loop count : {} -------------------------", count);
 
@@ -138,8 +126,7 @@ co::Task<void> NormalRpcCoClientModule::MainLoop() {
 
       // Check result
       if (status.OK()) {
-        AIMRT_INFO("Client get rpc ret, status: {}, rsp: {}", status.ToString(),
-                   aimrt::Pb2CompactJson(rsp));
+        AIMRT_INFO("Client get rpc ret, status: {}, rsp: {}", status.ToString(), aimrt::Pb2CompactJson(rsp));
       } else {
         AIMRT_WARN("Client get rpc error ret, status: {}", status.ToString());
       }

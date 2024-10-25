@@ -17,13 +17,11 @@ bool ExecutorModule::Initialize(aimrt::CoreRef core) {
 
   // Get thread safe executor
   thread_safe_executor_ = core_.GetExecutorManager().GetExecutor("thread_safe_executor");
-  AIMRT_CHECK_ERROR_THROW(thread_safe_executor_ && thread_safe_executor_.ThreadSafe(),
-                          "Can not get thread_safe_executor");
+  AIMRT_CHECK_ERROR_THROW(thread_safe_executor_ && thread_safe_executor_.ThreadSafe(), "Can not get thread_safe_executor");
 
   // Get time schedule executor
   time_schedule_executor_ = core_.GetExecutorManager().GetExecutor("time_schedule_executor");
-  AIMRT_CHECK_ERROR_THROW(time_schedule_executor_ && time_schedule_executor_.SupportTimerSchedule(),
-                          "Can not get time_schedule_executor");
+  AIMRT_CHECK_ERROR_THROW(time_schedule_executor_ && time_schedule_executor_.SupportTimerSchedule(), "Can not get time_schedule_executor");
 
   AIMRT_INFO("Init succeeded.");
 
@@ -54,17 +52,13 @@ void ExecutorModule::Shutdown() {
 }
 
 void ExecutorModule::SimpleExecuteDemo() {
-  work_executor_.Execute([this]() {
-    AIMRT_INFO("This is a simple task");
-  });
+  work_executor_.Execute([this]() { AIMRT_INFO("This is a simple task"); });
 }
 
 void ExecutorModule::ThreadSafeDemo() {
   uint32_t n = 0;
   for (uint32_t ii = 0; ii < 10000; ++ii) {
-    thread_safe_executor_.Execute([&n]() {
-      n++;
-    });
+    thread_safe_executor_.Execute([&n]() { n++; });
   }
 
   std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -77,9 +71,7 @@ void ExecutorModule::TimeScheduleDemo() {
 
   AIMRT_INFO("Loop count : {}", loop_count_++);
 
-  time_schedule_executor_.ExecuteAfter(
-      std::chrono::seconds(1),
-      std::bind(&ExecutorModule::TimeScheduleDemo, this));
+  time_schedule_executor_.ExecuteAfter(std::chrono::seconds(1), std::bind(&ExecutorModule::TimeScheduleDemo, this));
 }
 
 }  // namespace aimrt::examples::cpp::executor::executor_module

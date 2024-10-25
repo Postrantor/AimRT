@@ -18,14 +18,9 @@ inline void ExportLoggerRef(pybind11::object m) {
       .def(pybind11::init<>())
       .def("__bool__", &LoggerRef::operator bool)
       .def("GetLogLevel", &LoggerRef::GetLogLevel)
-      .def("Log", &LoggerRef::Log,
-           pybind11::arg("lvl"),
-           pybind11::arg("line"),
-           pybind11::arg("column"),
-           pybind11::arg("file_name"),
-           pybind11::arg("function_name"),
-           pybind11::arg("log_data"),
-           pybind11::arg("log_data_size"));
+      .def(
+          "Log", &LoggerRef::Log, pybind11::arg("lvl"), pybind11::arg("line"), pybind11::arg("column"), pybind11::arg("file_name"), pybind11::arg("function_name"),
+          pybind11::arg("log_data"), pybind11::arg("log_data_size"));
 }
 
 }  // namespace aimrt::runtime::python_runtime

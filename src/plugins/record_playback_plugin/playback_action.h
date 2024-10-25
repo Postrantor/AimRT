@@ -19,7 +19,7 @@
 namespace aimrt::plugins::record_playback_plugin {
 
 class PlaybackAction {
- public:
+public:
   struct Options {
     std::string bag_path;
 
@@ -47,7 +47,7 @@ class PlaybackAction {
     std::shared_ptr<aimrt::util::BufferArrayView> buffer_view_ptr;
   };
 
- public:
+public:
   PlaybackAction() = default;
   ~PlaybackAction() { CloseDb(); }
 
@@ -62,11 +62,9 @@ class PlaybackAction {
 
   const Options& GetOptions() const { return options_; }
 
-  void RegisterGetExecutorFunc(
-      const std::function<executor::ExecutorRef(std::string_view)>& get_executor_func);
+  void RegisterGetExecutorFunc(const std::function<executor::ExecutorRef(std::string_view)>& get_executor_func);
 
-  void RegisterGetTypeSupportFunc(
-      const std::function<aimrt::util::TypeSupportRef(std::string_view)>& get_type_support_func);
+  void RegisterGetTypeSupportFunc(const std::function<aimrt::util::TypeSupportRef(std::string_view)>& get_type_support_func);
 
   const auto& GetTopicMetaMap() const { return topic_meta_map_; }
   void RegisterPubRecordFunc(std::function<void(const OneRecord&)>&& func);
@@ -74,7 +72,7 @@ class PlaybackAction {
   bool StartSignalPlayback(uint64_t skip_duration_s, uint64_t play_duration_s);
   void StopSignalPlayback();
 
- private:
+private:
   bool OpenNewDb();
   void CloseDb();
 
@@ -89,7 +87,7 @@ class PlaybackAction {
     kShutdown,
   };
 
- private:
+private:
   Options options_;
   std::atomic<State> state_ = State::kPreInit;
 

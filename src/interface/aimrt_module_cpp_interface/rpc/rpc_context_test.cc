@@ -23,9 +23,7 @@ TEST(RPC_CONTEXT_TEST, Context) {
   EXPECT_EQ(ctx.GetMetaValue("key2"), "val2");
   EXPECT_EQ(ctx.GetMetaValue("key3"), "");
 
-  EXPECT_TRUE(aimrt::common::util::CheckContainerEqualNoOrder(
-      ctx.GetMetaKeys(),
-      std::vector<std::string_view>{"key1", "key2"}));
+  EXPECT_TRUE(aimrt::common::util::CheckContainerEqualNoOrder(ctx.GetMetaKeys(), std::vector<std::string_view>{"key1", "key2"}));
 }
 
 TEST(RPC_CONTEXT_TEST, ContextRef) {
@@ -44,9 +42,7 @@ TEST(RPC_CONTEXT_TEST, ContextRef) {
   EXPECT_EQ(ctx.GetMetaValue("key2"), "val2");
   EXPECT_EQ(ctx.GetMetaValue("key3"), "");
 
-  EXPECT_TRUE(aimrt::common::util::CheckContainerEqualNoOrder(
-      ctx.GetMetaKeys(),
-      std::vector<std::string_view>{"key1", "key2"}));
+  EXPECT_TRUE(aimrt::common::util::CheckContainerEqualNoOrder(ctx.GetMetaKeys(), std::vector<std::string_view>{"key1", "key2"}));
 }
 
 }  // namespace aimrt::rpc

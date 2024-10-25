@@ -15,7 +15,7 @@
 namespace aimrt::runtime::core::plugin {
 
 class PluginManager {
- public:
+public:
   struct Options {
     struct PluginOptions {
       std::string name;
@@ -34,9 +34,8 @@ class PluginManager {
 
   using PluginInitFunc = std::function<bool(AimRTCorePluginBase*)>;
 
- public:
-  PluginManager()
-      : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
+public:
+  PluginManager() : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
   ~PluginManager() = default;
 
   PluginManager(const PluginManager&) = delete;
@@ -62,7 +61,7 @@ class PluginManager {
 
   const std::vector<AimRTCorePluginBase*>& GetUsedPlugin() const;
 
- private:
+private:
   Options options_;
   std::atomic<State> state_ = State::kPreInit;
   std::shared_ptr<aimrt::common::util::LoggerWrapper> logger_ptr_;

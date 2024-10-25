@@ -10,13 +10,11 @@
 namespace aimrt::examples::cpp::pb_chn::benchmark_subscriber_module {
 
 class BenchmarkSubscriberModule : public aimrt::ModuleBase {
- public:
+public:
   BenchmarkSubscriberModule() = default;
   ~BenchmarkSubscriberModule() override = default;
 
-  ModuleInfo Info() const override {
-    return ModuleInfo{.name = "BenchmarkSubscriberModule"};
-  }
+  ModuleInfo Info() const override { return ModuleInfo{.name = "BenchmarkSubscriberModule"}; }
 
   bool Initialize(aimrt::CoreRef core) override;
 
@@ -24,18 +22,15 @@ class BenchmarkSubscriberModule : public aimrt::ModuleBase {
 
   void Shutdown() override;
 
- private:
+private:
   auto GetLogger() const { return core_.GetLogger(); }
 
-  void BenchmarkSignalHandle(
-      const std::shared_ptr<const aimrt::protocols::example::BenchmarkSignal>& data);
-  void BenchmarkMessageHandle(
-      uint32_t topic_index,
-      const std::shared_ptr<const aimrt::protocols::example::BenchmarkMessage>& data);
+  void BenchmarkSignalHandle(const std::shared_ptr<const aimrt::protocols::example::BenchmarkSignal>& data);
+  void BenchmarkMessageHandle(uint32_t topic_index, const std::shared_ptr<const aimrt::protocols::example::BenchmarkMessage>& data);
 
   void Evaluate() const;
 
- private:
+private:
   aimrt::CoreRef core_;
 
   aimrt::channel::SubscriberRef signal_subscriber_;  // topic name: benchmark_signal

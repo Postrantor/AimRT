@@ -6,11 +6,7 @@
 
 extern "C" {
 
-aimrt::AimRTCorePluginBase* AimRTDynlibCreateCorePluginHandle() {
-  return new aimrt::plugins::iceoryx_plugin::IceoryxPlugin();
-}
+aimrt::AimRTCorePluginBase* AimRTDynlibCreateCorePluginHandle() { return new aimrt::plugins::iceoryx_plugin::IceoryxPlugin(); }
 
-void AimRTDynlibDestroyCorePluginHandle(const aimrt::AimRTCorePluginBase* plugin) {
-  delete plugin;
-}
+void AimRTDynlibDestroyCorePluginHandle(const aimrt::AimRTCorePluginBase* plugin) { delete plugin; }
 }

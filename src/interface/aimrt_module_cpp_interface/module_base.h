@@ -16,7 +16,7 @@ namespace aimrt {
  *
  */
 class ModuleBase {
- public:
+public:
   ModuleBase() : base_(GenBase(this)) {}
   virtual ~ModuleBase() = default;
 
@@ -58,7 +58,7 @@ class ModuleBase {
    */
   const aimrt_module_base_t* NativeHandle() const { return &base_; }
 
- private:
+private:
   static aimrt_module_base_t GenBase(void* impl) {
     return aimrt_module_base_t{
         .info = [](void* impl) -> aimrt_module_info_t {
@@ -90,16 +90,17 @@ class ModuleBase {
             return false;
           }
         },
-        .shutdown = [](void* impl) {
-          try {
-            static_cast<ModuleBase*>(impl)->Shutdown();
-          } catch (...) {
-          }  //
-        },
+        .shutdown =
+            [](void* impl) {
+              try {
+                static_cast<ModuleBase*>(impl)->Shutdown();
+              } catch (...) {
+              }  //
+            },
         .impl = impl};
   }
 
- private:
+private:
   const aimrt_module_base_t base_;
 };
 

@@ -13,7 +13,7 @@ namespace aimrt::common::util {
 // https://github.com/trpc-group/trpc-cpp/blob/v1.2.0/trpc/util/deferred.h
 
 class Deferred {
- public:
+public:
   Deferred() = default;
 
   template <class F>
@@ -33,7 +33,7 @@ class Deferred {
 
   void Dismiss() noexcept { action_ = nullptr; }
 
- private:
+private:
   std::function<void()> action_;
 };
 // End of the source code from trpc-cpp.

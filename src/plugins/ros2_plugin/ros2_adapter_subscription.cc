@@ -6,17 +6,11 @@
 #include "ros2_plugin/global.h"
 
 namespace aimrt::plugins::ros2_plugin {
-std::shared_ptr<void> Ros2AdapterSubscription::create_message() {
-  return subscribe_wrapper_.info.msg_type_support_ref.CreateSharedPtr();
-}
+std::shared_ptr<void> Ros2AdapterSubscription::create_message() { return subscribe_wrapper_.info.msg_type_support_ref.CreateSharedPtr(); }
 
-std::shared_ptr<rclcpp::SerializedMessage>
-Ros2AdapterSubscription::create_serialized_message() {
-  return std::make_shared<rclcpp::SerializedMessage>();
-}
+std::shared_ptr<rclcpp::SerializedMessage> Ros2AdapterSubscription::create_serialized_message() { return std::make_shared<rclcpp::SerializedMessage>(); }
 
-void Ros2AdapterSubscription::handle_message(
-    std::shared_ptr<void>& message, const rclcpp::MessageInfo& message_info) {
+void Ros2AdapterSubscription::handle_message(std::shared_ptr<void>& message, const rclcpp::MessageInfo& message_info) {
   if (!run_flag_.load()) return;
 
   try {
@@ -28,24 +22,14 @@ void Ros2AdapterSubscription::handle_message(
   }
 }
 
-void Ros2AdapterSubscription::handle_serialized_message(
-    const std::shared_ptr<rclcpp::SerializedMessage>& serialized_message,
-    const rclcpp::MessageInfo& message_info) {
+void Ros2AdapterSubscription::handle_serialized_message(const std::shared_ptr<rclcpp::SerializedMessage>& serialized_message, const rclcpp::MessageInfo& message_info) {
   AIMRT_WARN("not support ros2 serialized message");
 }
 
-void Ros2AdapterSubscription::handle_loaned_message(
-    void* loaned_message, const rclcpp::MessageInfo& message_info) {
-  AIMRT_WARN("not support ros2 loaned message");
-}
+void Ros2AdapterSubscription::handle_loaned_message(void* loaned_message, const rclcpp::MessageInfo& message_info) { AIMRT_WARN("not support ros2 loaned message"); }
 
-void Ros2AdapterSubscription::return_message(std::shared_ptr<void>& message) {
-  message.reset();
-}
+void Ros2AdapterSubscription::return_message(std::shared_ptr<void>& message) { message.reset(); }
 
-void Ros2AdapterSubscription::return_serialized_message(
-    std::shared_ptr<rclcpp::SerializedMessage>& message) {
-  message.reset();
-}
+void Ros2AdapterSubscription::return_serialized_message(std::shared_ptr<rclcpp::SerializedMessage>& message) { message.reset(); }
 
 }  // namespace aimrt::plugins::ros2_plugin

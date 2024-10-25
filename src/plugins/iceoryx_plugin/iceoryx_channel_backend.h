@@ -13,13 +13,11 @@
 namespace aimrt::plugins::iceoryx_plugin {
 
 class IceoryxChannelBackend : public runtime::core::channel::ChannelBackendBase {
- public:
-  struct Options {
-  };
+public:
+  struct Options {};
 
- public:
-  IceoryxChannelBackend(
-      std::shared_ptr<IceoryxManager>& iceoryx_manager_ptr, uint64_t iox_shm_init_size)
+public:
+  IceoryxChannelBackend(std::shared_ptr<IceoryxManager>& iceoryx_manager_ptr, uint64_t iox_shm_init_size)
       : iceoryx_manager_ptr_(iceoryx_manager_ptr),
         iox_shm_init_size_(iox_shm_init_size) {}
 
@@ -31,16 +29,13 @@ class IceoryxChannelBackend : public runtime::core::channel::ChannelBackendBase 
   void Start() override;
   void Shutdown() override;
 
-  void SetChannelRegistry(const runtime::core::channel::ChannelRegistry* channel_registry_ptr) noexcept override {
-    channel_registry_ptr_ = channel_registry_ptr;
-  }
+  void SetChannelRegistry(const runtime::core::channel::ChannelRegistry* channel_registry_ptr) noexcept override { channel_registry_ptr_ = channel_registry_ptr; }
 
-  bool RegisterPublishType(
-      const runtime::core::channel::PublishTypeWrapper& publish_type_wrapper) noexcept override;
+  bool RegisterPublishType(const runtime::core::channel::PublishTypeWrapper& publish_type_wrapper) noexcept override;
   bool Subscribe(const runtime::core::channel::SubscribeWrapper& subscribe_wrapper) noexcept override;
   void Publish(runtime::core::channel::MsgWrapper& msg_wrapper) noexcept override;
 
- private:
+private:
   enum class State : uint32_t {
     kPreInit,
     kInit,
@@ -57,10 +52,7 @@ class IceoryxChannelBackend : public runtime::core::channel::ChannelBackendBase 
 
   std::mutex iox_write_mutex_;
 
-  std::unordered_map<
-      std::string,
-      std::unique_ptr<aimrt::runtime::core::channel::SubscribeTool>>
-      subscribe_wrapper_map_;
+  std::unordered_map<std::string, std::unique_ptr<aimrt::runtime::core::channel::SubscribeTool>> subscribe_wrapper_map_;
 
   std::unordered_map<std::string, uint64_t> iox_pub_shm_size_map_;
 

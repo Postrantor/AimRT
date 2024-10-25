@@ -5,7 +5,5 @@
 
 namespace aimrt::runtime::core::util {
 
-inline const char* GetAimRTVersion() {
-  return AIMRT_VERSION;
-}
+inline const char* GetAimRTVersion() { return AIMRT_VERSION; }
 }  // namespace aimrt::runtime::core::util

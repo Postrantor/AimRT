@@ -12,24 +12,16 @@
 namespace aimrt::runtime::python_runtime {
 
 class PyModuleBaseAdapter : public ModuleBase {
- public:
+public:
   using ModuleBase::ModuleBase;
 
-  ModuleInfo Info() const override {
-    PYBIND11_OVERRIDE_PURE(ModuleInfo, ModuleBase, Info);
-  }
+  ModuleInfo Info() const override { PYBIND11_OVERRIDE_PURE(ModuleInfo, ModuleBase, Info); }
 
-  bool Initialize(CoreRef core) override {
-    PYBIND11_OVERRIDE_PURE(bool, ModuleBase, Initialize, core);
-  }
+  bool Initialize(CoreRef core) override { PYBIND11_OVERRIDE_PURE(bool, ModuleBase, Initialize, core); }
 
-  bool Start() override {
-    PYBIND11_OVERRIDE_PURE(bool, ModuleBase, Start);
-  }
+  bool Start() override { PYBIND11_OVERRIDE_PURE(bool, ModuleBase, Start); }
 
-  void Shutdown() override {
-    PYBIND11_OVERRIDE_PURE(void, ModuleBase, Shutdown);
-  }
+  void Shutdown() override { PYBIND11_OVERRIDE_PURE(void, ModuleBase, Shutdown); }
 };
 
 inline void ExportModuleBase(pybind11::object m) {

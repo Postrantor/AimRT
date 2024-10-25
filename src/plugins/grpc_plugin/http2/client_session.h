@@ -13,7 +13,7 @@ namespace aimrt::plugins::grpc_plugin::http2 {
 // https://github.com/trpc-group/trpc-cpp/blob/v1.2.0/trpc/codec/grpc/http2/client_session.h
 
 class ClientSession : public Session {
- public:
+public:
   int InitSession(Http2Settings settings) override;
 
   int SubmitRequest(const RequestPtr& request_ptr) override;
@@ -23,10 +23,10 @@ class ClientSession : public Session {
 
   bool ResponseListEmpty() const { return full_response_list_.empty(); }
 
- private:
+private:
   int SubmitSettings(Http2Settings settings);
 
- private:
+private:
   std::forward_list<ResponsePtr> full_response_list_;
 };
 // End of source code from trpc-cpp.

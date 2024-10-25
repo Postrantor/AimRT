@@ -27,14 +27,11 @@ struct ServerOptions {
 
     if (options.max_connection_num < 1) options.max_connection_num = 1;
 
-    if (options.max_connection_num > Tcp::acceptor::max_listen_connections)
-      options.max_connection_num = Tcp::acceptor::max_listen_connections;
+    if (options.max_connection_num > Tcp::acceptor::max_listen_connections) options.max_connection_num = Tcp::acceptor::max_listen_connections;
 
-    if (options.mgr_timer_dt < std::chrono::milliseconds(100))
-      options.mgr_timer_dt = std::chrono::milliseconds(100);
+    if (options.mgr_timer_dt < std::chrono::milliseconds(100)) options.mgr_timer_dt = std::chrono::milliseconds(100);
 
-    if (options.max_no_data_duration < std::chrono::seconds(10))
-      options.max_no_data_duration = std::chrono::seconds(10);
+    if (options.max_no_data_duration < std::chrono::seconds(10)) options.max_no_data_duration = std::chrono::seconds(10);
 
     return options;
   }
@@ -43,9 +40,7 @@ struct ServerOptions {
 };
 
 struct ConnectionOptions {
-  explicit ConnectionOptions(const ServerOptions& options)
-      : max_no_data_duration(options.max_no_data_duration),
-        http2_settings(options.http2_settings) {}
+  explicit ConnectionOptions(const ServerOptions& options) : max_no_data_duration(options.max_no_data_duration), http2_settings(options.http2_settings) {}
 
   std::chrono::nanoseconds max_no_data_duration;
   http2::Session::Http2Settings http2_settings;

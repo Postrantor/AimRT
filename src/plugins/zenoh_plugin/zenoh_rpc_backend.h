@@ -15,16 +15,13 @@
 
 namespace aimrt::plugins::zenoh_plugin {
 class ZenohRpcBackend : public runtime::core::rpc::RpcBackendBase {
- public:
+public:
   struct Options {
     std::string timeout_executor;
   };
 
- public:
-  ZenohRpcBackend(
-      std::shared_ptr<ZenohManager>& zenoh_manager_ptr, std::string& limit_domain)
-      : zenoh_manager_ptr_(zenoh_manager_ptr),
-        limit_domain_(limit_domain) {}
+public:
+  ZenohRpcBackend(std::shared_ptr<ZenohManager>& zenoh_manager_ptr, std::string& limit_domain) : zenoh_manager_ptr_(zenoh_manager_ptr), limit_domain_(limit_domain) {}
   ~ZenohRpcBackend() = default;
 
   std::string_view Name() const noexcept override { return "zenoh"; }
@@ -33,27 +30,20 @@ class ZenohRpcBackend : public runtime::core::rpc::RpcBackendBase {
   void Start() override;
   void Shutdown() override;
 
-  bool RegisterServiceFunc(
-      const runtime::core::rpc::ServiceFuncWrapper& service_func_wrapper) noexcept override;
-  bool RegisterClientFunc(
-      const runtime::core::rpc::ClientFuncWrapper& client_func_wrapper) noexcept override;
-  void Invoke(
-      const std::shared_ptr<runtime::core::rpc::InvokeWrapper>& client_invoke_wrapper_ptr) noexcept override;
+  bool RegisterServiceFunc(const runtime::core::rpc::ServiceFuncWrapper& service_func_wrapper) noexcept override;
+  bool RegisterClientFunc(const runtime::core::rpc::ClientFuncWrapper& client_func_wrapper) noexcept override;
+  void Invoke(const std::shared_ptr<runtime::core::rpc::InvokeWrapper>& client_invoke_wrapper_ptr) noexcept override;
 
   void RegisterGetExecutorFunc(const std::function<executor::ExecutorRef(std::string_view)>& get_executor_func);
 
- private:
+private:
   static std::string_view GetRealFuncName(std::string_view func_name) {
     if (func_name.substr(0, 5) == "ros2:") return func_name.substr(5);
     if (func_name.substr(0, 3) == "pb:") return func_name.substr(3);
     return func_name;
   }
 
-  void ReturnRspWithStatusCode(
-      const std::string& pattern,
-      std::string_view serialization_type,
-      const char* req_id_buf,
-      uint32_t code);
+  void ReturnRspWithStatusCode(const std::string& pattern, std::string_view serialization_type, const char* req_id_buf, uint32_t code);
 
   enum class State : uint32_t {
     PreInit,

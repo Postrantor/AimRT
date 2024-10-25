@@ -75,9 +75,7 @@ struct convert<aimrt::plugins::record_playback_plugin::MetaData> {
 
     if (node["files"] && node["files"].IsSequence()) {
       for (const auto& file_node : node["files"]) {
-        auto file = Obj::FileMeta{
-            .path = file_node["path"].as<std::string>(),
-            .start_timestamp = file_node["start_timestamp"].as<uint64_t>()};
+        auto file = Obj::FileMeta{.path = file_node["path"].as<std::string>(), .start_timestamp = file_node["start_timestamp"].as<uint64_t>()};
 
         rhs.files.emplace_back(std::move(file));
       }

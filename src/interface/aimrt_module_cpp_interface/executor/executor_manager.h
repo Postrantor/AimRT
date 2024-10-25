@@ -10,25 +10,21 @@
 namespace aimrt::executor {
 
 class ExecutorManagerRef {
- public:
+public:
   ExecutorManagerRef() = default;
-  explicit ExecutorManagerRef(const aimrt_executor_manager_base_t* base_ptr)
-      : base_ptr_(base_ptr) {}
+  explicit ExecutorManagerRef(const aimrt_executor_manager_base_t* base_ptr) : base_ptr_(base_ptr) {}
   ~ExecutorManagerRef() = default;
 
   explicit operator bool() const { return (base_ptr_ != nullptr); }
 
-  const aimrt_executor_manager_base_t* NativeHandle() const {
-    return base_ptr_;
-  }
+  const aimrt_executor_manager_base_t* NativeHandle() const { return base_ptr_; }
 
   ExecutorRef GetExecutor(std::string_view executor_name) const {
     AIMRT_ASSERT(base_ptr_, "Reference is null.");
-    return ExecutorRef(base_ptr_->get_executor(
-        base_ptr_->impl, aimrt::util::ToAimRTStringView(executor_name)));
+    return ExecutorRef(base_ptr_->get_executor(base_ptr_->impl, aimrt::util::ToAimRTStringView(executor_name)));
   }
 
- private:
+private:
   const aimrt_executor_manager_base_t* base_ptr_ = nullptr;
 };
 

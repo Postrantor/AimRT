@@ -12,17 +12,9 @@
 using namespace aimrt::examples::cpp::pb_chn;
 
 static std::tuple<std::string_view, std::function<aimrt::ModuleBase*()>> aimrt_module_register_array[]{
-    {"NormalPublisherModule", []() -> aimrt::ModuleBase* {
-       return new normal_publisher_module::NormalPublisherModule();
-     }},
-    {"NormalSubscriberModule", []() -> aimrt::ModuleBase* {
-       return new normal_subscriber_module::NormalSubscriberModule();
-     }},
-    {"BenchmarkPublisherModule", []() -> aimrt::ModuleBase* {
-       return new benchmark_publisher_module::BenchmarkPublisherModule();
-     }},
-    {"BenchmarkSubscriberModule", []() -> aimrt::ModuleBase* {
-       return new benchmark_subscriber_module::BenchmarkSubscriberModule();
-     }}};
+    {"NormalPublisherModule", []() -> aimrt::ModuleBase* { return new normal_publisher_module::NormalPublisherModule(); }},
+    {"NormalSubscriberModule", []() -> aimrt::ModuleBase* { return new normal_subscriber_module::NormalSubscriberModule(); }},
+    {"BenchmarkPublisherModule", []() -> aimrt::ModuleBase* { return new benchmark_publisher_module::BenchmarkPublisherModule(); }},
+    {"BenchmarkSubscriberModule", []() -> aimrt::ModuleBase* { return new benchmark_subscriber_module::BenchmarkSubscriberModule(); }}};
 
 AIMRT_PKG_MAIN(aimrt_module_register_array)

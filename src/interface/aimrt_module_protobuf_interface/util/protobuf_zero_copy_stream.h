@@ -11,12 +11,9 @@
 
 namespace aimrt {
 
-class BufferArrayZeroCopyOutputStream
-    : public ::google::protobuf::io::ZeroCopyOutputStream {
- public:
-  BufferArrayZeroCopyOutputStream(
-      aimrt_buffer_array_t* buffer_array_ptr,
-      const aimrt_buffer_array_allocator_t* allocator_ptr)
+class BufferArrayZeroCopyOutputStream : public ::google::protobuf::io::ZeroCopyOutputStream {
+public:
+  BufferArrayZeroCopyOutputStream(aimrt_buffer_array_t* buffer_array_ptr, const aimrt_buffer_array_allocator_t* allocator_ptr)
       : buffer_array_ptr_(buffer_array_ptr),
         allocator_ptr_(allocator_ptr) {}
 
@@ -24,16 +21,13 @@ class BufferArrayZeroCopyOutputStream
 
   bool Next(void** data, int* size) override {
     if (cur_buf_used_size_ == cur_block_size_) {
-      aimrt_buffer_t new_buffer = allocator_ptr_->allocate(
-          allocator_ptr_->impl, buffer_array_ptr_, cur_block_size_ <<= 1);
+      aimrt_buffer_t new_buffer = allocator_ptr_->allocate(allocator_ptr_->impl, buffer_array_ptr_, cur_block_size_ <<= 1);
       if (new_buffer.data == nullptr) [[unlikely]]
         return false;
       *data = new_buffer.data;
       byte_count_ += (*size = cur_buf_used_size_ = cur_block_size_);
     } else {
-      *data =
-          static_cast<char*>(buffer_array_ptr_->data[buffer_array_ptr_->len - 1].data) +
-          cur_buf_used_size_;
+      *data = static_cast<char*>(buffer_array_ptr_->data[buffer_array_ptr_->len - 1].data) + cur_buf_used_size_;
       byte_count_ += (*size = cur_block_size_ - cur_buf_used_size_);
       cur_buf_used_size_ = cur_block_size_;
     }
@@ -53,7 +47,7 @@ class BufferArrayZeroCopyOutputStream
     }
   }
 
- private:
+private:
   static constexpr size_t kInitBlockSize = 1024;
 
   aimrt_buffer_array_t* buffer_array_ptr_;
@@ -63,12 +57,9 @@ class BufferArrayZeroCopyOutputStream
   int64_t byte_count_ = 0;
 };
 
-class BufferArrayZeroCopyInputStream
-    : public ::google::protobuf::io::ZeroCopyInputStream {
- public:
-  explicit BufferArrayZeroCopyInputStream(
-      aimrt_buffer_array_view_t buffer_array_view)
-      : buffer_array_view_(buffer_array_view) {}
+class BufferArrayZeroCopyInputStream : public ::google::protobuf::io::ZeroCopyInputStream {
+public:
+  explicit BufferArrayZeroCopyInputStream(aimrt_buffer_array_view_t buffer_array_view) : buffer_array_view_(buffer_array_view) {}
 
   virtual ~BufferArrayZeroCopyInputStream() = default;
 
@@ -118,7 +109,7 @@ class BufferArrayZeroCopyInputStream
 
   int64_t ByteCount() const override { return byte_count_; }
 
- private:
+private:
   aimrt_buffer_array_view_t buffer_array_view_;
   size_t cur_buf_unused_size_ = 0;
   size_t cur_buf_index_ = 0;

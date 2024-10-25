@@ -15,7 +15,7 @@
 namespace aimrt::plugins::grpc_plugin {
 
 class GrpcRpcBackend : public runtime::core::rpc::RpcBackendBase {
- public:
+public:
   struct Options {
     struct ClientOptions {
       std::string func_name;
@@ -29,7 +29,7 @@ class GrpcRpcBackend : public runtime::core::rpc::RpcBackendBase {
     std::vector<ServerOptions> servers_options;
   };
 
- public:
+public:
   explicit GrpcRpcBackend(
       const std::shared_ptr<boost::asio::io_context>& io_ptr,
       const std::shared_ptr<server::AsioHttp2Server>& http2_svr_ptr,
@@ -46,24 +46,19 @@ class GrpcRpcBackend : public runtime::core::rpc::RpcBackendBase {
   void Start() override;
   void Shutdown() override;
 
-  void SetRpcRegistry(const runtime::core::rpc::RpcRegistry* rpc_registry_ptr) noexcept override {
-    rpc_registry_ptr_ = rpc_registry_ptr;
-  }
+  void SetRpcRegistry(const runtime::core::rpc::RpcRegistry* rpc_registry_ptr) noexcept override { rpc_registry_ptr_ = rpc_registry_ptr; }
 
-  bool RegisterServiceFunc(
-      const runtime::core::rpc::ServiceFuncWrapper& service_func_wrapper) noexcept override;
-  bool RegisterClientFunc(
-      const runtime::core::rpc::ClientFuncWrapper& client_func_wrapper) noexcept override;
-  void Invoke(
-      const std::shared_ptr<runtime::core::rpc::InvokeWrapper>& client_invoke_wrapper_ptr) noexcept override;
+  bool RegisterServiceFunc(const runtime::core::rpc::ServiceFuncWrapper& service_func_wrapper) noexcept override;
+  bool RegisterClientFunc(const runtime::core::rpc::ClientFuncWrapper& client_func_wrapper) noexcept override;
+  void Invoke(const std::shared_ptr<runtime::core::rpc::InvokeWrapper>& client_invoke_wrapper_ptr) noexcept override;
 
- private:
+private:
   static std::string_view GetRealFuncName(std::string_view func_name) {
     if (func_name.substr(0, 3) == "pb:") return func_name.substr(3);
     return func_name;
   }
 
- private:
+private:
   enum class State : uint32_t {
     kPreInit,
     kInit,

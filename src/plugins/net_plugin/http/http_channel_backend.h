@@ -13,7 +13,7 @@
 namespace aimrt::plugins::net_plugin {
 
 class HttpChannelBackend : public runtime::core::channel::ChannelBackendBase {
- public:
+public:
   struct Options {
     struct PubTopicOptions {
       std::string topic_name;
@@ -29,7 +29,7 @@ class HttpChannelBackend : public runtime::core::channel::ChannelBackendBase {
     std::vector<SubTopicOptions> sub_topics_options;
   };
 
- public:
+public:
   HttpChannelBackend(
       const std::shared_ptr<boost::asio::io_context>& io_ptr,
       const std::shared_ptr<aimrt::common::net::AsioHttpClientPool>& http_cli_pool_ptr,
@@ -46,16 +46,13 @@ class HttpChannelBackend : public runtime::core::channel::ChannelBackendBase {
   void Start() override;
   void Shutdown() override;
 
-  void SetChannelRegistry(const runtime::core::channel::ChannelRegistry* channel_registry_ptr) noexcept override {
-    channel_registry_ptr_ = channel_registry_ptr;
-  }
+  void SetChannelRegistry(const runtime::core::channel::ChannelRegistry* channel_registry_ptr) noexcept override { channel_registry_ptr_ = channel_registry_ptr; }
 
-  bool RegisterPublishType(
-      const runtime::core::channel::PublishTypeWrapper& publish_type_wrapper) noexcept override;
+  bool RegisterPublishType(const runtime::core::channel::PublishTypeWrapper& publish_type_wrapper) noexcept override;
   bool Subscribe(const runtime::core::channel::SubscribeWrapper& subscribe_wrapper) noexcept override;
   void Publish(runtime::core::channel::MsgWrapper& msg_wrapper) noexcept override;
 
- private:
+private:
   enum class State : uint32_t {
     kPreInit,
     kInit,
@@ -72,10 +69,7 @@ class HttpChannelBackend : public runtime::core::channel::ChannelBackendBase {
   std::shared_ptr<aimrt::common::net::AsioHttpClientPool> http_cli_pool_ptr_;
   std::shared_ptr<aimrt::common::net::AsioHttpServer> http_svr_ptr_;
 
-  std::unordered_map<
-      std::string,
-      std::unique_ptr<aimrt::runtime::core::channel::SubscribeTool>>
-      http_subscribe_wrapper_map_;
+  std::unordered_map<std::string, std::unique_ptr<aimrt::runtime::core::channel::SubscribeTool>> http_subscribe_wrapper_map_;
 
   struct PubCfgInfo {
     std::vector<aimrt::common::util::Url<std::string>> server_url_st_vec;

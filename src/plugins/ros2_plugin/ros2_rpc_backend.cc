@@ -30,29 +30,21 @@ struct convert<aimrt::plugins::ros2_plugin::Ros2RpcBackend::Options::QosOptions>
   }
 
   static bool decode(const Node& node, Options& rhs) {
-    if (node["history"])
-      rhs.history = node["history"].as<std::string>();
+    if (node["history"]) rhs.history = node["history"].as<std::string>();
 
-    if (node["depth"])
-      rhs.depth = node["depth"].as<int>();
+    if (node["depth"]) rhs.depth = node["depth"].as<int>();
 
-    if (node["reliability"])
-      rhs.reliability = node["reliability"].as<std::string>();
+    if (node["reliability"]) rhs.reliability = node["reliability"].as<std::string>();
 
-    if (node["durability"])
-      rhs.durability = node["durability"].as<std::string>();
+    if (node["durability"]) rhs.durability = node["durability"].as<std::string>();
 
-    if (node["lifespan"])
-      rhs.lifespan = node["lifespan"].as<int>();
+    if (node["lifespan"]) rhs.lifespan = node["lifespan"].as<int>();
 
-    if (node["deadline"])
-      rhs.deadline = node["deadline"].as<int>();
+    if (node["deadline"]) rhs.deadline = node["deadline"].as<int>();
 
-    if (node["liveliness"])
-      rhs.liveliness = node["liveliness"].as<std::string>();
+    if (node["liveliness"]) rhs.liveliness = node["liveliness"].as<std::string>();
 
-    if (node["liveliness_lease_duration"])
-      rhs.liveliness_lease_duration = node["liveliness_lease_duration"].as<int>();
+    if (node["liveliness_lease_duration"]) rhs.liveliness_lease_duration = node["liveliness_lease_duration"].as<int>();
 
     return true;
   }
@@ -91,13 +83,11 @@ struct convert<aimrt::plugins::ros2_plugin::Ros2RpcBackend::Options> {
   }
 
   static bool decode(const Node& node, Options& rhs) {
-    if (node["timeout_executor"])
-      rhs.timeout_executor = node["timeout_executor"].as<std::string>();
+    if (node["timeout_executor"]) rhs.timeout_executor = node["timeout_executor"].as<std::string>();
 
     if (node["clients_options"] && node["clients_options"].IsSequence()) {
       for (const auto& client_options_node : node["clients_options"]) {
-        auto client_options = Options::ClientOptions{
-            .func_name = client_options_node["func_name"].as<std::string>()};
+        auto client_options = Options::ClientOptions{.func_name = client_options_node["func_name"].as<std::string>()};
 
         if (client_options_node["qos"]) {
           client_options.qos = client_options_node["qos"].as<Options::QosOptions>();
@@ -112,8 +102,7 @@ struct convert<aimrt::plugins::ros2_plugin::Ros2RpcBackend::Options> {
 
     if (node["servers_options"] && node["servers_options"].IsSequence()) {
       for (const auto& server_options_node : node["servers_options"]) {
-        auto server_options = Options::ServerOptions{
-            .func_name = server_options_node["func_name"].as<std::string>()};
+        auto server_options = Options::ServerOptions{.func_name = server_options_node["func_name"].as<std::string>()};
 
         if (server_options_node["qos"]) {
           server_options.qos = server_options_node["qos"].as<Options::QosOptions>();
@@ -135,26 +124,18 @@ struct convert<aimrt::plugins::ros2_plugin::Ros2RpcBackend::Options> {
 namespace aimrt::plugins::ros2_plugin {
 
 void Ros2RpcBackend::Initialize(YAML::Node options_node) {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-      "Ros2 Rpc backend can only be initialized once.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "Ros2 Rpc backend can only be initialized once.");
 
-  if (options_node && !options_node.IsNull())
-    options_ = options_node.as<Options>();
+  if (options_node && !options_node.IsNull()) options_ = options_node.as<Options>();
 
   if (!options_.timeout_executor.empty()) {
-    AIMRT_CHECK_ERROR_THROW(
-        get_executor_func_,
-        "Get executor function is not set before initialize.");
+    AIMRT_CHECK_ERROR_THROW(get_executor_func_, "Get executor function is not set before initialize.");
 
     timeout_executor_ = get_executor_func_(options_.timeout_executor);
 
-    AIMRT_CHECK_ERROR_THROW(
-        timeout_executor_,
-        "Get timeout executor '{}' failed.", options_.timeout_executor);
+    AIMRT_CHECK_ERROR_THROW(timeout_executor_, "Get timeout executor '{}' failed.", options_.timeout_executor);
 
-    AIMRT_TRACE("Ros rpc backend enable the timeout function, use '{}' as timeout executor.",
-                options_.timeout_executor);
+    AIMRT_TRACE("Ros rpc backend enable the timeout function, use '{}' as timeout executor.", options_.timeout_executor);
   } else {
     AIMRT_TRACE("Ros rpc backend does not enable the timeout function.");
   }
@@ -163,38 +144,27 @@ void Ros2RpcBackend::Initialize(YAML::Node options_node) {
 }
 
 void Ros2RpcBackend::Start() {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kStart) == State::kInit,
-      "Method can only be called when state is 'Init'.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'.");
 
-  for (auto& itr : ros2_adapter_client_map_)
-    itr.second->Start();
+  for (auto& itr : ros2_adapter_client_map_) itr.second->Start();
 
-  for (auto& itr : ros2_adapter_server_map_)
-    itr.second->Start();
+  for (auto& itr : ros2_adapter_server_map_) itr.second->Start();
 
-  for (auto& itr : ros2_adapter_wrapper_client_map_)
-    itr.second->Start();
+  for (auto& itr : ros2_adapter_wrapper_client_map_) itr.second->Start();
 
-  for (auto& itr : ros2_adapter_wrapper_server_map_)
-    itr.second->Start();
+  for (auto& itr : ros2_adapter_wrapper_server_map_) itr.second->Start();
 }
 
 void Ros2RpcBackend::Shutdown() {
-  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-    return;
+  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 
-  for (auto& itr : ros2_adapter_client_map_)
-    itr.second->Shutdown();
+  for (auto& itr : ros2_adapter_client_map_) itr.second->Shutdown();
 
-  for (auto& itr : ros2_adapter_server_map_)
-    itr.second->Shutdown();
+  for (auto& itr : ros2_adapter_server_map_) itr.second->Shutdown();
 
-  for (auto& itr : ros2_adapter_wrapper_client_map_)
-    itr.second->Shutdown();
+  for (auto& itr : ros2_adapter_wrapper_client_map_) itr.second->Shutdown();
 
-  for (auto& itr : ros2_adapter_wrapper_server_map_)
-    itr.second->Shutdown();
+  for (auto& itr : ros2_adapter_wrapper_server_map_) itr.second->Shutdown();
 
   ros2_adapter_client_map_.clear();
   ros2_adapter_server_map_.clear();
@@ -283,9 +253,7 @@ std::string Ros2RpcBackend::GetRemappedFuncName(const std::string& input_string,
     while (std::regex_search(search_start, replaced_func_name.cend(), placeholder_match, placeholder)) {
       int index = std::stoi(placeholder_match[1].str());
       if (index < match.size()) {
-        replaced_func_name.replace(placeholder_match.position() + (search_start - replaced_func_name.cbegin()),
-                                   placeholder_match.length(),
-                                   match[index].str());
+        replaced_func_name.replace(placeholder_match.position() + (search_start - replaced_func_name.cbegin()), placeholder_match.length(), match[index].str());
         search_start = replaced_func_name.cbegin() + placeholder_match.position() + match[index].length();
       } else {
         AIMRT_WARN("Regex placeholder index out of range, index: {}, match size: {}", index, match.size());
@@ -307,8 +275,7 @@ std::string Ros2RpcBackend::GetRemappedFuncName(const std::string& input_string,
   }
 }
 
-bool Ros2RpcBackend::RegisterServiceFunc(
-    const runtime::core::rpc::ServiceFuncWrapper& service_func_wrapper) noexcept {
+bool Ros2RpcBackend::RegisterServiceFunc(const runtime::core::rpc::ServiceFuncWrapper& service_func_wrapper) noexcept {
   try {
     if (state_.load() != State::kInit) {
       AIMRT_ERROR("Service func can only be registered when state is 'Init'.");
@@ -321,18 +288,14 @@ bool Ros2RpcBackend::RegisterServiceFunc(
     rclcpp::QoS qos = rclcpp::ServicesQoS();
     std::string remapped_func_name = info.func_name;
 
-    auto find_option = std::find_if(
-        options_.servers_options.begin(), options_.servers_options.end(),
-        [&info](const Options::ServerOptions& service_option) {
-          try {
-            return std::regex_match(info.func_name.begin(), info.func_name.end(),
-                                    std::regex(service_option.func_name, std::regex::ECMAScript));
-          } catch (const std::exception& e) {
-            AIMRT_WARN("Regex get exception, expr: {}, string: {}, exception info: {}",
-                       service_option.func_name, info.func_name, e.what());
-            return false;
-          }
-        });
+    auto find_option = std::find_if(options_.servers_options.begin(), options_.servers_options.end(), [&info](const Options::ServerOptions& service_option) {
+      try {
+        return std::regex_match(info.func_name.begin(), info.func_name.end(), std::regex(service_option.func_name, std::regex::ECMAScript));
+      } catch (const std::exception& e) {
+        AIMRT_WARN("Regex get exception, expr: {}, string: {}, exception info: {}", service_option.func_name, info.func_name, e.what());
+        return false;
+      }
+    });
 
     if (find_option != options_.servers_options.end()) {
       qos = GetQos(find_option->qos);
@@ -342,56 +305,38 @@ bool Ros2RpcBackend::RegisterServiceFunc(
     // 前缀是ros2类型的消息
     if (CheckRosFunc(info.func_name)) {
       if (ros2_adapter_server_map_.find(info.func_name) != ros2_adapter_server_map_.end()) {
-        AIMRT_WARN(
-            "Service '{}' is registered repeatedly in ros2 rpc backend, module '{}', lib path '{}'",
-            info.func_name, info.module_name, info.pkg_path);
+        AIMRT_WARN("Service '{}' is registered repeatedly in ros2 rpc backend, module '{}', lib path '{}'", info.func_name, info.module_name, info.pkg_path);
         return false;
       }
 
       auto ros2_func_name = GetRealRosFuncName(remapped_func_name);
 
-      auto ros2_adapter_server_ptr = std::make_shared<Ros2AdapterServer>(
-          ros2_node_ptr_->get_node_base_interface()->get_shared_rcl_node_handle(),
-          service_func_wrapper,
-          ros2_func_name,
-          qos);
-      ros2_node_ptr_->get_node_services_interface()->add_service(
-          std::dynamic_pointer_cast<rclcpp::ServiceBase>(ros2_adapter_server_ptr),
-          nullptr);
+      auto ros2_adapter_server_ptr =
+          std::make_shared<Ros2AdapterServer>(ros2_node_ptr_->get_node_base_interface()->get_shared_rcl_node_handle(), service_func_wrapper, ros2_func_name, qos);
+      ros2_node_ptr_->get_node_services_interface()->add_service(std::dynamic_pointer_cast<rclcpp::ServiceBase>(ros2_adapter_server_ptr), nullptr);
 
-      ros2_adapter_server_map_.emplace(info.func_name,
-                                       ros2_adapter_server_ptr);
+      ros2_adapter_server_map_.emplace(info.func_name, ros2_adapter_server_ptr);
 
-      AIMRT_INFO("Service '{}' is registered to ros2 rpc backend, ros2 func name is '{}'",
-                 info.func_name, ros2_func_name);
+      AIMRT_INFO("Service '{}' is registered to ros2 rpc backend, ros2 func name is '{}'", info.func_name, ros2_func_name);
 
       return true;
     }
 
     // 前缀不是ros2类型的消息
     if (ros2_adapter_wrapper_server_map_.find(info.func_name) != ros2_adapter_wrapper_server_map_.end()) {
-      AIMRT_WARN(
-          "Service '{}' is registered repeatedly in ros2 rpc backend, module '{}', lib path '{}'",
-          info.func_name, info.module_name, info.pkg_path);
+      AIMRT_WARN("Service '{}' is registered repeatedly in ros2 rpc backend, module '{}', lib path '{}'", info.func_name, info.module_name, info.pkg_path);
       return false;
     }
 
     auto ros2_func_name = GetRealRosFuncName(remapped_func_name);
 
-    auto ros2_adapter_wrapper_server_ptr = std::make_shared<Ros2AdapterWrapperServer>(
-        ros2_node_ptr_->get_node_base_interface()->get_shared_rcl_node_handle(),
-        service_func_wrapper,
-        ros2_func_name,
-        qos);
-    ros2_node_ptr_->get_node_services_interface()->add_service(
-        std::dynamic_pointer_cast<rclcpp::ServiceBase>(ros2_adapter_wrapper_server_ptr),
-        nullptr);
+    auto ros2_adapter_wrapper_server_ptr =
+        std::make_shared<Ros2AdapterWrapperServer>(ros2_node_ptr_->get_node_base_interface()->get_shared_rcl_node_handle(), service_func_wrapper, ros2_func_name, qos);
+    ros2_node_ptr_->get_node_services_interface()->add_service(std::dynamic_pointer_cast<rclcpp::ServiceBase>(ros2_adapter_wrapper_server_ptr), nullptr);
 
-    ros2_adapter_wrapper_server_map_.emplace(info.func_name,
-                                             ros2_adapter_wrapper_server_ptr);
+    ros2_adapter_wrapper_server_map_.emplace(info.func_name, ros2_adapter_wrapper_server_ptr);
 
-    AIMRT_INFO("Service '{}' is registered to ros2 rpc backend, ros2 func name is '{}'",
-               info.func_name, ros2_func_name);
+    AIMRT_INFO("Service '{}' is registered to ros2 rpc backend, ros2 func name is '{}'", info.func_name, ros2_func_name);
 
     return true;
   } catch (const std::exception& e) {
@@ -400,8 +345,7 @@ bool Ros2RpcBackend::RegisterServiceFunc(
   }
 }
 
-bool Ros2RpcBackend::RegisterClientFunc(
-    const runtime::core::rpc::ClientFuncWrapper& client_func_wrapper) noexcept {
+bool Ros2RpcBackend::RegisterClientFunc(const runtime::core::rpc::ClientFuncWrapper& client_func_wrapper) noexcept {
   try {
     if (state_.load() != State::kInit) {
       AIMRT_ERROR("Client func can only be registered when state is 'Init'.");
@@ -417,17 +361,14 @@ bool Ros2RpcBackend::RegisterClientFunc(
 
     std::string remapped_func_name = info.func_name;
 
-    auto find_option = std::find_if(
-        options_.clients_options.begin(), options_.clients_options.end(),
-        [&info](const Options::ClientOptions& client_option) {
-          try {
-            return std::regex_match(info.func_name.begin(), info.func_name.end(), std::regex(client_option.func_name, std::regex::ECMAScript));
-          } catch (const std::exception& e) {
-            AIMRT_WARN("Regex get exception, expr: {}, string: {}, exception info: {}",
-                       client_option.func_name, info.func_name, e.what());
-            return false;
-          }
-        });
+    auto find_option = std::find_if(options_.clients_options.begin(), options_.clients_options.end(), [&info](const Options::ClientOptions& client_option) {
+      try {
+        return std::regex_match(info.func_name.begin(), info.func_name.end(), std::regex(client_option.func_name, std::regex::ECMAScript));
+      } catch (const std::exception& e) {
+        AIMRT_WARN("Regex get exception, expr: {}, string: {}, exception info: {}", client_option.func_name, info.func_name, e.what());
+        return false;
+      }
+    });
 
     if (find_option != options_.clients_options.end()) {
       qos = GetQos(find_option->qos);
@@ -437,57 +378,38 @@ bool Ros2RpcBackend::RegisterClientFunc(
     // 前缀是ros2类型的消息
     if (CheckRosFunc(info.func_name)) {
       if (ros2_adapter_client_map_.find(info.func_name) != ros2_adapter_client_map_.end()) {
-        AIMRT_WARN(
-            "Client '{}' is registered repeatedly in ros2 rpc backend, module '{}', lib path '{}'",
-            info.func_name, info.module_name, info.pkg_path);
+        AIMRT_WARN("Client '{}' is registered repeatedly in ros2 rpc backend, module '{}', lib path '{}'", info.func_name, info.module_name, info.pkg_path);
         return false;
       }
 
       auto ros2_func_name = GetRealRosFuncName(remapped_func_name);
 
       auto ros2_adapter_client_ptr = std::make_shared<Ros2AdapterClient>(
-          ros2_node_ptr_->get_node_base_interface().get(),
-          ros2_node_ptr_->get_node_graph_interface(),
-          client_func_wrapper,
-          ros2_func_name,
-          qos,
-          timeout_executor_);
-      ros2_node_ptr_->get_node_services_interface()->add_client(
-          std::dynamic_pointer_cast<rclcpp::ClientBase>(ros2_adapter_client_ptr), nullptr);
+          ros2_node_ptr_->get_node_base_interface().get(), ros2_node_ptr_->get_node_graph_interface(), client_func_wrapper, ros2_func_name, qos, timeout_executor_);
+      ros2_node_ptr_->get_node_services_interface()->add_client(std::dynamic_pointer_cast<rclcpp::ClientBase>(ros2_adapter_client_ptr), nullptr);
 
       ros2_adapter_client_map_.emplace(info.func_name, ros2_adapter_client_ptr);
 
-      AIMRT_INFO("Client '{}' is registered to ros2 rpc backend, ros2 func name is '{}'",
-                 info.func_name, ros2_func_name);
+      AIMRT_INFO("Client '{}' is registered to ros2 rpc backend, ros2 func name is '{}'", info.func_name, ros2_func_name);
 
       return true;
     }
 
     // 前缀不是ros2类型的消息
     if (ros2_adapter_wrapper_client_map_.find(info.func_name) != ros2_adapter_wrapper_client_map_.end()) {
-      AIMRT_WARN(
-          "Client '{}' is registered repeatedly in ros2 rpc backend, module '{}', lib path '{}'",
-          info.func_name, info.module_name, info.pkg_path);
+      AIMRT_WARN("Client '{}' is registered repeatedly in ros2 rpc backend, module '{}', lib path '{}'", info.func_name, info.module_name, info.pkg_path);
       return false;
     }
 
     auto ros2_func_name = GetRealRosFuncName(remapped_func_name);
 
     auto ros2_adapter_wrapper_client_ptr = std::make_shared<Ros2AdapterWrapperClient>(
-        ros2_node_ptr_->get_node_base_interface().get(),
-        ros2_node_ptr_->get_node_graph_interface(),
-        client_func_wrapper,
-        ros2_func_name,
-        qos,
-        timeout_executor_);
-    ros2_node_ptr_->get_node_services_interface()->add_client(
-        std::dynamic_pointer_cast<rclcpp::ClientBase>(ros2_adapter_wrapper_client_ptr),
-        nullptr);
+        ros2_node_ptr_->get_node_base_interface().get(), ros2_node_ptr_->get_node_graph_interface(), client_func_wrapper, ros2_func_name, qos, timeout_executor_);
+    ros2_node_ptr_->get_node_services_interface()->add_client(std::dynamic_pointer_cast<rclcpp::ClientBase>(ros2_adapter_wrapper_client_ptr), nullptr);
 
     ros2_adapter_wrapper_client_map_.emplace(info.func_name, ros2_adapter_wrapper_client_ptr);
 
-    AIMRT_INFO("Client '{}' is registered to ros2 rpc backend, ros2 func name is '{}'",
-               info.func_name, ros2_func_name);
+    AIMRT_INFO("Client '{}' is registered to ros2 rpc backend, ros2 func name is '{}'", info.func_name, ros2_func_name);
 
     return true;
   } catch (const std::exception& e) {
@@ -496,8 +418,7 @@ bool Ros2RpcBackend::RegisterClientFunc(
   }
 }
 
-void Ros2RpcBackend::Invoke(
-    const std::shared_ptr<runtime::core::rpc::InvokeWrapper>& client_invoke_wrapper_ptr) noexcept {
+void Ros2RpcBackend::Invoke(const std::shared_ptr<runtime::core::rpc::InvokeWrapper>& client_invoke_wrapper_ptr) noexcept {
   try {
     if (state_.load() != State::kStart) [[unlikely]] {
       AIMRT_WARN("Method can only be called when state is 'Start'.");
@@ -526,17 +447,14 @@ void Ros2RpcBackend::Invoke(
     if (CheckRosFunc(info.func_name)) {
       auto finditr = ros2_adapter_client_map_.find(info.func_name);
       if (finditr == ros2_adapter_client_map_.end()) {
-        AIMRT_WARN(
-            "Client '{}' unregistered in ros2 rpc backend, module '{}', lib path '{}'",
-            info.func_name, info.module_name, info.pkg_path);
+        AIMRT_WARN("Client '{}' unregistered in ros2 rpc backend, module '{}', lib path '{}'", info.func_name, info.module_name, info.pkg_path);
 
         client_invoke_wrapper_ptr->callback(aimrt::rpc::Status(AIMRT_RPC_STATUS_CLI_BACKEND_INTERNAL_ERROR));
         return;
       }
 
       if (!(finditr->second->service_is_ready())) {
-        AIMRT_WARN("Ros2 service '{}' not ready, module '{}', lib path '{}'",
-                   info.func_name, info.module_name, info.pkg_path);
+        AIMRT_WARN("Ros2 service '{}' not ready, module '{}', lib path '{}'", info.func_name, info.module_name, info.pkg_path);
 
         client_invoke_wrapper_ptr->callback(aimrt::rpc::Status(AIMRT_RPC_STATUS_CLI_BACKEND_INTERNAL_ERROR));
         return;
@@ -549,17 +467,14 @@ void Ros2RpcBackend::Invoke(
     // 前缀不是ros2类型的消息
     auto finditr = ros2_adapter_wrapper_client_map_.find(info.func_name);
     if (finditr == ros2_adapter_wrapper_client_map_.end()) {
-      AIMRT_WARN(
-          "Client '{}' unregistered in ros2 rpc backend, module '{}', lib path '{}'",
-          info.func_name, info.module_name, info.pkg_path);
+      AIMRT_WARN("Client '{}' unregistered in ros2 rpc backend, module '{}', lib path '{}'", info.func_name, info.module_name, info.pkg_path);
 
       client_invoke_wrapper_ptr->callback(aimrt::rpc::Status(AIMRT_RPC_STATUS_CLI_BACKEND_INTERNAL_ERROR));
       return;
     }
 
     if (!(finditr->second->service_is_ready())) {
-      AIMRT_WARN("Ros2 service '{}' not ready, module '{}', lib path '{}'",
-                 info.func_name, info.module_name, info.pkg_path);
+      AIMRT_WARN("Ros2 service '{}' not ready, module '{}', lib path '{}'", info.func_name, info.module_name, info.pkg_path);
 
       client_invoke_wrapper_ptr->callback(aimrt::rpc::Status(AIMRT_RPC_STATUS_CLI_BACKEND_INTERNAL_ERROR));
       return;
@@ -571,17 +486,13 @@ void Ros2RpcBackend::Invoke(
   }
 }
 
-void Ros2RpcBackend::RegisterGetExecutorFunc(
-    const std::function<aimrt::executor::ExecutorRef(std::string_view)>& get_executor_func) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kPreInit,
-      "Method can only be called when state is 'PreInit'.");
+void Ros2RpcBackend::RegisterGetExecutorFunc(const std::function<aimrt::executor::ExecutorRef(std::string_view)>& get_executor_func) {
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
   get_executor_func_ = get_executor_func;
 }
 
 std::list<std::pair<std::string, std::string>> Ros2RpcBackend::GenInitializationReport() const noexcept {
-  std::vector<std::vector<std::string>> ros2_rpc_backend_srv_info_table =
-      {{"func name", "ros2 func name"}};
+  std::vector<std::vector<std::string>> ros2_rpc_backend_srv_info_table = {{"func name", "ros2 func name"}};
 
   for (const auto& item : ros2_adapter_server_map_) {
     std::vector<std::string> cur_func_info(2);
@@ -599,8 +510,7 @@ std::list<std::pair<std::string, std::string>> Ros2RpcBackend::GenInitialization
     ros2_rpc_backend_srv_info_table.emplace_back(std::move(cur_func_info));
   }
 
-  std::vector<std::vector<std::string>> ros2_rpc_backend_cli_info_table =
-      {{"func name", "ros2 func name"}};
+  std::vector<std::vector<std::string>> ros2_rpc_backend_cli_info_table = {{"func name", "ros2 func name"}};
 
   for (const auto& item : ros2_adapter_client_map_) {
     std::vector<std::string> cur_func_info(2);

@@ -16,7 +16,9 @@ std::string TruncateString(const std::string& input) {
   size_t suffix_length = iox::MAX_RUNTIME_NAME_LENGTH - ellipsis_length - prefix_length;
 
   std::string truncated_string = input.substr(0, prefix_length) + "..." + input.substr(input.length() - suffix_length);
-  AIMRT_WARN("Input url is too long. Each part should be less than {} characters. The input :{} has been truncated to :{}, which may lead to potential risks.", iox::MAX_RUNTIME_NAME_LENGTH, input, truncated_string);
+  AIMRT_WARN(
+      "Input url is too long. Each part should be less than {} characters. The input :{} has been truncated to :{}, which may lead to potential risks.",
+      iox::MAX_RUNTIME_NAME_LENGTH, input, truncated_string);
 
   return truncated_string;
 }
@@ -36,9 +38,9 @@ iox::capro::ServiceDescription Url2ServiceDescription(std::string& url) {
   size_t second_slash_pos = url.find('/', first_slash_pos + 1);
   size_t third_slash_pos = url.find('/', second_slash_pos + 1);
 
-  return iox::capro::ServiceDescription{String2IdString(url.substr(0, second_slash_pos - 0)),
-                                        String2IdString(url.substr(second_slash_pos, third_slash_pos - second_slash_pos)),
-                                        String2IdString(url.substr(third_slash_pos))};
+  return iox::capro::ServiceDescription{
+      String2IdString(url.substr(0, second_slash_pos - 0)), String2IdString(url.substr(second_slash_pos, third_slash_pos - second_slash_pos)),
+      String2IdString(url.substr(third_slash_pos))};
 }
 
 // Use PID as the unique name for each application/process
@@ -61,8 +63,8 @@ std::string IntToFixedLengthString(int number, int length) {
   return oss.str();
 }
 
-std::pair<std::shared_ptr<aimrt::util::BufferArrayView>, size_t> SerializeMsgSupportedIceoryx(
-    MsgWrapper& msg_wrapper, std::string_view serialization_type, aimrt::util::BufferArrayAllocatorRef allocator) {
+std::pair<std::shared_ptr<aimrt::util::BufferArrayView>, size_t>
+SerializeMsgSupportedIceoryx(MsgWrapper& msg_wrapper, std::string_view serialization_type, aimrt::util::BufferArrayAllocatorRef allocator) {
   auto& serialization_cache = msg_wrapper.serialization_cache;
   const auto& info = msg_wrapper.info;
 
@@ -74,11 +76,8 @@ std::pair<std::shared_ptr<aimrt::util::BufferArrayView>, size_t> SerializeMsgSup
   }
 
   auto buffer_array_ptr = std::make_unique<aimrt::util::BufferArray>(allocator);
-  bool serialize_ret = info.msg_type_support_ref.Serialize(
-      serialization_type,
-      msg_wrapper.msg_ptr,
-      buffer_array_ptr->AllocatorNativeHandle(),
-      buffer_array_ptr->BufferArrayNativeHandle());
+  bool serialize_ret =
+      info.msg_type_support_ref.Serialize(serialization_type, msg_wrapper.msg_ptr, buffer_array_ptr->AllocatorNativeHandle(), buffer_array_ptr->BufferArrayNativeHandle());
 
   AIMRT_ASSERT(serialize_ret, "Serialize failed.");
 

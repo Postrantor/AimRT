@@ -47,8 +47,7 @@ struct convert<aimrt::plugins::net_plugin::HttpChannelBackend::Options> {
 
     if (node["sub_topics_options"] && node["sub_topics_options"].IsSequence()) {
       for (const auto& sub_topic_options_node : node["sub_topics_options"]) {
-        auto sub_topic_options = Options::SubTopicOptions{
-            .topic_name = sub_topic_options_node["topic_name"].as<std::string>()};
+        auto sub_topic_options = Options::SubTopicOptions{.topic_name = sub_topic_options_node["topic_name"].as<std::string>()};
 
         rhs.sub_topics_options.emplace_back(std::move(sub_topic_options));
       }
@@ -62,35 +61,25 @@ struct convert<aimrt::plugins::net_plugin::HttpChannelBackend::Options> {
 namespace aimrt::plugins::net_plugin {
 
 void HttpChannelBackend::Initialize(YAML::Node options_node) {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-      "Http channel backend can only be initialized once.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "Http channel backend can only be initialized once.");
 
-  if (options_node && !options_node.IsNull())
-    options_ = options_node.as<Options>();
+  if (options_node && !options_node.IsNull()) options_ = options_node.as<Options>();
 
   options_node = options_;
 }
 
-void HttpChannelBackend::Start() {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kStart) == State::kInit,
-      "Method can only be called when state is 'Init'.");
-}
+void HttpChannelBackend::Start() { AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'."); }
 
 void HttpChannelBackend::Shutdown() {
-  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-    return;
+  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 
   http_svr_ptr_->Shutdown();
   http_cli_pool_ptr_->Shutdown();
 }
 
-bool HttpChannelBackend::RegisterPublishType(
-    const runtime::core::channel::PublishTypeWrapper& publish_type_wrapper) noexcept {
+bool HttpChannelBackend::RegisterPublishType(const runtime::core::channel::PublishTypeWrapper& publish_type_wrapper) noexcept {
   try {
-    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kInit,
-                            "Method can only be called when state is 'Init'.");
+    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kInit, "Method can only be called when state is 'Init'.");
 
     namespace util = aimrt::common::util;
 
@@ -98,14 +87,12 @@ bool HttpChannelBackend::RegisterPublishType(
 
     std::vector<std::string> server_url_list;
 
-    auto find_option_itr = std::find_if(
-        options_.pub_topics_options.begin(), options_.pub_topics_options.end(),
-        [topic_name = info.topic_name](const Options::PubTopicOptions& pub_option) {
+    auto find_option_itr =
+        std::find_if(options_.pub_topics_options.begin(), options_.pub_topics_options.end(), [topic_name = info.topic_name](const Options::PubTopicOptions& pub_option) {
           try {
             return std::regex_match(topic_name.begin(), topic_name.end(), std::regex(pub_option.topic_name, std::regex::ECMAScript));
           } catch (const std::exception& e) {
-            AIMRT_WARN("Regex get exception, expr: {}, string: {}, exception info: {}",
-                       pub_option.topic_name, topic_name, e.what());
+            AIMRT_WARN("Regex get exception, expr: {}, string: {}, exception info: {}", pub_option.topic_name, topic_name, e.what());
             return false;
           }
         });
@@ -124,10 +111,7 @@ bool HttpChannelBackend::RegisterPublishType(
       }
     }
 
-    pub_cfg_info_map_.emplace(
-        info.topic_name,
-        PubCfgInfo{
-            .server_url_st_vec = std::move(server_url_st_vec)});
+    pub_cfg_info_map_.emplace(info.topic_name, PubCfgInfo{.server_url_st_vec = std::move(server_url_st_vec)});
 
     return true;
   } catch (const std::exception& e) {
@@ -136,11 +120,9 @@ bool HttpChannelBackend::RegisterPublishType(
   }
 }
 
-bool HttpChannelBackend::Subscribe(
-    const runtime::core::channel::SubscribeWrapper& subscribe_wrapper) noexcept {
+bool HttpChannelBackend::Subscribe(const runtime::core::channel::SubscribeWrapper& subscribe_wrapper) noexcept {
   try {
-    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kInit,
-                            "Method can only be called when state is 'Init'.");
+    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kInit, "Method can only be called when state is 'Init'.");
 
     namespace asio = boost::asio;
     namespace http = boost::beast::http;
@@ -148,9 +130,7 @@ bool HttpChannelBackend::Subscribe(
 
     const auto& info = subscribe_wrapper.info;
 
-    std::string pattern = std::string("/channel/") +
-                          util::UrlEncode(info.topic_name) + "/" +
-                          util::UrlEncode(info.msg_type);
+    std::string pattern = std::string("/channel/") + util::UrlEncode(info.topic_name) + "/" + util::UrlEncode(info.msg_type);
 
     auto find_itr = http_subscribe_wrapper_map_.find(pattern);
     if (find_itr != http_subscribe_wrapper_map_.end()) {
@@ -167,20 +147,16 @@ bool HttpChannelBackend::Subscribe(
 
     aimrt::common::net::AsioHttpServer::HttpHandle<http::dynamic_body> http_handle =
         [this, topic_name = info.topic_name, sub_tool_ptr](
-            const http::request<http::dynamic_body>& req,
-            http::response<http::dynamic_body>& rsp,
-            std::chrono::nanoseconds timeout)
-        -> asio::awaitable<aimrt::common::net::AsioHttpServer::HttpHandleStatus> {
+            const http::request<http::dynamic_body>& req, http::response<http::dynamic_body>& rsp,
+            std::chrono::nanoseconds timeout) -> asio::awaitable<aimrt::common::net::AsioHttpServer::HttpHandleStatus> {
       // 获取序列化类型
       std::string serialization_type;
       auto req_content_type_itr = req.find(http::field::content_type);
-      AIMRT_CHECK_ERROR_THROW(req_content_type_itr != req.end(),
-                              "Http req has no content type.");
+      AIMRT_CHECK_ERROR_THROW(req_content_type_itr != req.end(), "Http req has no content type.");
 
       auto req_content_type_boost_sw = req_content_type_itr->value();
       std::string_view req_content_type(req_content_type_boost_sw.data(), req_content_type_boost_sw.size());
-      if (req_content_type == "application/json" ||
-          req_content_type == "application/json charset=utf-8") {
+      if (req_content_type == "application/json" || req_content_type == "application/json charset=utf-8") {
         serialization_type = "json";
         rsp.set(http::field::content_type, "application/json");
       } else if (req_content_type == "application/protobuf") {
@@ -203,9 +179,7 @@ bool HttpChannelBackend::Subscribe(
 
       // 从http header中读取其他字段到context中
       for (auto const& field : req) {
-        ctx_ptr->SetMetaValue(
-            aimrt::common::util::HttpHeaderDecode(field.name_string()),
-            aimrt::common::util::HttpHeaderDecode(field.value()));
+        ctx_ptr->SetMetaValue(aimrt::common::util::HttpHeaderDecode(field.name_string()), aimrt::common::util::HttpHeaderDecode(field.value()));
       }
 
       ctx_ptr->SetMetaValue(AIMRT_CHANNEL_CONTEXT_KEY_BACKEND, Name());
@@ -215,9 +189,7 @@ bool HttpChannelBackend::Subscribe(
       std::vector<aimrt_buffer_view_t> buffer_view_vec;
 
       for (auto const buf : boost::beast::buffers_range_ref(req_beast_buf)) {
-        buffer_view_vec.emplace_back(aimrt_buffer_view_t{
-            .data = const_cast<void*>(buf.data()),
-            .len = buf.size()});
+        buffer_view_vec.emplace_back(aimrt_buffer_view_t{.data = const_cast<void*>(buf.data()), .len = buf.size()});
       }
 
       aimrt::util::BufferArrayView buffer_array_view(buffer_view_vec);
@@ -227,8 +199,7 @@ bool HttpChannelBackend::Subscribe(
       co_return aimrt::common::net::AsioHttpServer::HttpHandleStatus::kOk;
     };
 
-    http_svr_ptr_->RegisterHttpHandleFunc<http::dynamic_body>(
-        pattern, std::move(http_handle));
+    http_svr_ptr_->RegisterHttpHandleFunc<http::dynamic_body>(pattern, std::move(http_handle));
 
     AIMRT_INFO("Register http handle for channel, uri '{}'", pattern);
 
@@ -241,8 +212,7 @@ bool HttpChannelBackend::Subscribe(
 
 void HttpChannelBackend::Publish(runtime::core::channel::MsgWrapper& msg_wrapper) noexcept {
   try {
-    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kStart,
-                            "Method can only be called when state is 'Start'.");
+    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kStart, "Method can only be called when state is 'Start'.");
 
     namespace asio = boost::asio;
     namespace http = boost::beast::http;
@@ -251,20 +221,15 @@ void HttpChannelBackend::Publish(runtime::core::channel::MsgWrapper& msg_wrapper
     const auto& info = msg_wrapper.info;
 
     auto find_itr = pub_cfg_info_map_.find(info.topic_name);
-    AIMRT_CHECK_ERROR_THROW(
-        find_itr != pub_cfg_info_map_.end() && !(find_itr->second.server_url_st_vec.empty()),
-        "Server url list is empty for topic '{}'", info.topic_name);
+    AIMRT_CHECK_ERROR_THROW(find_itr != pub_cfg_info_map_.end() && !(find_itr->second.server_url_st_vec.empty()), "Server url list is empty for topic '{}'", info.topic_name);
 
     const auto& server_url_st_vec = find_itr->second.server_url_st_vec;
 
     // 确定path
-    std::string pattern = std::string("/channel/") +
-                          util::UrlEncode(info.topic_name) + "/" +
-                          util::UrlEncode(info.msg_type);
+    std::string pattern = std::string("/channel/") + util::UrlEncode(info.topic_name) + "/" + util::UrlEncode(info.msg_type);
 
     // http req
-    auto req_ptr = std::make_shared<http::request<http::dynamic_body>>(
-        http::verb::post, pattern, 11);
+    auto req_ptr = std::make_shared<http::request<http::dynamic_body>>(http::verb::post, pattern, 11);
     req_ptr->set(http::field::user_agent, "aimrt");
 
     // 确定数据序列化类型，先找ctx，ctx中未配置则找支持的第一种序列化类型
@@ -288,17 +253,14 @@ void HttpChannelBackend::Publish(runtime::core::channel::MsgWrapper& msg_wrapper
     // 向http header中设置其他context meta字段
     std::vector<std::string_view> meta_keys = msg_wrapper.ctx_ref.GetMetaKeys();
     for (const auto& item : meta_keys) {
-      req_ptr->set(
-          aimrt::common::util::HttpHeaderEncode(item),
-          aimrt::common::util::HttpHeaderEncode(msg_wrapper.ctx_ref.GetMetaValue(item)));
+      req_ptr->set(aimrt::common::util::HttpHeaderEncode(item), aimrt::common::util::HttpHeaderEncode(msg_wrapper.ctx_ref.GetMetaValue(item)));
     }
 
     // msg序列化
     auto buffer_array_view_ptr = aimrt::runtime::core::channel::SerializeMsgWithCache(msg_wrapper, serialization_type);
     AIMRT_CHECK_ERROR_THROW(
-        buffer_array_view_ptr,
-        "Msg serialization failed, serialization_type {}, pkg_path: {}, module_name: {}, topic_name: {}, msg_type: {}",
-        serialization_type, info.pkg_path, info.module_name, info.topic_name, info.msg_type);
+        buffer_array_view_ptr, "Msg serialization failed, serialization_type {}, pkg_path: {}, module_name: {}, topic_name: {}, msg_type: {}", serialization_type, info.pkg_path,
+        info.module_name, info.topic_name, info.msg_type);
 
     // 填http req包，直接复制过去
     size_t msg_size = buffer_array_view_ptr->BufferSize();
@@ -316,9 +278,7 @@ void HttpChannelBackend::Publish(runtime::core::channel::MsgWrapper& msg_wrapper
 
         size_t cur_copy_size = std::min(cur_beast_buffer_size, cur_buffer_size);
 
-        memcpy(static_cast<char*>(buf.data()) + cur_beast_buf_pos,
-               static_cast<const char*>(data[buffer_array_pos].data) + buffer_pos,
-               cur_copy_size);
+        memcpy(static_cast<char*>(buf.data()) + cur_beast_buf_pos, static_cast<const char*>(data[buffer_array_pos].data) + buffer_pos, cur_copy_size);
 
         buffer_pos += cur_copy_size;
         if (buffer_pos == data[buffer_array_pos].len) {
@@ -337,9 +297,7 @@ void HttpChannelBackend::Publish(runtime::core::channel::MsgWrapper& msg_wrapper
       asio::co_spawn(
           *io_ptr_,
           [this, server_url, req_ptr]() -> asio::awaitable<void> {
-            aimrt::common::net::AsioHttpClient::Options cli_options{
-                .host = server_url.host,
-                .service = server_url.service};
+            aimrt::common::net::AsioHttpClient::Options cli_options{.host = server_url.host, .service = server_url.service};
 
             auto client_ptr = co_await http_cli_pool_ptr_->GetClient(cli_options);
             if (!client_ptr) [[unlikely]] {
@@ -356,9 +314,7 @@ void HttpChannelBackend::Publish(runtime::core::channel::MsgWrapper& msg_wrapper
             auto rsp = co_await client_ptr->HttpSendRecvCo<http::dynamic_body, http::dynamic_body>(*req_ptr);
 
             if (rsp.result() != http::status::ok) {
-              AIMRT_WARN("http channel publish get error: {} {}",
-                         rsp.result_int(),
-                         std::string(rsp.reason().data(), rsp.reason().size()));
+              AIMRT_WARN("http channel publish get error: {} {}", rsp.result_int(), std::string(rsp.reason().data(), rsp.reason().size()));
             }
           },
           asio::detached);

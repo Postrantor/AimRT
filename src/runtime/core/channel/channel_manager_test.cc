@@ -8,7 +8,7 @@
 namespace aimrt::runtime::core::channel {
 
 class ChannelManagerTest : public ::testing::Test {
- protected:
+protected:
   void SetUp() override {
     YAML::Node options_node_test = YAML::Load(R"str(
 aimrt:
@@ -32,13 +32,12 @@ aimrt:
 
   // 模拟的通道后端类，继承自ChannelBackendBase
   class MockChannelBackend : public ChannelBackendBase {
-   public:
+  public:
     std::string_view Name() const noexcept override { return "mock_backend_test"; }
     MOCK_METHOD1(Initialize, void(YAML::Node options_node));
     MOCK_METHOD0(Start, void());
     MOCK_METHOD0(Shutdown, void());
-    bool RegisterPublishType(
-        const PublishTypeWrapper& publish_type_wrapper) noexcept override { return false; }
+    bool RegisterPublishType(const PublishTypeWrapper& publish_type_wrapper) noexcept override { return false; }
     bool Subscribe(const SubscribeWrapper& subscribe_wrapper) noexcept override { return false; }
     void Publish(MsgWrapper& msg_wrapper) noexcept override { return; }
   };

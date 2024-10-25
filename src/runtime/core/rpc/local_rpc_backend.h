@@ -13,7 +13,7 @@
 namespace aimrt::runtime::core::rpc {
 
 class LocalRpcBackend : public RpcBackendBase {
- public:
+public:
   struct Options {
     std::string timeout_executor;
   };
@@ -25,9 +25,8 @@ class LocalRpcBackend : public RpcBackendBase {
     kShutdown,
   };
 
- public:
-  LocalRpcBackend()
-      : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
+public:
+  LocalRpcBackend() : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
   ~LocalRpcBackend() override = default;
 
   std::string_view Name() const noexcept override { return "local"; }
@@ -42,21 +41,15 @@ class LocalRpcBackend : public RpcBackendBase {
   void SetLogger(const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr) { logger_ptr_ = logger_ptr; }
   const aimrt::common::util::LoggerWrapper& GetLogger() const { return *logger_ptr_; }
 
-  void SetRpcRegistry(const RpcRegistry* rpc_registry_ptr) noexcept override {
-    rpc_registry_ptr_ = rpc_registry_ptr;
-  }
+  void SetRpcRegistry(const RpcRegistry* rpc_registry_ptr) noexcept override { rpc_registry_ptr_ = rpc_registry_ptr; }
 
-  bool RegisterServiceFunc(
-      const ServiceFuncWrapper& service_func_wrapper) noexcept override;
-  bool RegisterClientFunc(
-      const ClientFuncWrapper& client_func_wrapper) noexcept override;
-  void Invoke(
-      const std::shared_ptr<InvokeWrapper>& client_invoke_wrapper_ptr) noexcept override;
+  bool RegisterServiceFunc(const ServiceFuncWrapper& service_func_wrapper) noexcept override;
+  bool RegisterClientFunc(const ClientFuncWrapper& client_func_wrapper) noexcept override;
+  void Invoke(const std::shared_ptr<InvokeWrapper>& client_invoke_wrapper_ptr) noexcept override;
 
-  void RegisterGetExecutorFunc(
-      const std::function<executor::ExecutorRef(std::string_view)>& get_executor_func);
+  void RegisterGetExecutorFunc(const std::function<executor::ExecutorRef(std::string_view)>& get_executor_func);
 
- private:
+private:
   Options options_;
   std::atomic<State> state_ = State::kPreInit;
   std::shared_ptr<aimrt::common::util::LoggerWrapper> logger_ptr_;
@@ -69,13 +62,11 @@ class LocalRpcBackend : public RpcBackendBase {
 
   std::unique_ptr<util::RpcClientTool<std::shared_ptr<InvokeWrapper>>> client_tool_ptr_;
 
-  using ServiceFuncIndexMap =
+  using ServiceFuncIndexMap = std::unordered_map<
+      std::string_view,  // func_name
       std::unordered_map<
-          std::string_view,  // func_name
-          std::unordered_map<
-              std::string_view,  // lib_path
-              std::unordered_set<
-                  std::string_view>>>;  // module_name
+          std::string_view,                        // lib_path
+          std::unordered_set<std::string_view>>>;  // module_name
   ServiceFuncIndexMap service_func_register_index_;
 };
 

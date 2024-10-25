@@ -37,14 +37,10 @@ struct convert<aimrt::runtime::core::logger::RotateFileLoggerBackend::Options> {
 
     if (node["path"]) rhs.path = node["path"].as<std::string>();
     if (node["filename"]) rhs.filename = node["filename"].as<std::string>();
-    if (node["max_file_size_m"])
-      rhs.max_file_size_m = node["max_file_size_m"].as<uint32_t>();
-    if (node["max_file_num"])
-      rhs.max_file_num = node["max_file_num"].as<uint32_t>();
-    if (node["module_filter"])
-      rhs.module_filter = node["module_filter"].as<std::string>();
-    if (node["log_executor_name"])
-      rhs.log_executor_name = node["log_executor_name"].as<std::string>();
+    if (node["max_file_size_m"]) rhs.max_file_size_m = node["max_file_size_m"].as<uint32_t>();
+    if (node["max_file_num"]) rhs.max_file_num = node["max_file_num"].as<uint32_t>();
+    if (node["module_filter"]) rhs.module_filter = node["module_filter"].as<std::string>();
+    if (node["log_executor_name"]) rhs.log_executor_name = node["log_executor_name"].as<std::string>();
 
     return true;
   }
@@ -62,8 +58,7 @@ RotateFileLoggerBackend::~RotateFileLoggerBackend() {
 }
 
 void RotateFileLoggerBackend::Initialize(YAML::Node options_node) {
-  if (options_node && !options_node.IsNull())
-    options_ = options_node.as<Options>();
+  if (options_node && !options_node.IsNull()) options_ = options_node.as<Options>();
 
   std::filesystem::path log_path(options_.path);
   base_file_name_ = (log_path / options_.filename).string();
@@ -74,13 +69,11 @@ void RotateFileLoggerBackend::Initialize(YAML::Node options_node) {
 
   log_executor_ = get_executor_func_(options_.log_executor_name);
   if (!log_executor_) {
-    throw aimrt::common::util::AimRTException(
-        "Invalid log executor name: " + options_.log_executor_name);
+    throw aimrt::common::util::AimRTException("Invalid log executor name: " + options_.log_executor_name);
   }
 
   if (!log_executor_.ThreadSafe()) {
-    throw aimrt::common::util::AimRTException(
-        "Log executor must be thread safe. Log executor name: " + options_.log_executor_name);
+    throw aimrt::common::util::AimRTException("Log executor must be thread safe. Log executor name: " + options_.log_executor_name);
   }
 
   options_node = options_;
@@ -97,16 +90,9 @@ void RotateFileLoggerBackend::Log(const LogDataWrapper& log_data_wrapper) noexce
       return;
 
     auto log_data_str = ::aimrt_fmt::format(
-        "[{}.{:0>6}][{}][{}][{}][{}:{}:{} @{}]{}",
-        aimrt::common::util::GetTimeStr(std::chrono::system_clock::to_time_t(log_data_wrapper.t)),
-        (aimrt::common::util::GetTimestampUs(log_data_wrapper.t) % 1000000),
-        LogLevelTool::GetLogLevelName(log_data_wrapper.lvl),
-        log_data_wrapper.thread_id,
-        log_data_wrapper.module_name,
-        log_data_wrapper.file_name,
-        log_data_wrapper.line,
-        log_data_wrapper.column,
-        log_data_wrapper.function_name,
+        "[{}.{:0>6}][{}][{}][{}][{}:{}:{} @{}]{}", aimrt::common::util::GetTimeStr(std::chrono::system_clock::to_time_t(log_data_wrapper.t)),
+        (aimrt::common::util::GetTimestampUs(log_data_wrapper.t) % 1000000), LogLevelTool::GetLogLevelName(log_data_wrapper.lvl), log_data_wrapper.thread_id,
+        log_data_wrapper.module_name, log_data_wrapper.file_name, log_data_wrapper.line, log_data_wrapper.column, log_data_wrapper.function_name,
         std::string_view(log_data_wrapper.log_data, log_data_wrapper.log_data_size));
 
     auto log_work = [this, log_data_str{std::move(log_data_str)}]() {
@@ -132,8 +118,7 @@ bool RotateFileLoggerBackend::OpenNewFile() {
   }
 
   if (rename_flag && (std::filesystem::status(base_file_name_).type() == std::filesystem::file_type::regular)) {
-    std::filesystem::rename(
-        base_file_name_, base_file_name_ + "_" + std::to_string(GetNextIndex()));
+    std::filesystem::rename(base_file_name_, base_file_name_ + "_" + std::to_string(GetNextIndex()));
   }
 
   ofs_.open(base_file_name_, std::ios::app);
@@ -180,20 +165,15 @@ void RotateFileLoggerBackend::CleanLogFile() {
 
 uint32_t RotateFileLoggerBackend::GetNextIndex() {
   uint32_t idx = 1;
-  std::filesystem::path log_dir =
-      std::filesystem::path(base_file_name_).parent_path();
+  std::filesystem::path log_dir = std::filesystem::path(base_file_name_).parent_path();
 
   const std::filesystem::directory_iterator end_itr;
-  for (std::filesystem::directory_iterator itr(log_dir); itr != end_itr;
-       ++itr) {
+  for (std::filesystem::directory_iterator itr(log_dir); itr != end_itr; ++itr) {
     const std::string& cur_log_file_name = itr->path().string();
     if (cur_log_file_name.size() <= base_file_name_.size() + 1) continue;
-    if (cur_log_file_name.substr(0, base_file_name_.size() + 1) !=
-        (base_file_name_ + "_"))
-      continue;
+    if (cur_log_file_name.substr(0, base_file_name_.size() + 1) != (base_file_name_ + "_")) continue;
 
-    const std::string& cur_log_file_name_suffix =
-        cur_log_file_name.substr(base_file_name_.size() + 1);
+    const std::string& cur_log_file_name_suffix = cur_log_file_name.substr(base_file_name_.size() + 1);
     if (!aimrt::common::util::IsDigitStr(cur_log_file_name_suffix)) continue;
     uint32_t cur_idx = atoi(cur_log_file_name_suffix.c_str());
     if (cur_idx >= idx) idx = cur_idx + 1;
@@ -214,15 +194,11 @@ bool RotateFileLoggerBackend::CheckLog(const LogDataWrapper& log_data_wrapper) {
   bool if_log = false;
 
   try {
-    if (std::regex_match(
-            log_data_wrapper.module_name.begin(),
-            log_data_wrapper.module_name.end(),
-            std::regex(options_.module_filter, std::regex::ECMAScript))) {
+    if (std::regex_match(log_data_wrapper.module_name.begin(), log_data_wrapper.module_name.end(), std::regex(options_.module_filter, std::regex::ECMAScript))) {
       if_log = true;
     }
   } catch (const std::exception& e) {
-    fprintf(stderr, "Regex get exception, expr: %s, string: %s, exception info: %s\n",
-            options_.module_filter.c_str(), log_data_wrapper.module_name.data(), e.what());
+    fprintf(stderr, "Regex get exception, expr: %s, string: %s, exception info: %s\n", options_.module_filter.c_str(), log_data_wrapper.module_name.data(), e.what());
   }
 
   std::unique_lock lock(module_filter_map_mutex_);

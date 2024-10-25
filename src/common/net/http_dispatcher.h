@@ -18,32 +18,29 @@ namespace aimrt::common::net {
  */
 template <typename HttpHandleFuncType>
 class HttpDispatcher {
- public:
+public:
   using HttpHandle = std::function<HttpHandleFuncType>;
 
- public:
+public:
   HttpDispatcher() = default;
   ~HttpDispatcher() = default;
 
   template <typename... Args>
     requires std::constructible_from<HttpHandle, Args...>
   void RegisterHttpHandle(std::string_view pattern, Args&&... args) {
-    http_handle_list_.emplace_back(
-        std::regex(std::string(pattern), std::regex::ECMAScript | std::regex::icase),
-        std::forward<Args>(args)...);
+    http_handle_list_.emplace_back(std::regex(std::string(pattern), std::regex::ECMAScript | std::regex::icase), std::forward<Args>(args)...);
   }
 
   const HttpHandle& GetHttpHandle(std::string_view path) const {
     for (const auto& itr : http_handle_list_) {
-      if (std::regex_match(path.begin(), path.end(), itr.first) && itr.second)
-        return itr.second;
+      if (std::regex_match(path.begin(), path.end(), itr.first) && itr.second) return itr.second;
     }
 
     static HttpHandle empty_handle;
     return empty_handle;
   }
 
- private:
+private:
   std::list<std::pair<std::regex, HttpHandle>> http_handle_list_;
 };
 

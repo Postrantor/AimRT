@@ -20,7 +20,7 @@
 namespace aimrt::plugins::net_plugin {
 
 class NetPlugin : public AimRTCorePluginBase {
- public:
+public:
   struct Options {
     uint32_t thread_num = 2;
 
@@ -44,7 +44,7 @@ class NetPlugin : public AimRTCorePluginBase {
     std::optional<UdpOptions> udp_options;
   };
 
- public:
+public:
   NetPlugin() = default;
   ~NetPlugin() override = default;
 
@@ -53,14 +53,14 @@ class NetPlugin : public AimRTCorePluginBase {
   bool Initialize(runtime::core::AimRTCore* core_ptr) noexcept override;
   void Shutdown() noexcept override;
 
- private:
+private:
   void SetPluginLogger();
   void RegisterHttpRpcBackend();
   void RegisterHttpChannelBackend();
   void RegisterTcpChannelBackend();
   void RegisterUdpChannelBackend();
 
- private:
+private:
   runtime::core::AimRTCore* core_ptr_ = nullptr;
 
   Options options_;

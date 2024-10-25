@@ -10,48 +10,34 @@
 namespace aimrt::plugins::parameter_plugin {
 
 class ParameterServiceImpl : public aimrt::protocols::parameter_plugin::ParameterServiceCoService {
- public:
+public:
   ParameterServiceImpl() = default;
   ~ParameterServiceImpl() override = default;
 
-  void SetParameterManager(aimrt::runtime::core::parameter::ParameterManager* ptr) {
-    parameter_manager_ptr_ = ptr;
-  }
+  void SetParameterManager(aimrt::runtime::core::parameter::ParameterManager* ptr) { parameter_manager_ptr_ = ptr; }
 
-  aimrt::co::Task<aimrt::rpc::Status> Set(
-      aimrt::rpc::ContextRef ctx_ref,
-      const ::aimrt::protocols::parameter_plugin::SetParameterReq& req,
-      ::aimrt::protocols::parameter_plugin::SetParameterRsp& rsp) override;
+  aimrt::co::Task<aimrt::rpc::Status>
+  Set(aimrt::rpc::ContextRef ctx_ref, const ::aimrt::protocols::parameter_plugin::SetParameterReq& req, ::aimrt::protocols::parameter_plugin::SetParameterRsp& rsp) override;
 
-  aimrt::co::Task<aimrt::rpc::Status> Get(
-      aimrt::rpc::ContextRef ctx_ref,
-      const ::aimrt::protocols::parameter_plugin::GetParameterReq& req,
-      ::aimrt::protocols::parameter_plugin::GetParameterRsp& rsp) override;
+  aimrt::co::Task<aimrt::rpc::Status>
+  Get(aimrt::rpc::ContextRef ctx_ref, const ::aimrt::protocols::parameter_plugin::GetParameterReq& req, ::aimrt::protocols::parameter_plugin::GetParameterRsp& rsp) override;
 
-  aimrt::co::Task<aimrt::rpc::Status> List(
-      aimrt::rpc::ContextRef ctx_ref,
-      const ::aimrt::protocols::parameter_plugin::ListParameterReq& req,
-      ::aimrt::protocols::parameter_plugin::ListParameterRsp& rsp) override;
+  aimrt::co::Task<aimrt::rpc::Status>
+  List(aimrt::rpc::ContextRef ctx_ref, const ::aimrt::protocols::parameter_plugin::ListParameterReq& req, ::aimrt::protocols::parameter_plugin::ListParameterRsp& rsp) override;
 
-  aimrt::co::Task<aimrt::rpc::Status> Dump(
-      aimrt::rpc::ContextRef ctx_ref,
-      const ::aimrt::protocols::parameter_plugin::DumpParameterReq& req,
-      ::aimrt::protocols::parameter_plugin::DumpParameterRsp& rsp) override;
+  aimrt::co::Task<aimrt::rpc::Status>
+  Dump(aimrt::rpc::ContextRef ctx_ref, const ::aimrt::protocols::parameter_plugin::DumpParameterReq& req, ::aimrt::protocols::parameter_plugin::DumpParameterRsp& rsp) override;
 
-  aimrt::co::Task<aimrt::rpc::Status> Load(
-      aimrt::rpc::ContextRef ctx_ref,
-      const ::aimrt::protocols::parameter_plugin::LoadParameterReq& req,
-      ::aimrt::protocols::parameter_plugin::LoadParameterRsp& rsp) override;
+  aimrt::co::Task<aimrt::rpc::Status>
+  Load(aimrt::rpc::ContextRef ctx_ref, const ::aimrt::protocols::parameter_plugin::LoadParameterReq& req, ::aimrt::protocols::parameter_plugin::LoadParameterRsp& rsp) override;
 
- private:
+private:
   enum class ErrorCode : uint32_t {
     kSuc = 0,
     kInvalidModuleName = 1,
   };
 
-  static constexpr std::string_view kErrorInfoArray[] = {
-      "",
-      "INVALID_MODULE_NAME"};
+  static constexpr std::string_view kErrorInfoArray[] = {"", "INVALID_MODULE_NAME"};
 
   template <typename T>
   void SetErrorCode(ErrorCode code, T& rsp) {

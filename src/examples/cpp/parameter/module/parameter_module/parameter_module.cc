@@ -14,9 +14,7 @@ bool ParameterModule::Initialize(aimrt::CoreRef core) {
   try {
     // Get executor handle
     work_executor_ = core_.GetExecutorManager().GetExecutor("work_thread_pool");
-    AIMRT_CHECK_ERROR_THROW(
-        work_executor_ && work_executor_.SupportTimerSchedule(),
-        "Get executor 'work_thread_pool' failed.");
+    AIMRT_CHECK_ERROR_THROW(work_executor_ && work_executor_.SupportTimerSchedule(), "Get executor 'work_thread_pool' failed.");
 
     parameter_handle_ = core_.GetParameterHandle();
     AIMRT_CHECK_ERROR_THROW(parameter_handle_, "Get parameter failed.");

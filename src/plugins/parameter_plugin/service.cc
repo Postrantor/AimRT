@@ -93,9 +93,7 @@ aimrt::co::Task<aimrt::rpc::Status> ParameterServiceImpl::Load(
     aimrt::rpc::ContextRef ctx_ref,
     const ::aimrt::protocols::parameter_plugin::LoadParameterReq& req,
     ::aimrt::protocols::parameter_plugin::LoadParameterRsp& rsp) {
-  for (auto module_itr = req.module_parameter_map().begin();
-       module_itr != req.module_parameter_map().end();
-       ++module_itr) {
+  for (auto module_itr = req.module_parameter_map().begin(); module_itr != req.module_parameter_map().end(); ++module_itr) {
     std::string_view module_name(module_itr->first);
     auto* parameter_handle_ptr = parameter_manager_ptr_->GetParameterHandle(module_name);
 
@@ -106,9 +104,7 @@ aimrt::co::Task<aimrt::rpc::Status> ParameterServiceImpl::Load(
     }
 
     const auto& pb_parameter_map = module_itr->second.value();
-    for (auto parameter_itr = pb_parameter_map.begin();
-         parameter_itr != pb_parameter_map.end();
-         ++parameter_itr) {
+    for (auto parameter_itr = pb_parameter_map.begin(); parameter_itr != pb_parameter_map.end(); ++parameter_itr) {
       parameter_handle_ptr->SetParameter(parameter_itr->first, parameter_itr->second);
     }
   }

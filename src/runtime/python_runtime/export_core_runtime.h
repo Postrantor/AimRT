@@ -15,9 +15,7 @@ namespace aimrt::runtime::python_runtime {
 inline void ExportCoreOptions(pybind11::object m) {
   using aimrt::runtime::core::AimRTCore;
 
-  pybind11::class_<AimRTCore::Options>(std::move(m), "CoreOptions")
-      .def(pybind11::init<>())
-      .def_readwrite("cfg_file_path", &AimRTCore::Options::cfg_file_path);
+  pybind11::class_<AimRTCore::Options>(std::move(m), "CoreOptions").def(pybind11::init<>()).def_readwrite("cfg_file_path", &AimRTCore::Options::cfg_file_path);
 }
 
 inline void PyCoreStart(aimrt::runtime::core::AimRTCore& core) {
@@ -27,14 +25,12 @@ inline void PyCoreStart(aimrt::runtime::core::AimRTCore& core) {
   pybind11::gil_scoped_acquire acquire;
 }
 
-inline void PyCoreRegisterModule(
-    aimrt::runtime::core::AimRTCore& core, const aimrt::ModuleBase* module) {
+inline void PyCoreRegisterModule(aimrt::runtime::core::AimRTCore& core, const aimrt::ModuleBase* module) {
   AIMRT_HL_CHECK_ERROR_THROW(core.GetLogger(), module, "module is null!");
   core.GetModuleManager().RegisterModule("core-py", module->NativeHandle());
 }
 
-inline aimrt::CoreRef PyCoreCreateModule(
-    aimrt::runtime::core::AimRTCore& core, std::string_view module_name) {
+inline aimrt::CoreRef PyCoreCreateModule(aimrt::runtime::core::AimRTCore& core, std::string_view module_name) {
   return aimrt::CoreRef(core.GetModuleManager().CreateModule("core-py", module_name));
 }
 

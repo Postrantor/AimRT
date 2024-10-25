@@ -19,7 +19,7 @@
 namespace aimrt::runtime::core::logger {
 
 class LoggerManager {
- public:
+public:
   struct Options {
     aimrt_log_level_t core_lvl = aimrt_log_level_t::AIMRT_LOG_LEVEL_INFO;
     aimrt_log_level_t default_module_lvl = aimrt_log_level_t::AIMRT_LOG_LEVEL_INFO;
@@ -40,9 +40,8 @@ class LoggerManager {
 
   using LoggerBackendGenFunc = std::function<std::unique_ptr<LoggerBackendBase>()>;
 
- public:
-  LoggerManager()
-      : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
+public:
+  LoggerManager() : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
   ~LoggerManager() = default;
 
   LoggerManager(const LoggerManager&) = delete;
@@ -52,12 +51,9 @@ class LoggerManager {
   void Start();
   void Shutdown();
 
-  void RegisterGetExecutorFunc(
-      const std::function<aimrt::executor::ExecutorRef(std::string_view)>& get_executor_func);
+  void RegisterGetExecutorFunc(const std::function<aimrt::executor::ExecutorRef(std::string_view)>& get_executor_func);
 
-  void RegisterLoggerBackendGenFunc(
-      std::string_view type,
-      LoggerBackendGenFunc&& logger_backend_gen_func);
+  void RegisterLoggerBackendGenFunc(std::string_view type, LoggerBackendGenFunc&& logger_backend_gen_func);
 
   const LoggerProxy& GetLoggerProxy(const util::ModuleDetailInfo& module_info);
   const LoggerProxy& GetLoggerProxy(std::string_view logger_name = "core");
@@ -74,11 +70,11 @@ class LoggerManager {
 
   const std::vector<std::unique_ptr<LoggerBackendBase>>& GetUsedLoggerBackend() const;
 
- private:
+private:
   void RegisterConsoleLoggerBackendGenFunc();
   void RegisterRotateFileLoggerBackendGenFunc();
 
- private:
+private:
   Options options_;
   std::atomic<State> state_ = State::kPreInit;
   std::shared_ptr<aimrt::common::util::LoggerWrapper> logger_ptr_;
@@ -89,12 +85,7 @@ class LoggerManager {
 
   std::vector<std::unique_ptr<LoggerBackendBase>> logger_backend_vec_;
 
-  std::unordered_map<
-      std::string,
-      std::unique_ptr<LoggerProxy>,
-      aimrt::common::util::StringHash,
-      std::equal_to<>>
-      logger_proxy_map_;
+  std::unordered_map<std::string, std::unique_ptr<LoggerProxy>, aimrt::common::util::StringHash, std::equal_to<>> logger_proxy_map_;
 };
 
 }  // namespace aimrt::runtime::core::logger

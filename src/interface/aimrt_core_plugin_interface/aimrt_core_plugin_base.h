@@ -14,7 +14,7 @@ class AimRTCore;
 }
 
 class AimRTCorePluginBase {
- public:
+public:
   AimRTCorePluginBase() = default;
   virtual ~AimRTCorePluginBase() = default;
 

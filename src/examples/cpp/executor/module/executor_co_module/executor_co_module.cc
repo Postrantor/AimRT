@@ -24,13 +24,11 @@ bool ExecutorCoModule::Initialize(aimrt::CoreRef core) {
 
   // Check thread safe executor
   auto thread_safe_executor = core_.GetExecutorManager().GetExecutor("thread_safe_executor");
-  AIMRT_CHECK_ERROR_THROW(thread_safe_executor && thread_safe_executor.ThreadSafe(),
-                          "Can not get thread_safe_executor");
+  AIMRT_CHECK_ERROR_THROW(thread_safe_executor && thread_safe_executor.ThreadSafe(), "Can not get thread_safe_executor");
 
   // Check time schedule executor
   auto time_schedule_executor = core_.GetExecutorManager().GetExecutor("time_schedule_executor");
-  AIMRT_CHECK_ERROR_THROW(time_schedule_executor && time_schedule_executor.SupportTimerSchedule(),
-                          "Can not get time_schedule_executor");
+  AIMRT_CHECK_ERROR_THROW(time_schedule_executor && time_schedule_executor.SupportTimerSchedule(), "Can not get time_schedule_executor");
 
   AIMRT_INFO("Init succeeded.");
 

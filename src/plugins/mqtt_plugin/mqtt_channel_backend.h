@@ -13,7 +13,7 @@
 namespace aimrt::plugins::mqtt_plugin {
 
 class MqttChannelBackend : public runtime::core::channel::ChannelBackendBase {
- public:
+public:
   struct Options {
     struct PubTopicOptions {
       std::string topic_name;
@@ -30,11 +30,8 @@ class MqttChannelBackend : public runtime::core::channel::ChannelBackendBase {
     std::vector<SubTopicOptions> sub_topics_options;
   };
 
- public:
-  MqttChannelBackend(
-      MQTTAsync& client,
-      uint32_t max_pkg_size,
-      const std::shared_ptr<MsgHandleRegistry>& msg_handle_registry_ptr)
+public:
+  MqttChannelBackend(MQTTAsync& client, uint32_t max_pkg_size, const std::shared_ptr<MsgHandleRegistry>& msg_handle_registry_ptr)
       : client_(client),
         max_pkg_size_(max_pkg_size),
         msg_handle_registry_ptr_(msg_handle_registry_ptr) {}
@@ -47,19 +44,16 @@ class MqttChannelBackend : public runtime::core::channel::ChannelBackendBase {
   void Start() override;
   void Shutdown() override;
 
-  void SetChannelRegistry(const runtime::core::channel::ChannelRegistry* channel_registry_ptr) noexcept override {
-    channel_registry_ptr_ = channel_registry_ptr;
-  }
+  void SetChannelRegistry(const runtime::core::channel::ChannelRegistry* channel_registry_ptr) noexcept override { channel_registry_ptr_ = channel_registry_ptr; }
 
-  bool RegisterPublishType(
-      const runtime::core::channel::PublishTypeWrapper& publish_type_wrapper) noexcept override;
+  bool RegisterPublishType(const runtime::core::channel::PublishTypeWrapper& publish_type_wrapper) noexcept override;
   bool Subscribe(const runtime::core::channel::SubscribeWrapper& subscribe_wrapper) noexcept override;
   void Publish(runtime::core::channel::MsgWrapper& msg_wrapper) noexcept override;
 
   void SubscribeMqttTopic();
   void UnSubscribeMqttTopic();
 
- private:
+private:
   enum class State : uint32_t {
     kPreInit,
     kInit,
@@ -82,10 +76,7 @@ class MqttChannelBackend : public runtime::core::channel::ChannelBackendBase {
   };
   std::vector<MqttSubInfo> sub_info_vec_;
 
-  std::unordered_map<
-      std::string,
-      std::unique_ptr<aimrt::runtime::core::channel::SubscribeTool>>
-      subscribe_wrapper_map_;
+  std::unordered_map<std::string, std::unique_ptr<aimrt::runtime::core::channel::SubscribeTool>> subscribe_wrapper_map_;
 
   struct PubCfgInfo {
     int qos;

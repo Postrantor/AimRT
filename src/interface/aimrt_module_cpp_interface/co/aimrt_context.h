@@ -5,17 +5,17 @@
 
 #ifdef AIMRT_EXECUTOR_USE_STDEXEC
 
-  #include <exec/timed_scheduler.hpp>
-  #include <stdexec/execution.hpp>
+#include <exec/timed_scheduler.hpp>
+#include <stdexec/execution.hpp>
 
-  #include "aimrt_module_cpp_interface/executor/executor_manager.h"
-  #include "aimrt_module_cpp_interface/util/function.h"
+#include "aimrt_module_cpp_interface/executor/executor_manager.h"
+#include "aimrt_module_cpp_interface/util/function.h"
 
 namespace aimrt::co {
 
 // Scheduler
 class AimRTScheduler {
- public:
+public:
   // OperationState
   template <typename Receiver>
     requires stdexec::receiver<Receiver>
@@ -24,7 +24,8 @@ class AimRTScheduler {
       requires std::constructible_from<Receiver, Receiver2>
     OperationState(executor::ExecutorRef executor_ref, Receiver2&& r)  //
         noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
-        : executor_ref_(executor_ref), receiver_((Receiver2 &&) r) {}
+        : executor_ref_(executor_ref),
+          receiver_((Receiver2 &&) r) {}
 
     friend void tag_invoke(stdexec::start_t, OperationState& op) noexcept {
       op.executor_ref_.Execute([r{(Receiver &&) op.receiver_}]() mutable {
@@ -42,14 +43,11 @@ class AimRTScheduler {
 
   // Sender
   class Task {
-   public:
+  public:
     using is_sender = void;
-    using completion_signatures = stdexec::completion_signatures<
-        stdexec::set_value_t(),
-        stdexec::set_error_t(std::exception_ptr)>;
+    using completion_signatures = stdexec::completion_signatures<stdexec::set_value_t(), stdexec::set_error_t(std::exception_ptr)>;
 
-    explicit Task(executor::ExecutorRef executor_ref) noexcept
-        : executor_ref_(executor_ref) {}
+    explicit Task(executor::ExecutorRef executor_ref) noexcept : executor_ref_(executor_ref) {}
 
     template <class R>
     friend auto tag_invoke(stdexec::connect_t, const Task& self, R&& rec)  //
@@ -61,17 +59,14 @@ class AimRTScheduler {
       executor::ExecutorRef executor_ref_;
 
       template <class CPO>
-      friend AimRTScheduler
-      tag_invoke(stdexec::get_completion_scheduler_t<CPO>, const Env& self) noexcept {
+      friend AimRTScheduler tag_invoke(stdexec::get_completion_scheduler_t<CPO>, const Env& self) noexcept {
         return AimRTScheduler(self.executor_ref_);
       }
     };
 
-    friend Env tag_invoke(stdexec::get_env_t, const Task& self) noexcept {
-      return Env{self.executor_ref_};
-    }
+    friend Env tag_invoke(stdexec::get_env_t, const Task& self) noexcept { return Env{self.executor_ref_}; }
 
-   private:
+  private:
     executor::ExecutorRef executor_ref_;
   };
 
@@ -86,7 +81,9 @@ class AimRTScheduler {
         std::chrono::system_clock::time_point tp,
         Receiver2&& r)  //
         noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
-        : executor_ref_(executor_ref), tp_(tp), receiver_((Receiver2 &&) r) {}
+        : executor_ref_(executor_ref),
+          tp_(tp),
+          receiver_((Receiver2 &&) r) {}
 
     friend void tag_invoke(stdexec::start_t, SchedulerAtOperationState& op) noexcept {
       op.executor_ref_.ExecuteAt(op.tp_, [r{(Receiver &&) op.receiver_}]() mutable {
@@ -98,7 +95,7 @@ class AimRTScheduler {
       });
     }
 
-   private:
+  private:
     executor::ExecutorRef executor_ref_;
     std::chrono::system_clock::time_point tp_;
     Receiver receiver_;
@@ -106,16 +103,11 @@ class AimRTScheduler {
 
   // Sender
   class SchedulerAtTask {
-   public:
+  public:
     using is_sender = void;
-    using completion_signatures = stdexec::completion_signatures<
-        stdexec::set_value_t(),
-        stdexec::set_error_t(std::exception_ptr)>;
+    using completion_signatures = stdexec::completion_signatures<stdexec::set_value_t(), stdexec::set_error_t(std::exception_ptr)>;
 
-    SchedulerAtTask(
-        executor::ExecutorRef executor_ref,
-        std::chrono::system_clock::time_point tp) noexcept
-        : executor_ref_(executor_ref), tp_(tp) {}
+    SchedulerAtTask(executor::ExecutorRef executor_ref, std::chrono::system_clock::time_point tp) noexcept : executor_ref_(executor_ref), tp_(tp) {}
 
     template <class R>
     friend auto tag_invoke(stdexec::connect_t, const SchedulerAtTask& self, R&& rec)  //
@@ -127,76 +119,53 @@ class AimRTScheduler {
       executor::ExecutorRef executor_ref_;
 
       template <class CPO>
-      friend AimRTScheduler
-      tag_invoke(stdexec::get_completion_scheduler_t<CPO>, const Env& self) noexcept {
+      friend AimRTScheduler tag_invoke(stdexec::get_completion_scheduler_t<CPO>, const Env& self) noexcept {
         return AimRTScheduler(self.executor_ref_);
       }
     };
 
-    friend Env tag_invoke(stdexec::get_env_t, const SchedulerAtTask& self) noexcept {
-      return Env{self.executor_ref_};
-    }
+    friend Env tag_invoke(stdexec::get_env_t, const SchedulerAtTask& self) noexcept { return Env{self.executor_ref_}; }
 
-   private:
+  private:
     executor::ExecutorRef executor_ref_;
     std::chrono::system_clock::time_point tp_;
   };
 
- public:
-  explicit AimRTScheduler(executor::ExecutorRef executor_ref) noexcept
-      : executor_ref_(executor_ref) {}
+public:
+  explicit AimRTScheduler(executor::ExecutorRef executor_ref) noexcept : executor_ref_(executor_ref) {}
 
-  friend Task
-  tag_invoke(stdexec::schedule_t, const AimRTScheduler& s) noexcept {
-    return Task(s.executor_ref_);
-  }
+  friend Task tag_invoke(stdexec::schedule_t, const AimRTScheduler& s) noexcept { return Task(s.executor_ref_); }
 
-  friend std::chrono::system_clock::time_point
-  tag_invoke(exec::now_t, const AimRTScheduler& s) noexcept {
-    return s.executor_ref_.Now();
-  }
+  friend std::chrono::system_clock::time_point tag_invoke(exec::now_t, const AimRTScheduler& s) noexcept { return s.executor_ref_.Now(); }
 
-  friend SchedulerAtTask
-  tag_invoke(exec::schedule_after_t,
-             const AimRTScheduler& s,
-             std::chrono::nanoseconds dt) noexcept {
+  friend SchedulerAtTask tag_invoke(exec::schedule_after_t, const AimRTScheduler& s, std::chrono::nanoseconds dt) noexcept {
     return SchedulerAtTask(s.executor_ref_, dt + s.executor_ref_.Now());
   }
 
-  friend SchedulerAtTask
-  tag_invoke(exec::schedule_at_t,
-             const AimRTScheduler& s,
-             std::chrono::system_clock::time_point tp) noexcept {
+  friend SchedulerAtTask tag_invoke(exec::schedule_at_t, const AimRTScheduler& s, std::chrono::system_clock::time_point tp) noexcept {
     return SchedulerAtTask(s.executor_ref_, tp);
   }
 
-  friend bool operator==(const AimRTScheduler& a, const AimRTScheduler& b) noexcept {
-    return a.executor_ref_.NativeHandle() == b.executor_ref_.NativeHandle();
-  }
+  friend bool operator==(const AimRTScheduler& a, const AimRTScheduler& b) noexcept { return a.executor_ref_.NativeHandle() == b.executor_ref_.NativeHandle(); }
 
-  friend bool operator!=(const AimRTScheduler& a, const AimRTScheduler& b) noexcept {
-    return a.executor_ref_.NativeHandle() != b.executor_ref_.NativeHandle();
-  }
+  friend bool operator!=(const AimRTScheduler& a, const AimRTScheduler& b) noexcept { return a.executor_ref_.NativeHandle() != b.executor_ref_.NativeHandle(); }
 
   explicit operator bool() const { return static_cast<bool>(executor_ref_); }
 
- private:
+private:
   executor::ExecutorRef executor_ref_;
 };
 
 // Context
 class AimRTContext {
- public:
-  explicit AimRTContext(executor::ExecutorManagerRef executor_manager_ref = {}) noexcept
-      : executor_manager_ref_(executor_manager_ref) {}
+public:
+  explicit AimRTContext(executor::ExecutorManagerRef executor_manager_ref = {}) noexcept : executor_manager_ref_(executor_manager_ref) {}
 
-  AimRTScheduler GetScheduler(std::string_view executor_name) {
-    return AimRTScheduler(executor_manager_ref_.GetExecutor(executor_name));
-  }
+  AimRTScheduler GetScheduler(std::string_view executor_name) { return AimRTScheduler(executor_manager_ref_.GetExecutor(executor_name)); }
 
   explicit operator bool() const { return static_cast<bool>(executor_manager_ref_); }
 
- private:
+private:
   executor::ExecutorManagerRef executor_manager_ref_;
 };
 
@@ -204,24 +173,24 @@ class AimRTContext {
 
 #else
 
-  #include <unifex/execute.hpp>
+#include <unifex/execute.hpp>
 
-  #include "aimrt_module_cpp_interface/executor/executor_manager.h"
-  #include "aimrt_module_cpp_interface/util/function.h"
+#include "aimrt_module_cpp_interface/executor/executor_manager.h"
+#include "aimrt_module_cpp_interface/util/function.h"
 
 namespace aimrt::co {
 
 // Scheduler
 class AimRTScheduler {
- public:
+public:
   // OperationState
   template <typename Receiver>
   struct OperationState final {
     template <typename Receiver2>
       requires std::constructible_from<Receiver, Receiver2>
-    explicit OperationState(executor::ExecutorRef executor_ref, Receiver2&& r) noexcept(
-        std::is_nothrow_constructible_v<Receiver, Receiver2>)
-        : executor_ref_(executor_ref), receiver_((Receiver2 &&) r) {}
+    explicit OperationState(executor::ExecutorRef executor_ref, Receiver2&& r) noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
+        : executor_ref_(executor_ref),
+          receiver_((Receiver2 &&) r) {}
 
     void start() noexcept {
       executor_ref_.Execute([r{std::move(receiver_)}]() mutable {
@@ -239,9 +208,8 @@ class AimRTScheduler {
 
   // Sender
   class Task {
-   public:
-    template <template <typename...> class Variant,
-              template <typename...> class Tuple>
+  public:
+    template <template <typename...> class Variant, template <typename...> class Tuple>
     using value_types = Variant<Tuple<>>;
 
     template <template <typename...> class Variant>
@@ -249,16 +217,14 @@ class AimRTScheduler {
 
     static constexpr bool sends_done = false;
 
-    explicit Task(executor::ExecutorRef executor_ref) noexcept
-        : executor_ref_(executor_ref) {}
+    explicit Task(executor::ExecutorRef executor_ref) noexcept : executor_ref_(executor_ref) {}
 
     template <typename Receiver>
     OperationState<unifex::remove_cvref_t<Receiver>> connect(Receiver&& receiver) {
-      return OperationState<unifex::remove_cvref_t<Receiver>>(
-          executor_ref_, (Receiver &&) receiver);
+      return OperationState<unifex::remove_cvref_t<Receiver>>(executor_ref_, (Receiver &&) receiver);
     }
 
-   private:
+  private:
     executor::ExecutorRef executor_ref_;
   };
 
@@ -272,7 +238,9 @@ class AimRTScheduler {
         const std::chrono::nanoseconds& dt,
         Receiver2&& r)  //
         noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
-        : executor_ref_(executor_ref), dt_(dt), receiver_((Receiver2 &&) r) {}
+        : executor_ref_(executor_ref),
+          dt_(dt),
+          receiver_((Receiver2 &&) r) {}
 
     void start() noexcept {
       executor_ref_.ExecuteAfter(dt_, [r{std::move(receiver_)}]() mutable {
@@ -284,7 +252,7 @@ class AimRTScheduler {
       });
     }
 
-   private:
+  private:
     executor::ExecutorRef executor_ref_;
     std::chrono::nanoseconds dt_;
     Receiver receiver_;
@@ -292,9 +260,8 @@ class AimRTScheduler {
 
   // Sender
   class SchedulerAfterTask {
-   public:
-    template <template <typename...> class Variant,
-              template <typename...> class Tuple>
+  public:
+    template <template <typename...> class Variant, template <typename...> class Tuple>
     using value_types = Variant<Tuple<>>;
 
     template <template <typename...> class Variant>
@@ -302,18 +269,14 @@ class AimRTScheduler {
 
     static constexpr bool sends_done = false;
 
-    explicit SchedulerAfterTask(
-        executor::ExecutorRef executor_ref,
-        const std::chrono::nanoseconds& dt) noexcept
-        : executor_ref_(executor_ref), dt_(dt) {}
+    explicit SchedulerAfterTask(executor::ExecutorRef executor_ref, const std::chrono::nanoseconds& dt) noexcept : executor_ref_(executor_ref), dt_(dt) {}
 
     template <typename Receiver>
     SchedulerAfterOperationState<unifex::remove_cvref_t<Receiver>> connect(Receiver&& receiver) {
-      return SchedulerAfterOperationState<unifex::remove_cvref_t<Receiver>>(
-          executor_ref_, dt_, (Receiver &&) receiver);
+      return SchedulerAfterOperationState<unifex::remove_cvref_t<Receiver>>(executor_ref_, dt_, (Receiver &&) receiver);
     }
 
-   private:
+  private:
     executor::ExecutorRef executor_ref_;
     std::chrono::nanoseconds dt_;
   };
@@ -328,7 +291,9 @@ class AimRTScheduler {
         const std::chrono::system_clock::time_point& tp,
         Receiver2&& r)  //
         noexcept(std::is_nothrow_constructible_v<Receiver, Receiver2>)
-        : executor_ref_(executor_ref), tp_(tp), receiver_((Receiver2 &&) r) {}
+        : executor_ref_(executor_ref),
+          tp_(tp),
+          receiver_((Receiver2 &&) r) {}
 
     void start() noexcept {
       executor_ref_.ExecuteAt(tp_, [r{std::move(receiver_)}]() mutable {
@@ -340,7 +305,7 @@ class AimRTScheduler {
       });
     }
 
-   private:
+  private:
     executor::ExecutorRef executor_ref_;
     std::chrono::system_clock::time_point tp_;
     Receiver receiver_;
@@ -348,9 +313,8 @@ class AimRTScheduler {
 
   // Sender
   class SchedulerAtTask {
-   public:
-    template <template <typename...> class Variant,
-              template <typename...> class Tuple>
+  public:
+    template <template <typename...> class Variant, template <typename...> class Tuple>
     using value_types = Variant<Tuple<>>;
 
     template <template <typename...> class Variant>
@@ -358,63 +322,47 @@ class AimRTScheduler {
 
     static constexpr bool sends_done = false;
 
-    explicit SchedulerAtTask(
-        executor::ExecutorRef executor_ref,
-        const std::chrono::system_clock::time_point& tp) noexcept
-        : executor_ref_(executor_ref), tp_(tp) {}
+    explicit SchedulerAtTask(executor::ExecutorRef executor_ref, const std::chrono::system_clock::time_point& tp) noexcept : executor_ref_(executor_ref), tp_(tp) {}
 
     template <typename Receiver>
     SchedulerAtOperationState<unifex::remove_cvref_t<Receiver>> connect(Receiver&& receiver) {
-      return SchedulerAtOperationState<unifex::remove_cvref_t<Receiver>>(
-          executor_ref_, tp_, (Receiver &&) receiver);
+      return SchedulerAtOperationState<unifex::remove_cvref_t<Receiver>>(executor_ref_, tp_, (Receiver &&) receiver);
     }
 
-   private:
+  private:
     executor::ExecutorRef executor_ref_;
     std::chrono::system_clock::time_point tp_;
   };
 
- public:
-  explicit AimRTScheduler(executor::ExecutorRef executor_ref = {}) noexcept
-      : executor_ref_(executor_ref) {}
+public:
+  explicit AimRTScheduler(executor::ExecutorRef executor_ref = {}) noexcept : executor_ref_(executor_ref) {}
 
   Task schedule() const noexcept { return Task(executor_ref_); }
 
-  SchedulerAfterTask schedule_after(const std::chrono::nanoseconds& dt) const noexcept {
-    return SchedulerAfterTask(executor_ref_, dt);
-  }
+  SchedulerAfterTask schedule_after(const std::chrono::nanoseconds& dt) const noexcept { return SchedulerAfterTask(executor_ref_, dt); }
 
-  SchedulerAtTask schedule_at(const std::chrono::system_clock::time_point& tp) const noexcept {
-    return SchedulerAtTask(executor_ref_, tp);
-  }
+  SchedulerAtTask schedule_at(const std::chrono::system_clock::time_point& tp) const noexcept { return SchedulerAtTask(executor_ref_, tp); }
 
-  friend bool operator==(AimRTScheduler a, AimRTScheduler b) noexcept {
-    return a.executor_ref_.NativeHandle() == b.executor_ref_.NativeHandle();
-  }
+  friend bool operator==(AimRTScheduler a, AimRTScheduler b) noexcept { return a.executor_ref_.NativeHandle() == b.executor_ref_.NativeHandle(); }
 
-  friend bool operator!=(AimRTScheduler a, AimRTScheduler b) noexcept {
-    return a.executor_ref_.NativeHandle() != b.executor_ref_.NativeHandle();
-  }
+  friend bool operator!=(AimRTScheduler a, AimRTScheduler b) noexcept { return a.executor_ref_.NativeHandle() != b.executor_ref_.NativeHandle(); }
 
   explicit operator bool() const { return static_cast<bool>(executor_ref_); }
 
- private:
+private:
   executor::ExecutorRef executor_ref_;
 };
 
 // Context
 class AimRTContext {
- public:
-  explicit AimRTContext(executor::ExecutorManagerRef executor_manager_ref = {}) noexcept
-      : executor_manager_ref_(executor_manager_ref) {}
+public:
+  explicit AimRTContext(executor::ExecutorManagerRef executor_manager_ref = {}) noexcept : executor_manager_ref_(executor_manager_ref) {}
 
-  AimRTScheduler GetScheduler(std::string_view executor_name) const {
-    return AimRTScheduler(executor_manager_ref_.GetExecutor(executor_name));
-  }
+  AimRTScheduler GetScheduler(std::string_view executor_name) const { return AimRTScheduler(executor_manager_ref_.GetExecutor(executor_name)); }
 
   explicit operator bool() const { return static_cast<bool>(executor_manager_ref_); }
 
- private:
+private:
   executor::ExecutorManagerRef executor_manager_ref_;
 };
 

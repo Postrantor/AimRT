@@ -41,8 +41,7 @@ int32_t main(int32_t argc, char** argv) {
     core.Initialize(options);
 
     // Create Module
-    aimrt::CoreRef module_handle(
-        core.GetModuleManager().CreateModule("NormalPublisherModule"));
+    aimrt::CoreRef module_handle(core.GetModuleManager().CreateModule("NormalPublisherModule"));
 
     std::string topic_name = "test_topic";
     double channel_frq = 0.5;
@@ -57,8 +56,7 @@ int32_t main(int32_t argc, char** argv) {
 
     // Register publish type
     auto publisher = module_handle.GetChannelHandle().GetPublisher(topic_name);
-    AIMRT_HL_CHECK_ERROR_THROW(module_handle.GetLogger(),
-                               publisher, "Get publisher for topic '{}' failed.", topic_name);
+    AIMRT_HL_CHECK_ERROR_THROW(module_handle.GetLogger(), publisher, "Get publisher for topic '{}' failed.", topic_name);
 
     aimrt::channel::PublisherProxy<aimrt::protocols::example::ExampleEventMsg> publisher_proxy(publisher);
     bool ret = publisher_proxy.RegisterPublishType();
@@ -91,8 +89,7 @@ int32_t main(int32_t argc, char** argv) {
     fu.wait();
 
   } catch (const std::exception& e) {
-    std::cout << "AimRT run with exception and exit. " << e.what()
-              << std::endl;
+    std::cout << "AimRT run with exception and exit. " << e.what() << std::endl;
     return -1;
   }
 

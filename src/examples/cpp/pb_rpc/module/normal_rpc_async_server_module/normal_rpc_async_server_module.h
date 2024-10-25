@@ -11,13 +11,11 @@
 namespace aimrt::examples::cpp::pb_rpc::normal_rpc_async_server_module {
 
 class NormalRpcAsyncServerModule : public aimrt::ModuleBase {
- public:
+public:
   NormalRpcAsyncServerModule() = default;
   ~NormalRpcAsyncServerModule() override = default;
 
-  ModuleInfo Info() const override {
-    return ModuleInfo{.name = "NormalRpcAsyncServerModule"};
-  }
+  ModuleInfo Info() const override { return ModuleInfo{.name = "NormalRpcAsyncServerModule"}; }
 
   bool Initialize(aimrt::CoreRef core) override;
 
@@ -25,7 +23,7 @@ class NormalRpcAsyncServerModule : public aimrt::ModuleBase {
 
   void Shutdown() override;
 
- private:
+private:
   aimrt::CoreRef core_;
   std::shared_ptr<ExampleServiceAsyncServiceImpl> service_ptr_;
 };

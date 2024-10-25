@@ -14,7 +14,7 @@
 namespace aimrt::plugins::grpc_plugin {
 
 class GrpcPlugin : public AimRTCorePluginBase {
- public:
+public:
   struct Options {
     uint32_t thread_num = 2;
 
@@ -22,7 +22,7 @@ class GrpcPlugin : public AimRTCorePluginBase {
     uint16_t listen_port = 50051;
   };
 
- public:
+public:
   GrpcPlugin() = default;
   ~GrpcPlugin() override = default;
 
@@ -31,11 +31,11 @@ class GrpcPlugin : public AimRTCorePluginBase {
   bool Initialize(runtime::core::AimRTCore* core_ptr) noexcept override;
   void Shutdown() noexcept override;
 
- private:
+private:
   void SetPluginLogger();
   void RegisterGrpcRpcBackend();
 
- private:
+private:
   runtime::core::AimRTCore* core_ptr_ = nullptr;
 
   Options options_;

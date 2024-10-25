@@ -19,99 +19,53 @@ namespace aimrt::util {
  *
  */
 class TypeSupportRef {
- public:
+public:
   TypeSupportRef() = default;
-  explicit TypeSupportRef(const aimrt_type_support_base_t* base_ptr)
-      : base_ptr_(base_ptr) {}
+  explicit TypeSupportRef(const aimrt_type_support_base_t* base_ptr) : base_ptr_(base_ptr) {}
   ~TypeSupportRef() = default;
 
   explicit operator bool() const { return (base_ptr_ != nullptr); }
 
-  const aimrt_type_support_base_t* NativeHandle() const {
-    return base_ptr_;
-  }
+  const aimrt_type_support_base_t* NativeHandle() const { return base_ptr_; }
 
-  std::string_view TypeName() const {
-    return ToStdStringView(base_ptr_->type_name(base_ptr_->impl));
-  }
+  std::string_view TypeName() const { return ToStdStringView(base_ptr_->type_name(base_ptr_->impl)); }
 
-  void* Create() const {
-    return base_ptr_->create(base_ptr_->impl);
-  }
+  void* Create() const { return base_ptr_->create(base_ptr_->impl); }
 
-  void Destroy(void* msg) const {
-    base_ptr_->destroy(base_ptr_->impl, msg);
-  }
+  void Destroy(void* msg) const { base_ptr_->destroy(base_ptr_->impl, msg); }
 
   std::shared_ptr<void> CreateSharedPtr() const {
-    return std::shared_ptr<void>(
-        base_ptr_->create(base_ptr_->impl),
-        [base_ptr{this->base_ptr_}](void* ptr) {
-          base_ptr->destroy(base_ptr->impl, ptr);
-        });
+    return std::shared_ptr<void>(base_ptr_->create(base_ptr_->impl), [base_ptr{this->base_ptr_}](void* ptr) { base_ptr->destroy(base_ptr->impl, ptr); });
   }
 
-  void Copy(const void* from, void* to) const {
-    base_ptr_->copy(base_ptr_->impl, from, to);
+  void Copy(const void* from, void* to) const { base_ptr_->copy(base_ptr_->impl, from, to); }
+
+  void Move(void* from, void* to) const { base_ptr_->move(base_ptr_->impl, from, to); }
+
+  bool Serialize(std::string_view serialization_type, const void* msg, const aimrt_buffer_array_allocator_t* allocator, aimrt_buffer_array_t* buffer_array) const {
+    return base_ptr_->serialize(base_ptr_->impl, ToAimRTStringView(serialization_type), msg, allocator, buffer_array);
   }
 
-  void Move(void* from, void* to) const {
-    base_ptr_->move(base_ptr_->impl, from, to);
+  bool Deserialize(std::string_view serialization_type, aimrt_buffer_array_view_t buffer_array_view, void* msg) const {
+    return base_ptr_->deserialize(base_ptr_->impl, ToAimRTStringView(serialization_type), buffer_array_view, msg);
   }
 
-  bool Serialize(
-      std::string_view serialization_type,
-      const void* msg,
-      const aimrt_buffer_array_allocator_t* allocator,
-      aimrt_buffer_array_t* buffer_array) const {
-    return base_ptr_->serialize(
-        base_ptr_->impl,
-        ToAimRTStringView(serialization_type),
-        msg,
-        allocator,
-        buffer_array);
-  }
+  size_t SerializationTypesSupportedNum() const { return base_ptr_->serialization_types_supported_num(base_ptr_->impl); }
 
-  bool Deserialize(
-      std::string_view serialization_type,
-      aimrt_buffer_array_view_t buffer_array_view,
-      void* msg) const {
-    return base_ptr_->deserialize(
-        base_ptr_->impl,
-        ToAimRTStringView(serialization_type),
-        buffer_array_view,
-        msg);
-  }
-
-  size_t SerializationTypesSupportedNum() const {
-    return base_ptr_->serialization_types_supported_num(base_ptr_->impl);
-  }
-
-  const aimrt_string_view_t* SerializationTypesSupportedList() const {
-    return base_ptr_->serialization_types_supported_list(base_ptr_->impl);
-  }
+  const aimrt_string_view_t* SerializationTypesSupportedList() const { return base_ptr_->serialization_types_supported_list(base_ptr_->impl); }
 
   std::span<const aimrt_string_view_t> SerializationTypesSupportedListSpan() const {
-    return std::span<const aimrt_string_view_t>(
-        base_ptr_->serialization_types_supported_list(base_ptr_->impl),
-        base_ptr_->serialization_types_supported_num(base_ptr_->impl));
+    return std::span<const aimrt_string_view_t>(base_ptr_->serialization_types_supported_list(base_ptr_->impl), base_ptr_->serialization_types_supported_num(base_ptr_->impl));
   }
 
-  const void* CustomTypeSupportPtr() const {
-    return base_ptr_->custom_type_support_ptr(base_ptr_->impl);
-  }
+  const void* CustomTypeSupportPtr() const { return base_ptr_->custom_type_support_ptr(base_ptr_->impl); }
 
-  std::string_view DefaultSerializationType() const {
-    return ToStdStringView(base_ptr_->serialization_types_supported_list(base_ptr_->impl)[0]);
-  }
+  std::string_view DefaultSerializationType() const { return ToStdStringView(base_ptr_->serialization_types_supported_list(base_ptr_->impl)[0]); }
 
   bool CheckSerializationTypeSupported(std::string_view serialization_type) const {
     auto serialization_type_span = SerializationTypesSupportedListSpan();
     auto finditr = std::find_if(
-        serialization_type_span.begin(), serialization_type_span.end(),
-        [serialization_type](aimrt_string_view_t s) {
-          return serialization_type == ToStdStringView(s);
-        });
+        serialization_type_span.begin(), serialization_type_span.end(), [serialization_type](aimrt_string_view_t s) { return serialization_type == ToStdStringView(s); });
 
     return (finditr != serialization_type_span.end());
   }
@@ -119,20 +73,14 @@ class TypeSupportRef {
   std::string SimpleSerialize(std::string_view serialization_type, const void* msg) const {
     aimrt::util::BufferArray buffer_array;
 
-    bool ret = base_ptr_->serialize(
-        base_ptr_->impl,
-        ToAimRTStringView(serialization_type),
-        msg,
-        buffer_array.AllocatorNativeHandle(),
-        buffer_array.BufferArrayNativeHandle());
+    bool ret = base_ptr_->serialize(base_ptr_->impl, ToAimRTStringView(serialization_type), msg, buffer_array.AllocatorNativeHandle(), buffer_array.BufferArrayNativeHandle());
 
-    if (ret)
-      return buffer_array.JoinToString();
+    if (ret) return buffer_array.JoinToString();
 
     return "";
   }
 
- private:
+private:
   const aimrt_type_support_base_t* base_ptr_ = nullptr;
 };
 

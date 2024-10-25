@@ -6,11 +6,7 @@
 
 extern "C" {
 
-aimrt::AimRTCorePluginBase* AimRTDynlibCreateCorePluginHandle() {
-  return new aimrt::plugins::net_plugin::NetPlugin();
-}
+aimrt::AimRTCorePluginBase* AimRTDynlibCreateCorePluginHandle() { return new aimrt::plugins::net_plugin::NetPlugin(); }
 
-void AimRTDynlibDestroyCorePluginHandle(const aimrt::AimRTCorePluginBase* plugin) {
-  delete plugin;
-}
+void AimRTDynlibDestroyCorePluginHandle(const aimrt::AimRTCorePluginBase* plugin) { delete plugin; }
 }

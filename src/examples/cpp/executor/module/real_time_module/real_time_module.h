@@ -12,13 +12,11 @@
 namespace aimrt::examples::cpp::executor::real_time_module {
 
 class RealTimeModule : public aimrt::ModuleBase {
- public:
+public:
   RealTimeModule() = default;
   ~RealTimeModule() override = default;
 
-  ModuleInfo Info() const override {
-    return ModuleInfo{.name = "RealTimeModule"};
-  }
+  ModuleInfo Info() const override { return ModuleInfo{.name = "RealTimeModule"}; }
 
   bool Initialize(aimrt::CoreRef aimrt_ptr) override;
 
@@ -26,13 +24,13 @@ class RealTimeModule : public aimrt::ModuleBase {
 
   void Shutdown() override;
 
- private:
+private:
   auto GetLogger() { return core_.GetLogger(); }
 
   void StartWorkLoopByExecutor(std::string_view executor_name);
   co::Task<void> WorkLoop(aimrt::executor::ExecutorRef executor_ptr);
 
- private:
+private:
   aimrt::CoreRef core_;
   co::AsyncScope scope_;
   std::atomic_bool run_flag_ = true;

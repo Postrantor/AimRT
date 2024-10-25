@@ -49,33 +49,24 @@ struct convert<aimrt::plugins::net_plugin::UdpChannelBackend::Options> {
 namespace aimrt::plugins::net_plugin {
 
 void UdpChannelBackend::Initialize(YAML::Node options_node) {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-      "Udp channel backend can only be initialized once.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "Udp channel backend can only be initialized once.");
 
-  if (options_node && !options_node.IsNull())
-    options_ = options_node.as<Options>();
+  if (options_node && !options_node.IsNull()) options_ = options_node.as<Options>();
 
   options_node = options_;
 }
 
-void UdpChannelBackend::Start() {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kStart) == State::kInit,
-      "Method can only be called when state is 'Init'.");
-}
+void UdpChannelBackend::Start() { AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'."); }
 
 void UdpChannelBackend::Shutdown() {
-  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-    return;
+  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 
   udp_svr_ptr_->Shutdown();
   msg_handle_registry_ptr_->Shutdown();
   udp_cli_pool_ptr_->Shutdown();
 }
 
-bool UdpChannelBackend::RegisterPublishType(
-    const runtime::core::channel::PublishTypeWrapper& publish_type_wrapper) noexcept {
+bool UdpChannelBackend::RegisterPublishType(const runtime::core::channel::PublishTypeWrapper& publish_type_wrapper) noexcept {
   try {
     namespace util = aimrt::common::util;
 
@@ -83,14 +74,12 @@ bool UdpChannelBackend::RegisterPublishType(
 
     std::vector<std::string> server_url_list;
 
-    auto find_option_itr = std::find_if(
-        options_.pub_topics_options.begin(), options_.pub_topics_options.end(),
-        [topic_name = info.topic_name](const Options::PubTopicOptions& pub_option) {
+    auto find_option_itr =
+        std::find_if(options_.pub_topics_options.begin(), options_.pub_topics_options.end(), [topic_name = info.topic_name](const Options::PubTopicOptions& pub_option) {
           try {
             return std::regex_match(topic_name.begin(), topic_name.end(), std::regex(pub_option.topic_name, std::regex::ECMAScript));
           } catch (const std::exception& e) {
-            AIMRT_WARN("Regex get exception, expr: {}, string: {}, exception info: {}",
-                       pub_option.topic_name, topic_name, e.what());
+            AIMRT_WARN("Regex get exception, expr: {}, string: {}, exception info: {}", pub_option.topic_name, topic_name, e.what());
             return false;
           }
         });
@@ -102,22 +91,15 @@ bool UdpChannelBackend::RegisterPublishType(
     std::vector<boost::asio::ip::udp::endpoint> server_ep_vec;
     for (const auto& publish_add : server_url_list) {
       auto v = aimrt::common::util::SplitToVec<std::string>(publish_add, ":");
-      boost::asio::ip::udp::endpoint ep{
-          boost::asio::ip::make_address(v[0].c_str()),
-          static_cast<uint16_t>(atoi(v[1].c_str()))};
+      boost::asio::ip::udp::endpoint ep{boost::asio::ip::make_address(v[0].c_str()), static_cast<uint16_t>(atoi(v[1].c_str()))};
 
       server_ep_vec.emplace_back(ep);
     }
 
-    pub_cfg_info_map_.emplace(
-        info.topic_name,
-        PubCfgInfo{
-            .server_ep_vec = std::move(server_ep_vec)});
+    pub_cfg_info_map_.emplace(info.topic_name, PubCfgInfo{.server_ep_vec = std::move(server_ep_vec)});
 
     // 检查path
-    std::string pattern = std::string("/channel/") +
-                          util::UrlEncode(info.topic_name) + "/" +
-                          util::UrlEncode(info.msg_type);
+    std::string pattern = std::string("/channel/") + util::UrlEncode(info.topic_name) + "/" + util::UrlEncode(info.msg_type);
 
     AIMRT_CHECK_ERROR_THROW(pattern.size() <= 255, "Too long uri: {}", pattern);
 
@@ -128,19 +110,15 @@ bool UdpChannelBackend::RegisterPublishType(
   }
 }
 
-bool UdpChannelBackend::Subscribe(
-    const runtime::core::channel::SubscribeWrapper& subscribe_wrapper) noexcept {
+bool UdpChannelBackend::Subscribe(const runtime::core::channel::SubscribeWrapper& subscribe_wrapper) noexcept {
   try {
-    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kInit,
-                            "Method can only be called when state is 'Init'.");
+    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kInit, "Method can only be called when state is 'Init'.");
 
     namespace util = aimrt::common::util;
 
     const auto& info = subscribe_wrapper.info;
 
-    std::string pattern = std::string("/channel/") +
-                          util::UrlEncode(info.topic_name) + "/" +
-                          util::UrlEncode(info.msg_type);
+    std::string pattern = std::string("/channel/") + util::UrlEncode(info.topic_name) + "/" + util::UrlEncode(info.msg_type);
 
     auto find_itr = udp_subscribe_wrapper_map_.find(pattern);
     if (find_itr != udp_subscribe_wrapper_map_.end()) {
@@ -155,14 +133,11 @@ bool UdpChannelBackend::Subscribe(
 
     udp_subscribe_wrapper_map_.emplace(pattern, std::move(sub_tool_unique_ptr));
 
-    auto handle = [this, topic_name = info.topic_name, sub_tool_ptr](
-                      const std::shared_ptr<boost::asio::streambuf>& msg_buf_ptr) {
+    auto handle = [this, topic_name = info.topic_name, sub_tool_ptr](const std::shared_ptr<boost::asio::streambuf>& msg_buf_ptr) {
       auto ctx_ptr = std::make_shared<aimrt::channel::Context>(aimrt_channel_context_type_t::AIMRT_CHANNEL_SUBSCRIBER_CONTEXT);
 
       // 解析msg buf
-      util::ConstBufferOperator buf_oper(
-          static_cast<const char*>(msg_buf_ptr->data().data()),
-          msg_buf_ptr->size());
+      util::ConstBufferOperator buf_oper(static_cast<const char*>(msg_buf_ptr->data().data()), msg_buf_ptr->size());
 
       auto pattern = buf_oper.GetString(util::BufferLenType::kUInt8);
 
@@ -182,8 +157,7 @@ bool UdpChannelBackend::Subscribe(
       // 获取消息buf
       auto remaining_buf = buf_oper.GetRemainingBuffer();
 
-      sub_tool_ptr->DoSubscribeCallback(
-          ctx_ptr, serialization_type, static_cast<const void*>(remaining_buf.data()), remaining_buf.size());
+      sub_tool_ptr->DoSubscribeCallback(ctx_ptr, serialization_type, static_cast<const void*>(remaining_buf.data()), remaining_buf.size());
     };
 
     msg_handle_registry_ptr_->RegisterMsgHandle(pattern, std::move(handle));
@@ -199,17 +173,14 @@ bool UdpChannelBackend::Subscribe(
 
 void UdpChannelBackend::Publish(runtime::core::channel::MsgWrapper& msg_wrapper) noexcept {
   try {
-    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kStart,
-                            "Method can only be called when state is 'Start'.");
+    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kStart, "Method can only be called when state is 'Start'.");
 
     namespace util = aimrt::common::util;
 
     const auto& info = msg_wrapper.info;
 
     auto find_itr = pub_cfg_info_map_.find(info.topic_name);
-    AIMRT_CHECK_ERROR_THROW(
-        find_itr != pub_cfg_info_map_.end() && !(find_itr->second.server_ep_vec.empty()),
-        "Server url list is empty for topic '{}'", info.topic_name);
+    AIMRT_CHECK_ERROR_THROW(find_itr != pub_cfg_info_map_.end() && !(find_itr->second.server_ep_vec.empty()), "Server url list is empty for topic '{}'", info.topic_name);
 
     const auto& server_ep_vec = find_itr->second.server_ep_vec;
 
@@ -224,14 +195,12 @@ void UdpChannelBackend::Publish(runtime::core::channel::MsgWrapper& msg_wrapper)
     // msg序列化
     auto buffer_array_view_ptr = aimrt::runtime::core::channel::SerializeMsgWithCache(msg_wrapper, serialization_type);
     AIMRT_CHECK_ERROR_THROW(
-        buffer_array_view_ptr,
-        "Msg serialization failed, serialization_type {}, pkg_path: {}, module_name: {}, topic_name: {}, msg_type: {}",
-        serialization_type, info.pkg_path, info.module_name, info.topic_name, info.msg_type);
+        buffer_array_view_ptr, "Msg serialization failed, serialization_type {}, pkg_path: {}, module_name: {}, topic_name: {}, msg_type: {}", serialization_type, info.pkg_path,
+        info.module_name, info.topic_name, info.msg_type);
 
     // context
     const auto& keys = msg_wrapper.ctx_ref.GetMetaKeys();
-    AIMRT_CHECK_ERROR_THROW(keys.size() <= 255,
-                            "Too much context meta, require less than 255, but actually {}.", keys.size());
+    AIMRT_CHECK_ERROR_THROW(keys.size() <= 255, "Too much context meta, require less than 255, but actually {}.", keys.size());
 
     std::vector<std::string_view> context_meta_kv;
     size_t context_meta_kv_size = 1;
@@ -245,9 +214,7 @@ void UdpChannelBackend::Publish(runtime::core::channel::MsgWrapper& msg_wrapper)
     }
 
     // 确定path
-    std::string pattern = std::string("/channel/") +
-                          util::UrlEncode(info.topic_name) + "/" +
-                          util::UrlEncode(info.msg_type);
+    std::string pattern = std::string("/channel/") + util::UrlEncode(info.topic_name) + "/" + util::UrlEncode(info.msg_type);
 
     // 填内容，直接复制过去
     auto msg_buf_ptr = std::make_shared<boost::asio::streambuf>();
@@ -256,10 +223,7 @@ void UdpChannelBackend::Publish(runtime::core::channel::MsgWrapper& msg_wrapper)
     const size_t buffer_array_len = buffer_array_view_ptr->Size();
     size_t msg_size = buffer_array_view_ptr->BufferSize();
 
-    uint32_t pkg_size = 1 + pattern.size() +
-                        1 + serialization_type.size() +
-                        context_meta_kv_size +
-                        msg_size;
+    uint32_t pkg_size = 1 + pattern.size() + 1 + serialization_type.size() + context_meta_kv_size + msg_size;
 
     auto buf = msg_buf_ptr->prepare(pkg_size);
 
@@ -275,9 +239,7 @@ void UdpChannelBackend::Publish(runtime::core::channel::MsgWrapper& msg_wrapper)
 
     // data
     for (size_t ii = 0; ii < buffer_array_len; ++ii) {
-      buf_oper.SetBuffer(
-          static_cast<const char*>(buffer_array_data[ii].data),
-          buffer_array_data[ii].len);
+      buf_oper.SetBuffer(static_cast<const char*>(buffer_array_data[ii].data), buffer_array_data[ii].len);
     }
 
     msg_buf_ptr->commit(pkg_size);
@@ -286,8 +248,7 @@ void UdpChannelBackend::Publish(runtime::core::channel::MsgWrapper& msg_wrapper)
       boost::asio::co_spawn(
           *io_ptr_,
           [this, server_ep, msg_buf_ptr]() -> boost::asio::awaitable<void> {
-            aimrt::common::net::AsioUdpClient::Options client_options{
-                .svr_ep = server_ep};
+            aimrt::common::net::AsioUdpClient::Options client_options{.svr_ep = server_ep};
 
             auto cli = co_await udp_cli_pool_ptr_->GetClient(client_options);
             if (!cli) [[unlikely]] {

@@ -14,13 +14,11 @@
 namespace aimrt::examples::cpp::ros2_rpc::normal_rpc_async_client_module {
 
 class NormalRpcAsyncClientModule : public aimrt::ModuleBase {
- public:
+public:
   NormalRpcAsyncClientModule() = default;
   ~NormalRpcAsyncClientModule() override = default;
 
-  ModuleInfo Info() const override {
-    return ModuleInfo{.name = "NormalRpcAsyncClientModule"};
-  }
+  ModuleInfo Info() const override { return ModuleInfo{.name = "NormalRpcAsyncClientModule"}; }
 
   bool Initialize(aimrt::CoreRef core) override;
 
@@ -28,12 +26,12 @@ class NormalRpcAsyncClientModule : public aimrt::ModuleBase {
 
   void Shutdown() override;
 
- private:
+private:
   auto GetLogger() { return core_.GetLogger(); }
 
   void MainLoopFunc();
 
- private:
+private:
   aimrt::CoreRef core_;
   aimrt::executor::ExecutorRef executor_;
 

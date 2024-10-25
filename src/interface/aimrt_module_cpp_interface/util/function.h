@@ -31,10 +31,8 @@ concept DecayedType = std::is_same_v<std::decay_t<T>, T>;
 
 // TODO: 参数类型也要是退化的（纯C Style，不可有引用、stl容器等）
 template <typename T>
-concept FunctionCStyleOps =
-    std::is_same_v<void (*)(void*, void*), decltype(T::relocator)> &&
-    std::is_same_v<void (*)(void*), decltype(T::destroyer)> &&
-    DecayedType<typename InvokerTraitsHelper<decltype(T::invoker)>::ReturnType>;
+concept FunctionCStyleOps = std::is_same_v<void (*)(void*, void*), decltype(T::relocator)> && std::is_same_v<void (*)(void*), decltype(T::destroyer)> &&
+                            DecayedType<typename InvokerTraitsHelper<decltype(T::invoker)>::ReturnType>;
 
 /*
 TODO:
@@ -50,30 +48,27 @@ TODO:
  */
 template <FunctionCStyleOps Ops>
 class Function<Ops> {
- public:
+public:
   using OpsType = Ops;
   using InvokerType = decltype(OpsType::invoker);
 
- private:
+private:
   using InvokerTypeHelper = InvokerTraitsHelper<decltype(OpsType::invoker)>;
   using R = typename InvokerTypeHelper::ReturnType;
   using ArgsTuple = typename InvokerTypeHelper::ArgsTuple;
   using Indices = std::make_index_sequence<InvokerTypeHelper::kArgCount>;
 
- public:
+public:
   Function() { base_.ops = nullptr; }
   Function(std::nullptr_t) { base_.ops = nullptr; }
 
   ~Function() {
-    if (base_.ops)
-      static_cast<const OpsType*>(base_.ops)->destroyer(&(base_.object_buf));
+    if (base_.ops) static_cast<const OpsType*>(base_.ops)->destroyer(&(base_.object_buf));
   }
 
   Function(Function&& function) noexcept {
     base_.ops = std::exchange(function.base_.ops, nullptr);
-    if (base_.ops)
-      static_cast<const OpsType*>(base_.ops)
-          ->relocator(&(function.base_.object_buf), &(base_.object_buf));
+    if (base_.ops) static_cast<const OpsType*>(base_.ops)->relocator(&(function.base_.object_buf), &(base_.object_buf));
   }
 
   Function(aimrt_function_base_t* function_base) {
@@ -83,9 +78,7 @@ class Function<Ops> {
     }
 
     base_.ops = std::exchange(function_base->ops, nullptr);
-    if (base_.ops)
-      static_cast<const OpsType*>(base_.ops)
-          ->relocator(&(function_base->object_buf), &(base_.object_buf));
+    if (base_.ops) static_cast<const OpsType*>(base_.ops)->relocator(&(function_base->object_buf), &(base_.object_buf));
   }
 
   Function& operator=(Function&& function) noexcept {
@@ -97,14 +90,11 @@ class Function<Ops> {
   }
 
   template <class T, size_t... Idx>
-  static constexpr bool CheckImplicitlyConvertible(
-      std::index_sequence<Idx...>) {
-    return std::is_invocable_r_v<R, T, std::tuple_element_t<Idx, ArgsTuple>...> &&
-           !std::is_same_v<std::decay_t<T>, Function>;
+  static constexpr bool CheckImplicitlyConvertible(std::index_sequence<Idx...>) {
+    return std::is_invocable_r_v<R, T, std::tuple_element_t<Idx, ArgsTuple>...> && !std::is_same_v<std::decay_t<T>, Function>;
   }
 
-  template <class T,
-            class = std::enable_if_t<CheckImplicitlyConvertible<T>(Indices{})>>
+  template <class T, class = std::enable_if_t<CheckImplicitlyConvertible<T>(Indices{})>>
   Function(T&& action) {
     if constexpr (std::is_assignable<T, std::nullptr_t>::value) {
       if (action == nullptr) {
@@ -116,8 +106,7 @@ class Function<Ops> {
     ConstructorImpl<T>(std::forward<T>(action), Indices{});
   }
 
-  template <class T,
-            class = std::enable_if_t<CheckImplicitlyConvertible<T>(Indices{})>>
+  template <class T, class = std::enable_if_t<CheckImplicitlyConvertible<T>(Indices{})>>
   Function& operator=(T&& action) {
     this->~Function();
     new (this) Function(std::forward<T>(action));
@@ -140,7 +129,7 @@ class Function<Ops> {
 
   aimrt_function_base_t* NativeHandle() { return &base_; }
 
- private:
+private:
   template <class T, size_t... Idx>
   void ConstructorImpl(T&& action, std::index_sequence<Idx...>) {
     using Decayed = std::decay_t<T>;
@@ -154,9 +143,11 @@ class Function<Ops> {
               return std::invoke(*static_cast<Decayed*>(object), args...);
             }
           },
-          .relocator = [](void* from, void* to) {
+          .relocator =
+              [](void* from, void* to) {
                 new (to) Decayed(std::move(*static_cast<Decayed*>(from)));
-                static_cast<Decayed*>(from)->~Decayed(); },
+                static_cast<Decayed*>(from)->~Decayed();
+              },
           .destroyer = [](void* object) { static_cast<Decayed*>(object)->~Decayed(); }};
 
       base_.ops = &kOps;
@@ -180,7 +171,7 @@ class Function<Ops> {
     }
   }
 
- private:
+private:
   mutable aimrt_function_base_t base_;
 };
 
@@ -217,8 +208,7 @@ struct FunctionTypeDeducer<R (Class::*)(Args...) const&> {
 template <class R, class... Args>
 Function(R (*)(Args...)) -> Function<R(Args...)>;
 
-template <class F, class Signature =
-                       details::FunctionSignature<decltype(&F::operator())>>
+template <class F, class Signature = details::FunctionSignature<decltype(&F::operator())>>
 Function(F) -> Function<Signature>;
 
 template <class T>

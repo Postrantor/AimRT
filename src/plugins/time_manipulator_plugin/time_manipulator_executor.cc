@@ -15,8 +15,7 @@ struct convert<aimrt::plugins::time_manipulator_plugin::TimeManipulatorExecutor:
     Node node;
 
     node["bind_executor"] = rhs.bind_executor;
-    node["dt_us"] = static_cast<uint64_t>(
-        std::chrono::duration_cast<std::chrono::microseconds>(rhs.dt).count());
+    node["dt_us"] = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(rhs.dt).count());
     node["init_ratio"] = rhs.init_ratio;
     node["wheel_size"] = rhs.wheel_size;
     node["thread_sched_policy"] = rhs.thread_sched_policy;
@@ -30,16 +29,11 @@ struct convert<aimrt::plugins::time_manipulator_plugin::TimeManipulatorExecutor:
 
     rhs.bind_executor = node["bind_executor"].as<std::string>();
 
-    if (node["dt_us"])
-      rhs.dt = std::chrono::microseconds(node["dt_us"].as<uint64_t>());
-    if (node["init_ratio"])
-      rhs.init_ratio = node["init_ratio"].as<double>();
-    if (node["wheel_size"])
-      rhs.wheel_size = node["wheel_size"].as<std::vector<size_t>>();
-    if (node["thread_sched_policy"])
-      rhs.thread_sched_policy = node["thread_sched_policy"].as<std::string>();
-    if (node["thread_bind_cpu"])
-      rhs.thread_bind_cpu = node["thread_bind_cpu"].as<std::vector<uint32_t>>();
+    if (node["dt_us"]) rhs.dt = std::chrono::microseconds(node["dt_us"].as<uint64_t>());
+    if (node["init_ratio"]) rhs.init_ratio = node["init_ratio"].as<double>();
+    if (node["wheel_size"]) rhs.wheel_size = node["wheel_size"].as<std::vector<size_t>>();
+    if (node["thread_sched_policy"]) rhs.thread_sched_policy = node["thread_sched_policy"].as<std::string>();
+    if (node["thread_bind_cpu"]) rhs.thread_bind_cpu = node["thread_bind_cpu"].as<std::vector<uint32_t>>();
 
     return true;
   }
@@ -48,37 +42,26 @@ struct convert<aimrt::plugins::time_manipulator_plugin::TimeManipulatorExecutor:
 
 namespace aimrt::plugins::time_manipulator_plugin {
 
-void TimeManipulatorExecutor::Initialize(std::string_view name,
-                                         YAML::Node options_node) {
-  AIMRT_CHECK_ERROR_THROW(
-      get_executor_func_,
-      "Get executor function is not set before initialize.");
+void TimeManipulatorExecutor::Initialize(std::string_view name, YAML::Node options_node) {
+  AIMRT_CHECK_ERROR_THROW(get_executor_func_, "Get executor function is not set before initialize.");
 
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-      "TimeManipulatorExecutor can only be initialized once.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "TimeManipulatorExecutor can only be initialized once.");
 
   name_ = std::string(name);
 
-  if (options_node && !options_node.IsNull())
-    options_ = options_node.as<Options>();
+  if (options_node && !options_node.IsNull()) options_ = options_node.as<Options>();
 
-  AIMRT_CHECK_ERROR_THROW(
-      !options_.bind_executor.empty(),
-      "Invalide bind executor name, name is empty.");
+  AIMRT_CHECK_ERROR_THROW(!options_.bind_executor.empty(), "Invalide bind executor name, name is empty.");
 
   bind_executor_ref_ = get_executor_func_(options_.bind_executor);
 
-  AIMRT_CHECK_ERROR_THROW(
-      bind_executor_ref_,
-      "Can not get executor {}.", options_.bind_executor);
+  AIMRT_CHECK_ERROR_THROW(bind_executor_ref_, "Can not get executor {}.", options_.bind_executor);
 
   thread_safe_ = bind_executor_ref_.ThreadSafe();
 
   SetTimeRatio(options_.init_ratio);
 
-  dt_count_ = static_cast<uint64_t>(
-      std::chrono::duration_cast<std::chrono::nanoseconds>(options_.dt).count());
+  dt_count_ = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(options_.dt).count());
 
   uint64_t cur_scale = 1;
   for (size_t ii = 0; ii < options_.wheel_size.size(); ++ii) {
@@ -114,9 +97,7 @@ void TimeManipulatorExecutor::Initialize(std::string_view name,
 }
 
 void TimeManipulatorExecutor::Start() {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kStart) == State::kInit,
-      "Method can only be called when state is 'Init'.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'.");
 
   timer_thread_ptr_ = std::make_unique<std::thread>(std::bind(&TimeManipulatorExecutor::TimerLoop, this));
 
@@ -124,11 +105,9 @@ void TimeManipulatorExecutor::Start() {
 }
 
 void TimeManipulatorExecutor::Shutdown() {
-  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-    return;
+  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 
-  if (timer_thread_ptr_ && timer_thread_ptr_->joinable())
-    timer_thread_ptr_->join();
+  if (timer_thread_ptr_ && timer_thread_ptr_->joinable()) timer_thread_ptr_->join();
 
   timer_thread_ptr_.reset();
   timing_task_map_.clear();
@@ -156,12 +135,10 @@ void TimeManipulatorExecutor::Execute(aimrt::executor::Task&& task) noexcept {
 std::chrono::system_clock::time_point TimeManipulatorExecutor::Now() const noexcept {
   std::shared_lock<std::shared_mutex> lck(tick_mutex_);
 
-  return aimrt::common::util::GetTimePointFromTimestampNs(
-      current_tick_count_ * dt_count_ + start_time_point_);
+  return aimrt::common::util::GetTimePointFromTimestampNs(current_tick_count_ * dt_count_ + start_time_point_);
 }
 
-void TimeManipulatorExecutor::ExecuteAt(
-    std::chrono::system_clock::time_point tp, aimrt::executor::Task&& task) noexcept {
+void TimeManipulatorExecutor::ExecuteAt(std::chrono::system_clock::time_point tp, aimrt::executor::Task&& task) noexcept {
   try {
     uint64_t virtual_tp = aimrt::common::util::GetTimestampNs(tp) - start_time_point_;
 
@@ -183,26 +160,21 @@ void TimeManipulatorExecutor::ExecuteAt(
         auto pos = (diff_tick_count + temp_current_tick_count) % options_.wheel_size[ii];
 
         // TODO：基于时间将任务排序后插进去
-        timing_wheel_vec_[ii].wheel[pos].emplace_back(
-            TaskWithTimestamp{virtual_tp / dt_count_, std::move(task)});
+        timing_wheel_vec_[ii].wheel[pos].emplace_back(TaskWithTimestamp{virtual_tp / dt_count_, std::move(task)});
         return;
       }
       diff_tick_count /= options_.wheel_size[ii];
       temp_current_tick_count /= options_.wheel_size[ii];
     }
 
-    timing_task_map_[diff_tick_count + temp_current_tick_count].emplace_back(
-        TaskWithTimestamp{virtual_tp / dt_count_, std::move(task)});
+    timing_task_map_[diff_tick_count + temp_current_tick_count].emplace_back(TaskWithTimestamp{virtual_tp / dt_count_, std::move(task)});
   } catch (const std::exception& e) {
     AIMRT_ERROR("{}", e.what());
   }
 }
 
-void TimeManipulatorExecutor::RegisterGetExecutorFunc(
-    const std::function<aimrt::executor::ExecutorRef(std::string_view)>& get_executor_func) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kPreInit,
-      "Method can only be called when state is 'PreInit'.");
+void TimeManipulatorExecutor::RegisterGetExecutorFunc(const std::function<aimrt::executor::ExecutorRef(std::string_view)>& get_executor_func) {
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
   get_executor_func_ = get_executor_func;
 }
 
@@ -219,8 +191,7 @@ void TimeManipulatorExecutor::SetTimeRatio(double ratio) {
   ratio_direction_ = false;
 
   // 大于0小于1，慢放
-  if (ratio > 1e-15 && ratio < 1.0 &&
-      (1.0 / ratio) < std::numeric_limits<uint32_t>::max()) {
+  if (ratio > 1e-15 && ratio < 1.0 && (1.0 / ratio) < std::numeric_limits<uint32_t>::max()) {
     real_ratio_ = static_cast<uint32_t>(1.0 / ratio);
     return;
   }
@@ -232,11 +203,9 @@ void TimeManipulatorExecutor::SetTimeRatio(double ratio) {
 double TimeManipulatorExecutor::GetTimeRatio() const {
   std::shared_lock<std::shared_mutex> lck(ratio_mutex_);
 
-  if (ratio_direction_)
-    return real_ratio_;
+  if (ratio_direction_) return real_ratio_;
 
-  if (real_ratio_ == std::numeric_limits<uint32_t>::max())
-    return 0.0;
+  if (real_ratio_ == std::numeric_limits<uint32_t>::max()) return 0.0;
 
   return 1.0 / real_ratio_;
 }
@@ -249,8 +218,7 @@ void TimeManipulatorExecutor::TimerLoop() {
     aimrt::runtime::core::util::BindCpuForCurrentThread(options_.thread_bind_cpu);
     aimrt::runtime::core::util::SetCpuSchedForCurrentThread(options_.thread_sched_policy);
   } catch (const std::exception& e) {
-    AIMRT_WARN("Set thread policy for time manipulator executor '{}' get exception, {}",
-               Name(), e.what());
+    AIMRT_WARN("Set thread policy for time manipulator executor '{}' get exception, {}", Name(), e.what());
   }
 
   auto last_loop_time_point = std::chrono::system_clock::now();
@@ -292,9 +260,7 @@ void TimeManipulatorExecutor::TimerLoop() {
           real_dt -= real_dt;
         }
 
-        std::this_thread::sleep_until(
-            last_loop_time_point +=
-            std::chrono::duration_cast<std::chrono::system_clock::time_point::duration>(sleep_time));
+        std::this_thread::sleep_until(last_loop_time_point += std::chrono::duration_cast<std::chrono::system_clock::time_point::duration>(sleep_time));
 
       } while (state_.load() != State::kShutdown && real_dt.count());
 
@@ -327,8 +293,7 @@ void TimeManipulatorExecutor::TimerLoop() {
 
       tick_mutex_.unlock();
     } catch (const std::exception& e) {
-      AIMRT_FATAL("Time manipulator executor '{}' run loop get exception, {}",
-                  Name(), e.what());
+      AIMRT_FATAL("Time manipulator executor '{}' run loop get exception, {}", Name(), e.what());
     }
   }
 }

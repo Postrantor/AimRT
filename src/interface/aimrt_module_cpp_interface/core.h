@@ -31,10 +31,9 @@ struct ModuleInfo {
  *
  */
 class CoreRef {
- public:
+public:
   CoreRef() = default;
-  explicit CoreRef(const aimrt_core_base_t* base_ptr)
-      : base_ptr_(base_ptr) {}
+  explicit CoreRef(const aimrt_core_base_t* base_ptr) : base_ptr_(base_ptr) {}
   ~CoreRef() = default;
 
   explicit operator bool() const { return (base_ptr_ != nullptr); }
@@ -124,7 +123,7 @@ class CoreRef {
     return parameter::ParameterHandleRef(base_ptr_->parameter_handle(base_ptr_->impl));
   }
 
- private:
+private:
   const aimrt_core_base_t* base_ptr_ = nullptr;
 };
 

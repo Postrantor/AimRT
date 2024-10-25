@@ -21,8 +21,7 @@ bool NormalRpcAsyncClientModule::Initialize(aimrt::CoreRef core) {
 
     // Get executor handle
     executor_ = core_.GetExecutorManager().GetExecutor("work_thread_pool");
-    AIMRT_CHECK_ERROR_THROW(executor_ && executor_.SupportTimerSchedule(),
-                            "Get executor 'work_thread_pool' failed.");
+    AIMRT_CHECK_ERROR_THROW(executor_ && executor_.SupportTimerSchedule(), "Get executor 'work_thread_pool' failed.");
 
     // Get rpc handle
     auto rpc_handle = core_.GetRpcHandle();
@@ -88,22 +87,17 @@ void NormalRpcAsyncClientModule::MainLoopFunc() {
   AIMRT_INFO("Client start new rpc call. req: {}", aimrt::Pb2CompactJson(*req_ptr));
 
   // Call rpc
-  proxy.GetFooData(
-      ctx_ptr, *req_ptr, *rsp_ptr,
-      [this, ctx_ptr, req_ptr, rsp_ptr](aimrt::rpc::Status status) {
-        // Check result
-        if (status.OK()) {
-          AIMRT_INFO("Client get rpc ret, status: {}, rsp: {}", status.ToString(),
-                     aimrt::Pb2CompactJson(*rsp_ptr));
-        } else {
-          AIMRT_WARN("Client get rpc error ret, status: {}", status.ToString());
-        }
-      });
+  proxy.GetFooData(ctx_ptr, *req_ptr, *rsp_ptr, [this, ctx_ptr, req_ptr, rsp_ptr](aimrt::rpc::Status status) {
+    // Check result
+    if (status.OK()) {
+      AIMRT_INFO("Client get rpc ret, status: {}, rsp: {}", status.ToString(), aimrt::Pb2CompactJson(*rsp_ptr));
+    } else {
+      AIMRT_WARN("Client get rpc error ret, status: {}", status.ToString());
+    }
+  });
 
   // Sleep
-  executor_.ExecuteAfter(
-      std::chrono::milliseconds(static_cast<uint32_t>(1000 / rpc_frq_)),
-      std::bind(&NormalRpcAsyncClientModule::MainLoopFunc, this));
+  executor_.ExecuteAfter(std::chrono::milliseconds(static_cast<uint32_t>(1000 / rpc_frq_)), std::bind(&NormalRpcAsyncClientModule::MainLoopFunc, this));
 }
 
 }  // namespace aimrt::examples::cpp::pb_rpc::normal_rpc_async_client_module

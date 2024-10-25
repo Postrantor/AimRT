@@ -12,13 +12,13 @@
 namespace aimrt::common::util {
 
 class BlockQueueStoppedException : public std::runtime_error {
- public:
+public:
   BlockQueueStoppedException() : std::runtime_error("BlockQueue is stopped") {}
 };
 
 template <class T>
 class BlockQueue {
- public:
+public:
   BlockQueue() = default;
   ~BlockQueue() { Stop(); }
 
@@ -74,7 +74,7 @@ class BlockQueue {
     return running_flag_;
   }
 
- protected:
+protected:
   mutable std::mutex mutex_;
   std::condition_variable cond_;
   std::queue<T> queue_;

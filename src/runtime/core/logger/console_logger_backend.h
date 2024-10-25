@@ -13,14 +13,14 @@
 namespace aimrt::runtime::core::logger {
 
 class ConsoleLoggerBackend : public LoggerBackendBase {
- public:
+public:
   struct Options {
     bool print_color = true;
     std::string module_filter = "(.*)";
     std::string log_executor_name = "";
   };
 
- public:
+public:
   ConsoleLoggerBackend() = default;
   ~ConsoleLoggerBackend() override = default;
 
@@ -30,28 +30,23 @@ class ConsoleLoggerBackend : public LoggerBackendBase {
   void Start() override {}
   void Shutdown() override { run_flag_.store(false); }
 
-  void RegisterGetExecutorFunc(
-      const std::function<aimrt::executor::ExecutorRef(std::string_view)>& get_executor_func) {
-    get_executor_func_ = get_executor_func;
-  }
+  void RegisterGetExecutorFunc(const std::function<aimrt::executor::ExecutorRef(std::string_view)>& get_executor_func) { get_executor_func_ = get_executor_func; }
 
   bool AllowDuplicates() const noexcept override { return false; }
 
   void Log(const LogDataWrapper& log_data_wrapper) noexcept override;
 
- private:
+private:
   bool CheckLog(const LogDataWrapper& log_data_wrapper);
 
- private:
+private:
   Options options_;
   std::function<aimrt::executor::ExecutorRef(std::string_view)> get_executor_func_;
   aimrt::executor::ExecutorRef log_executor_;
   std::atomic_bool run_flag_ = false;
 
   std::shared_mutex module_filter_map_mutex_;
-  std::unordered_map<
-      std::string, bool, aimrt::common::util::StringHash, std::equal_to<>>
-      module_filter_map_;
+  std::unordered_map<std::string, bool, aimrt::common::util::StringHash, std::equal_to<>> module_filter_map_;
 };
 
 }  // namespace aimrt::runtime::core::logger

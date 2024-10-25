@@ -23,7 +23,7 @@
 namespace aimrt::runtime::core {
 
 class AimRTCore {
- public:
+public:
   struct Options {
     std::string cfg_file_path;
   };
@@ -145,7 +145,7 @@ class AimRTCore {
 
   using HookTask = std::function<void()>;
 
- public:
+public:
   AimRTCore();
   ~AimRTCore();
 
@@ -164,8 +164,7 @@ class AimRTCore {
   template <typename... Args>
     requires std::constructible_from<HookTask, Args...>
   void RegisterHookFunc(State state, Args&&... args) {
-    hook_task_vec_array_[static_cast<uint32_t>(state)]
-        .emplace_back(std::forward<Args>(args)...);
+    hook_task_vec_array_[static_cast<uint32_t>(state)].emplace_back(std::forward<Args>(args)...);
   }
 
   auto& GetConfiguratorManager() { return configurator_manager_; }
@@ -205,7 +204,7 @@ class AimRTCore {
 
   std::string GenInitializationReport() const;
 
- private:
+private:
   void EnterState(State state);
   void SetCoreLogger();
   void ResetCoreLogger();
@@ -215,7 +214,7 @@ class AimRTCore {
   void StartImpl();
   void ShutdownImpl();
 
- private:
+private:
   Options options_;
   State state_ = State::kPreInit;
   std::shared_ptr<aimrt::common::util::LoggerWrapper> logger_ptr_;

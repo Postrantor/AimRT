@@ -25,18 +25,14 @@ TEST(NET_TEST, Tcp_base) {
 
   // start cli
   auto tcp_cli_ptr = std::make_shared<AsioTcpClient>(cli_sys_ptr->IO());
-  tcp_cli_ptr->RegisterMsgHandle(
-      [&cli_result_str](const std::shared_ptr<asio::streambuf> &msg_buf_ptr) {
-        cli_result_str = std::string(
-            static_cast<const char *>(msg_buf_ptr->data().data()), msg_buf_ptr->size());
-        AIMRT_INFO("cli get a msg, size: {}, data: {}", cli_result_str.size(), cli_result_str);
-      });
+  tcp_cli_ptr->RegisterMsgHandle([&cli_result_str](const std::shared_ptr<asio::streambuf> &msg_buf_ptr) {
+    cli_result_str = std::string(static_cast<const char *>(msg_buf_ptr->data().data()), msg_buf_ptr->size());
+    AIMRT_INFO("cli get a msg, size: {}, data: {}", cli_result_str.size(), cli_result_str);
+  });
 
-  tcp_cli_ptr->Initialize(AsioTcpClient::Options{
-      .svr_ep = asio::ip::tcp::endpoint{asio::ip::address_v4({127, 0, 0, 1}), 57634}});
+  tcp_cli_ptr->Initialize(AsioTcpClient::Options{.svr_ep = asio::ip::tcp::endpoint{asio::ip::address_v4({127, 0, 0, 1}), 57634}});
 
-  cli_sys_ptr->RegisterSvrFunc([tcp_cli_ptr] { tcp_cli_ptr->Start(); },
-                               [tcp_cli_ptr] { tcp_cli_ptr->Shutdown(); });
+  cli_sys_ptr->RegisterSvrFunc([tcp_cli_ptr] { tcp_cli_ptr->Start(); }, [tcp_cli_ptr] { tcp_cli_ptr->Shutdown(); });
 
   std::thread t_cli([cli_sys_ptr] {
     AIMRT_INFO("cli_sys_ptr start.");
@@ -49,21 +45,15 @@ TEST(NET_TEST, Tcp_base) {
   std::thread t_svr([svr_sys_ptr, &svr_result_str] {
     AIMRT_INFO("svr_sys_ptr start.");
     auto tcp_svr_ptr = std::make_shared<AsioTcpServer>(svr_sys_ptr->IO());
-    tcp_svr_ptr->RegisterMsgHandle(
-        [tcp_svr_ptr, &svr_result_str](const asio::ip::tcp::endpoint &ep,
-                                       const std::shared_ptr<asio::streambuf> &msg_buf_ptr) {
-          svr_result_str = std::string(
-              static_cast<const char *>(msg_buf_ptr->data().data()), msg_buf_ptr->size());
-          AIMRT_INFO("svr get a msg from {}, size: {}, data: {}",
-                     aimrt::common::util::SSToString(ep), svr_result_str.size(), svr_result_str);
-          tcp_svr_ptr->SendMsg(ep, msg_buf_ptr);
-        });
+    tcp_svr_ptr->RegisterMsgHandle([tcp_svr_ptr, &svr_result_str](const asio::ip::tcp::endpoint &ep, const std::shared_ptr<asio::streambuf> &msg_buf_ptr) {
+      svr_result_str = std::string(static_cast<const char *>(msg_buf_ptr->data().data()), msg_buf_ptr->size());
+      AIMRT_INFO("svr get a msg from {}, size: {}, data: {}", aimrt::common::util::SSToString(ep), svr_result_str.size(), svr_result_str);
+      tcp_svr_ptr->SendMsg(ep, msg_buf_ptr);
+    });
 
-    tcp_svr_ptr->Initialize(AsioTcpServer::Options{
-        .ep = {asio::ip::address_v4(), 57634}});
+    tcp_svr_ptr->Initialize(AsioTcpServer::Options{.ep = {asio::ip::address_v4(), 57634}});
 
-    svr_sys_ptr->RegisterSvrFunc([tcp_svr_ptr] { tcp_svr_ptr->Start(); },
-                                 [tcp_svr_ptr] { tcp_svr_ptr->Shutdown(); });
+    svr_sys_ptr->RegisterSvrFunc([tcp_svr_ptr] { tcp_svr_ptr->Start(); }, [tcp_svr_ptr] { tcp_svr_ptr->Shutdown(); });
 
     svr_sys_ptr->Start();
     svr_sys_ptr->Join();

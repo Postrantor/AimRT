@@ -13,12 +13,12 @@
 namespace aimrt::plugins::iceoryx_plugin {
 
 class IceoryxPlugin : public AimRTCorePluginBase {
- public:
+public:
   struct Options {
     uint64_t shm_init_size;
   };
 
- public:
+public:
   IceoryxPlugin() = default;
 
   ~IceoryxPlugin() override = default;
@@ -28,14 +28,14 @@ class IceoryxPlugin : public AimRTCorePluginBase {
 
   void Shutdown() noexcept override;
 
- private:
+private:
   void SetPluginLogger();
 
   void RegisterIceoryxChannelBackend();
 
   void RegisterIceoryxRpcBackend() {}
 
- private:
+private:
   runtime::core::AimRTCore *core_ptr_ = nullptr;
 
   Options options_;

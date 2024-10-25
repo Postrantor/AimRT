@@ -19,9 +19,8 @@ using Strand = boost::asio::strand<boost::asio::io_context::executor_type>;
 template <class T>
 using Awaitable = boost::asio::awaitable<T>;
 
-class AsioHttp2ClientPool
-    : public std::enable_shared_from_this<AsioHttp2ClientPool> {
- public:
+class AsioHttp2ClientPool : public std::enable_shared_from_this<AsioHttp2ClientPool> {
+public:
   explicit AsioHttp2ClientPool(const std::shared_ptr<IOCtx>& io_ptr)
       : io_ptr_(io_ptr),
         mgr_strand_(boost::asio::make_strand(*io_ptr_)),
@@ -33,30 +32,21 @@ class AsioHttp2ClientPool
   AsioHttp2ClientPool& operator=(const AsioHttp2ClientPool&) = delete;
 
   void SetLogger(const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr) {
-    AIMRT_CHECK_ERROR_THROW(
-        state_.load() == State::kPreInit,
-        "Method can only be called when state is 'PreInit'.");
+    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
     logger_ptr_ = logger_ptr;
   }
 
   void Initialize(const ClientPoolOptions& options) {
-    AIMRT_CHECK_ERROR_THROW(
-        std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-        "Method can only be called when state is 'PreInit'.");
+    AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
     options_ = ClientPoolOptions::Verify(options);
   }
 
-  void Start() {
-    AIMRT_CHECK_ERROR_THROW(
-        std::atomic_exchange(&state_, State::kStart) == State::kInit,
-        "Method can only be called when state is 'Init'.");
-  }
+  void Start() { AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'."); }
 
   void Shutdown() {
-    if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-      return;
+    if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 
     auto self = shared_from_this();
     boost::asio::dispatch(mgr_strand_, [this, self]() {
@@ -68,8 +58,7 @@ class AsioHttp2ClientPool
     });
   }
 
-  Awaitable<std::shared_ptr<AsioHttp2Client>> GetClient(
-      const ClientOptions& client_options) {
+  Awaitable<std::shared_ptr<AsioHttp2Client>> GetClient(const ClientOptions& client_options) {
     return boost::asio::co_spawn(
         mgr_strand_,
         [this, &client_options]() -> Awaitable<std::shared_ptr<AsioHttp2Client>> {
@@ -94,8 +83,7 @@ class AsioHttp2ClientPool
                 client_map_.erase(itr++);
             }
 
-            AIMRT_CHECK_ERROR_THROW(client_map_.size() < options_.max_client_num,
-                                    "Client pool is full.");
+            AIMRT_CHECK_ERROR_THROW(client_map_.size() < options_.max_client_num, "Client pool is full.");
           }
 
           auto client_ptr = std::make_shared<AsioHttp2Client>(io_ptr_);
@@ -110,7 +98,7 @@ class AsioHttp2ClientPool
 
   const aimrt::common::util::LoggerWrapper& GetLogger() const { return *logger_ptr_; }
 
- private:
+private:
   enum class State : uint32_t {
     kPreInit,
     kInit,

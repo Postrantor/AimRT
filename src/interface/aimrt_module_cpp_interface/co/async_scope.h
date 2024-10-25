@@ -5,19 +5,19 @@
 
 #ifdef AIMRT_EXECUTOR_USE_STDEXEC
 
-  #include <exec/async_scope.hpp>
+#include <exec/async_scope.hpp>
 
 namespace aimrt::co {
 
 using AsyncScope = exec::async_scope;
 
-  #define complete on_empty
+#define complete on_empty
 
 }  // namespace aimrt::co
 
 #else
 
-  #include <unifex/async_scope.hpp>
+#include <unifex/async_scope.hpp>
 
 namespace aimrt::co {
 

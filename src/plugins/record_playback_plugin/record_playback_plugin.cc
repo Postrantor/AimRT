@@ -49,13 +49,11 @@ struct convert<aimrt::plugins::record_playback_plugin::RecordPlaybackPlugin::Opt
   static bool decode(const Node& node, Options& rhs) {
     if (!node.IsMap()) return false;
 
-    if (node["service_name"])
-      rhs.service_name = node["service_name"].as<std::string>();
+    if (node["service_name"]) rhs.service_name = node["service_name"].as<std::string>();
 
     if (node["type_support_pkgs"] && node["type_support_pkgs"].IsSequence()) {
       for (const auto& type_support_pkg_node : node["type_support_pkgs"]) {
-        auto type_support_pkg = Options::TypeSupportPkg{
-            .path = type_support_pkg_node["path"].as<std::string>()};
+        auto type_support_pkg = Options::TypeSupportPkg{.path = type_support_pkg_node["path"].as<std::string>()};
 
         rhs.type_support_pkgs.emplace_back(std::move(type_support_pkg));
       }
@@ -63,9 +61,7 @@ struct convert<aimrt::plugins::record_playback_plugin::RecordPlaybackPlugin::Opt
 
     if (node["record_actions"] && node["record_actions"].IsSequence()) {
       for (const auto& record_action_node : node["record_actions"]) {
-        auto record_action = Options::RecordActionOptions{
-            .name = record_action_node["name"].as<std::string>(),
-            .options = record_action_node["options"]};
+        auto record_action = Options::RecordActionOptions{.name = record_action_node["name"].as<std::string>(), .options = record_action_node["options"]};
 
         rhs.record_actions.emplace_back(std::move(record_action));
       }
@@ -73,9 +69,7 @@ struct convert<aimrt::plugins::record_playback_plugin::RecordPlaybackPlugin::Opt
 
     if (node["playback_actions"] && node["playback_actions"].IsSequence()) {
       for (const auto& playback_action_node : node["playback_actions"]) {
-        auto playback_action = Options::PlaybackActionOptions{
-            .name = playback_action_node["name"].as<std::string>(),
-            .options = playback_action_node["options"]};
+        auto playback_action = Options::PlaybackActionOptions{.name = playback_action_node["name"].as<std::string>(), .options = playback_action_node["options"]};
 
         rhs.playback_actions.emplace_back(std::move(playback_action));
       }
@@ -103,46 +97,35 @@ bool RecordPlaybackPlugin::Initialize(runtime::core::AimRTCore* core_ptr) noexce
     // type support
     for (auto& type_support_pkg : options_.type_support_pkgs) {
       // 检查重复pkg
-      auto finditr = std::find_if(
-          options_.type_support_pkgs.begin(), options_.type_support_pkgs.end(),
-          [&type_support_pkg](const auto& op) {
-            if (&type_support_pkg == &op) return false;
-            return op.path == type_support_pkg.path;
-          });
-      AIMRT_CHECK_ERROR_THROW(finditr == options_.type_support_pkgs.end(),
-                              "Duplicate pkg path {}", type_support_pkg.path);
+      auto finditr = std::find_if(options_.type_support_pkgs.begin(), options_.type_support_pkgs.end(), [&type_support_pkg](const auto& op) {
+        if (&type_support_pkg == &op) return false;
+        return op.path == type_support_pkg.path;
+      });
+      AIMRT_CHECK_ERROR_THROW(finditr == options_.type_support_pkgs.end(), "Duplicate pkg path {}", type_support_pkg.path);
 
       InitTypeSupport(type_support_pkg);
     }
 
-    AIMRT_TRACE("Load {} pkg and {} type.",
-                type_support_pkg_loader_vec_.size(), type_support_map_.size());
+    AIMRT_TRACE("Load {} pkg and {} type.", type_support_pkg_loader_vec_.size(), type_support_map_.size());
 
     // record
     for (auto& record_action_options : options_.record_actions) {
       // 检查重复 record
-      auto finditr = std::find_if(
-          options_.record_actions.begin(), options_.record_actions.end(),
-          [&record_action_options](const auto& op) {
-            if (&record_action_options == &op) return false;
-            return op.name == record_action_options.name;
-          });
-      AIMRT_CHECK_ERROR_THROW(finditr == options_.record_actions.end(),
-                              "Duplicate record action {}", record_action_options.name);
+      auto finditr = std::find_if(options_.record_actions.begin(), options_.record_actions.end(), [&record_action_options](const auto& op) {
+        if (&record_action_options == &op) return false;
+        return op.name == record_action_options.name;
+      });
+      AIMRT_CHECK_ERROR_THROW(finditr == options_.record_actions.end(), "Duplicate record action {}", record_action_options.name);
 
       auto action_ptr = std::make_unique<RecordAction>();
 
       action_ptr->RegisterGetExecutorFunc(
-          [this](std::string_view executor_name) -> aimrt::executor::ExecutorRef {
-            return core_ptr_->GetExecutorManager().GetExecutor(executor_name);
-          });
-      action_ptr->RegisterGetTypeSupportFunc(
-          [this](std::string_view msg_type) -> aimrt::util::TypeSupportRef {
-            auto finditr = type_support_map_.find(msg_type);
-            if (finditr != type_support_map_.end())
-              return finditr->second.type_support_ref;
-            return {};
-          });
+          [this](std::string_view executor_name) -> aimrt::executor::ExecutorRef { return core_ptr_->GetExecutorManager().GetExecutor(executor_name); });
+      action_ptr->RegisterGetTypeSupportFunc([this](std::string_view msg_type) -> aimrt::util::TypeSupportRef {
+        auto finditr = type_support_map_.find(msg_type);
+        if (finditr != type_support_map_.end()) return finditr->second.type_support_ref;
+        return {};
+      });
       action_ptr->Initialize(record_action_options.options);
 
       record_action_map_.emplace(record_action_options.name, std::move(action_ptr));
@@ -151,73 +134,54 @@ bool RecordPlaybackPlugin::Initialize(runtime::core::AimRTCore* core_ptr) noexce
     // playback
     for (auto& playback_action_options : options_.playback_actions) {
       // 检查重复 playback
-      auto finditr = std::find_if(
-          options_.playback_actions.begin(), options_.playback_actions.end(),
-          [&playback_action_options](const auto& op) {
-            if (&playback_action_options == &op) return false;
-            return op.name == playback_action_options.name;
-          });
-      AIMRT_CHECK_ERROR_THROW(finditr == options_.playback_actions.end(),
-                              "Duplicate playback action {}", playback_action_options.name);
+      auto finditr = std::find_if(options_.playback_actions.begin(), options_.playback_actions.end(), [&playback_action_options](const auto& op) {
+        if (&playback_action_options == &op) return false;
+        return op.name == playback_action_options.name;
+      });
+      AIMRT_CHECK_ERROR_THROW(finditr == options_.playback_actions.end(), "Duplicate playback action {}", playback_action_options.name);
 
       auto action_ptr = std::make_unique<PlaybackAction>();
 
       action_ptr->RegisterGetExecutorFunc(
-          [this](std::string_view executor_name) -> aimrt::executor::ExecutorRef {
-            return core_ptr_->GetExecutorManager().GetExecutor(executor_name);
-          });
-      action_ptr->RegisterGetTypeSupportFunc(
-          [this](std::string_view msg_type) -> aimrt::util::TypeSupportRef {
-            auto finditr = type_support_map_.find(msg_type);
-            if (finditr != type_support_map_.end())
-              return finditr->second.type_support_ref;
-            return {};
-          });
+          [this](std::string_view executor_name) -> aimrt::executor::ExecutorRef { return core_ptr_->GetExecutorManager().GetExecutor(executor_name); });
+      action_ptr->RegisterGetTypeSupportFunc([this](std::string_view msg_type) -> aimrt::util::TypeSupportRef {
+        auto finditr = type_support_map_.find(msg_type);
+        if (finditr != type_support_map_.end()) return finditr->second.type_support_ref;
+        return {};
+      });
       action_ptr->Initialize(playback_action_options.options);
 
       playback_action_map_.emplace(playback_action_options.name, std::move(action_ptr));
     }
 
     core_ptr_->RegisterHookFunc(
-        runtime::core::AimRTCore::State::kPostInitLog,
-        [this] {
-          SetLogger(aimrt::logger::LoggerRef(
-              core_ptr_->GetLoggerManager().GetLoggerProxy().NativeHandle()));
-        });
+        runtime::core::AimRTCore::State::kPostInitLog, [this] { SetLogger(aimrt::logger::LoggerRef(core_ptr_->GetLoggerManager().GetLoggerProxy().NativeHandle())); });
 
-    core_ptr_->RegisterHookFunc(
-        runtime::core::AimRTCore::State::kPreInitModules,
-        [this] {
-          RegisterRpcService();
-          RegisterRecordChannel();
-          RegisterPlaybackChannel();
-        });
+    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPreInitModules, [this] {
+      RegisterRpcService();
+      RegisterRecordChannel();
+      RegisterPlaybackChannel();
+    });
 
-    core_ptr_->RegisterHookFunc(
-        runtime::core::AimRTCore::State::kPostStart,
-        [this] {
-          for (auto& itr : record_action_map_) {
-            itr.second->InitExecutor();
-            itr.second->Start();
-          }
+    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPostStart, [this] {
+      for (auto& itr : record_action_map_) {
+        itr.second->InitExecutor();
+        itr.second->Start();
+      }
 
-          for (auto& itr : playback_action_map_) {
-            itr.second->InitExecutor();
-            itr.second->Start();
-          }
-        });
+      for (auto& itr : playback_action_map_) {
+        itr.second->InitExecutor();
+        itr.second->Start();
+      }
+    });
 
-    core_ptr_->RegisterHookFunc(
-        runtime::core::AimRTCore::State::kPreShutdown,
-        [this] {
-          for (auto& itr : playback_action_map_)
-            itr.second->Shutdown();
+    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPreShutdown, [this] {
+      for (auto& itr : playback_action_map_) itr.second->Shutdown();
 
-          for (auto& itr : record_action_map_)
-            itr.second->Shutdown();
+      for (auto& itr : record_action_map_) itr.second->Shutdown();
 
-          SetLogger(aimrt::logger::GetSimpleLoggerRef());
-        });
+      SetLogger(aimrt::logger::GetSimpleLoggerRef());
+    });
 
     plugin_options_node = options_;
     core_ptr_->GetPluginManager().UpdatePluginOptionsNode(Name(), plugin_options_node);
@@ -234,11 +198,9 @@ void RecordPlaybackPlugin::Shutdown() noexcept {
   try {
     if (!init_flag_) return;
 
-    for (auto& itr : playback_action_map_)
-      itr.second->Shutdown();
+    for (auto& itr : playback_action_map_) itr.second->Shutdown();
 
-    for (auto& itr : record_action_map_)
-      itr.second->Shutdown();
+    for (auto& itr : record_action_map_) itr.second->Shutdown();
 
   } catch (const std::exception& e) {
     AIMRT_ERROR("Shutdown failed, {}", e.what());
@@ -260,17 +222,11 @@ void RecordPlaybackPlugin::InitTypeSupport(Options::TypeSupportPkg& options) {
     // 检查重复 type
     auto finditr = type_support_map_.find(type_name);
     if (finditr != type_support_map_.end()) {
-      AIMRT_WARN("Duplicate msg type '{}' in {} and {}.",
-                 type_name, options.path, finditr->second.options.path);
+      AIMRT_WARN("Duplicate msg type '{}' in {} and {}.", type_name, options.path, finditr->second.options.path);
       continue;
     }
 
-    type_support_map_.emplace(
-        type_name,
-        TypeSupportWrapper{
-            .options = options,
-            .type_support_ref = type_support_ref,
-            .loader_ptr = loader_ptr.get()});
+    type_support_map_.emplace(type_name, TypeSupportWrapper{.options = options, .type_support_ref = type_support_ref, .loader_ptr = loader_ptr.get()});
   }
 
   type_support_pkg_loader_vec_.emplace_back(std::move(loader_ptr));
@@ -279,14 +235,12 @@ void RecordPlaybackPlugin::InitTypeSupport(Options::TypeSupportPkg& options) {
 void RecordPlaybackPlugin::RegisterRpcService() {
   service_ptr_ = std::make_unique<RecordPlaybackServiceImpl>();
 
-  if (!options_.service_name.empty())
-    service_ptr_->SetServiceName(options_.service_name);
+  if (!options_.service_name.empty()) service_ptr_->SetServiceName(options_.service_name);
 
   service_ptr_->SetRecordActionMap(&record_action_map_);
   service_ptr_->SetPlaybackActionMap(&playback_action_map_);
 
-  auto rpc_handle_ref = aimrt::rpc::RpcHandleRef(
-      core_ptr_->GetRpcManager().GetRpcHandleProxy().NativeHandle());
+  auto rpc_handle_ref = aimrt::rpc::RpcHandleRef(core_ptr_->GetRpcManager().GetRpcHandleProxy().NativeHandle());
 
   bool ret = rpc_handle_ref.RegisterService(service_ptr_.get());
   AIMRT_CHECK_ERROR(ret, "Register service failed.");
@@ -313,22 +267,15 @@ void RecordPlaybackPlugin::RegisterRecordChannel() {
     for (const auto& topic_meta_itr : topic_meta_map) {
       const auto& topic_meta = topic_meta_itr.second;
 
-      RecordFunc record_func =
-          [&record_action, topic_id{topic_meta.id}, serialization_type{topic_meta.serialization_type}](
-              uint64_t cur_timestamp, MsgWrapper& msg_wrapper) {
-            auto buffer_view_ptr = aimrt::runtime::core::channel::TrySerializeMsgWithCache(msg_wrapper, serialization_type);
-            if (!buffer_view_ptr) [[unlikely]] {
-              AIMRT_WARN("Can not serialize msg type '{}' with serialization type '{}'.",
-                         msg_wrapper.info.msg_type, serialization_type);
-              return;
-            }
+      RecordFunc record_func = [&record_action, topic_id{topic_meta.id}, serialization_type{topic_meta.serialization_type}](uint64_t cur_timestamp, MsgWrapper& msg_wrapper) {
+        auto buffer_view_ptr = aimrt::runtime::core::channel::TrySerializeMsgWithCache(msg_wrapper, serialization_type);
+        if (!buffer_view_ptr) [[unlikely]] {
+          AIMRT_WARN("Can not serialize msg type '{}' with serialization type '{}'.", msg_wrapper.info.msg_type, serialization_type);
+          return;
+        }
 
-            record_action.AddRecord(
-                RecordAction::OneRecord{
-                    .timestamp = cur_timestamp,
-                    .topic_index = topic_id,
-                    .buffer_view_ptr = buffer_view_ptr});
-          };
+        record_action.AddRecord(RecordAction::OneRecord{.timestamp = cur_timestamp, .topic_index = topic_id, .buffer_view_ptr = buffer_view_ptr});
+      };
 
       auto& item = recore_func_map[topic_meta_itr.first];
       item.require_cache_serialization_types.emplace(topic_meta.serialization_type);
@@ -359,26 +306,21 @@ void RecordPlaybackPlugin::RegisterRecordChannel() {
     // 小优化
     auto& record_func_vec = wrapper.record_func_vec;
     if (record_func_vec.size() == 1) {
-      sub_wrapper.callback =
-          [record_func{std::move(record_func_vec[0])}](
-              MsgWrapper& msg_wrapper, std::function<void()>&& release_callback) {
-            auto cur_timestamp = aimrt::common::util::GetCurTimestampNs();
+      sub_wrapper.callback = [record_func{std::move(record_func_vec[0])}](MsgWrapper& msg_wrapper, std::function<void()>&& release_callback) {
+        auto cur_timestamp = aimrt::common::util::GetCurTimestampNs();
 
-            record_func(cur_timestamp, msg_wrapper);
+        record_func(cur_timestamp, msg_wrapper);
 
-            release_callback();
-          };
+        release_callback();
+      };
     } else {
-      sub_wrapper.callback =
-          [record_func_vec{std::move(record_func_vec)}](
-              MsgWrapper& msg_wrapper, std::function<void()>&& release_callback) {
-            auto cur_timestamp = aimrt::common::util::GetCurTimestampNs();
+      sub_wrapper.callback = [record_func_vec{std::move(record_func_vec)}](MsgWrapper& msg_wrapper, std::function<void()>&& release_callback) {
+        auto cur_timestamp = aimrt::common::util::GetCurTimestampNs();
 
-            for (const auto& record_func : record_func_vec)
-              record_func(cur_timestamp, msg_wrapper);
+        for (const auto& record_func : record_func_vec) record_func(cur_timestamp, msg_wrapper);
 
-            release_callback();
-          };
+        release_callback();
+      };
     }
 
     bool ret = core_ptr_->GetChannelManager().Subscribe(std::move(sub_wrapper));
@@ -398,9 +340,7 @@ void RecordPlaybackPlugin::RegisterPlaybackChannel() {
     const auto& topic_meta_map = playback_action.GetTopicMetaMap();
 
     for (const auto& topic_meta_itr : topic_meta_map) {
-      playback_topic_meta_set.emplace(TopicMetaKey{
-          .topic_name = topic_meta_itr.second.topic_name,
-          .msg_type = topic_meta_itr.second.msg_type});
+      playback_topic_meta_set.emplace(TopicMetaKey{.topic_name = topic_meta_itr.second.topic_name, .msg_type = topic_meta_itr.second.msg_type});
     }
   }
 
@@ -439,42 +379,33 @@ void RecordPlaybackPlugin::RegisterPlaybackChannel() {
       auto finditr = type_support_map_.find(topic_meta.msg_type);
       const auto& type_support_wrapper = finditr->second;
 
-      const auto* pub_type_wrapper_ptr = core_ptr_->GetChannelManager().GetChannelRegistry()->GetPublishTypeWrapperPtr(
-          topic_meta.msg_type, topic_meta.topic_name, type_support_wrapper.options.path, "core");
+      const auto* pub_type_wrapper_ptr =
+          core_ptr_->GetChannelManager().GetChannelRegistry()->GetPublishTypeWrapperPtr(topic_meta.msg_type, topic_meta.topic_name, type_support_wrapper.options.path, "core");
       AIMRT_CHECK_ERROR_THROW(pub_type_wrapper_ptr, "Get publish type failed!");
 
-      topic_id_wrapper_map.emplace(
-          topic_meta.id,
-          TopicIndexWrapper{
-              .pub_type_wrapper_ptr = pub_type_wrapper_ptr,
-              .serialization_type = topic_meta.serialization_type});
+      topic_id_wrapper_map.emplace(topic_meta.id, TopicIndexWrapper{.pub_type_wrapper_ptr = pub_type_wrapper_ptr, .serialization_type = topic_meta.serialization_type});
     }
 
-    playback_action.RegisterPubRecordFunc(
-        [this, topic_id_wrapper_map{std::move(topic_id_wrapper_map)}](
-            const PlaybackAction::OneRecord& record) {
-          auto finditr = topic_id_wrapper_map.find(record.topic_index);
-          if (finditr == topic_id_wrapper_map.end()) [[unlikely]] {
-            AIMRT_WARN("Invalid topic id: {}.", record.topic_index);
-            return;
-          }
+    playback_action.RegisterPubRecordFunc([this, topic_id_wrapper_map{std::move(topic_id_wrapper_map)}](const PlaybackAction::OneRecord& record) {
+      auto finditr = topic_id_wrapper_map.find(record.topic_index);
+      if (finditr == topic_id_wrapper_map.end()) [[unlikely]] {
+        AIMRT_WARN("Invalid topic id: {}.", record.topic_index);
+        return;
+      }
 
-          const auto* pub_type_wrapper_ptr = finditr->second.pub_type_wrapper_ptr;
-          const auto& serialization_type = finditr->second.serialization_type;
-          auto msg_type_support_ref = pub_type_wrapper_ptr->info.msg_type_support_ref;
+      const auto* pub_type_wrapper_ptr = finditr->second.pub_type_wrapper_ptr;
+      const auto& serialization_type = finditr->second.serialization_type;
+      auto msg_type_support_ref = pub_type_wrapper_ptr->info.msg_type_support_ref;
 
-          // TODO: 记录ctx
-          aimrt::channel::Context ctx;
+      // TODO: 记录ctx
+      aimrt::channel::Context ctx;
 
-          MsgWrapper msg_wrapper{
-              .info = pub_type_wrapper_ptr->info,
-              .msg_ptr = nullptr,
-              .ctx_ref = ctx};
+      MsgWrapper msg_wrapper{.info = pub_type_wrapper_ptr->info, .msg_ptr = nullptr, .ctx_ref = ctx};
 
-          msg_wrapper.serialization_cache.emplace(serialization_type, record.buffer_view_ptr);
+      msg_wrapper.serialization_cache.emplace(serialization_type, record.buffer_view_ptr);
 
-          core_ptr_->GetChannelManager().Publish(std::move(msg_wrapper));
-        });
+      core_ptr_->GetChannelManager().Publish(std::move(msg_wrapper));
+    });
   }
 }
 

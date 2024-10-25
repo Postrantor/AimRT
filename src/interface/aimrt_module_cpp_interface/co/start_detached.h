@@ -5,7 +5,7 @@
 
 #ifdef AIMRT_EXECUTOR_USE_STDEXEC
 
-  #include <stdexec/execution.hpp>
+#include <stdexec/execution.hpp>
 
 namespace aimrt::co {
 
@@ -15,9 +15,9 @@ inline constexpr auto& StartDetached = stdexec::start_detached;
 
 #else
 
-  #include <unifex/async_scope.hpp>
-  #include <unifex/sync_wait.hpp>
-  #include <unifex/then.hpp>
+#include <unifex/async_scope.hpp>
+#include <unifex/sync_wait.hpp>
+#include <unifex/then.hpp>
 
 namespace aimrt::co {
 
@@ -36,8 +36,7 @@ inline void StartDetached(Sender&& sender) {
       delete p;
     }
   };
-  static std::unique_ptr<unifex::async_scope, AsyncScopeDeleter> scope_ptr{
-      new unifex::async_scope()};
+  static std::unique_ptr<unifex::async_scope, AsyncScopeDeleter> scope_ptr{new unifex::async_scope()};
   scope_ptr->spawn((Sender &&) sender);
 }
 

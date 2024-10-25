@@ -28,37 +28,25 @@ Ros2AdapterClient::Ros2AdapterClient(
   client_options.qos = qos.get_rmw_qos_profile();
 
   rcl_ret_t ret = rcl_client_init(
-      this->get_client_handle().get(),
-      this->get_rcl_node_handle(),
-      static_cast<const rosidl_service_type_support_t*>(client_func_wrapper_.info.custom_type_support_ptr),
-      real_ros2_func_name_.c_str(),
-      &client_options);
+      this->get_client_handle().get(), this->get_rcl_node_handle(), static_cast<const rosidl_service_type_support_t*>(client_func_wrapper_.info.custom_type_support_ptr),
+      real_ros2_func_name_.c_str(), &client_options);
   if (ret != RCL_RET_OK) {
     if (ret == RCL_RET_SERVICE_NAME_INVALID) {
       auto* rcl_node_handle = this->get_rcl_node_handle();
       // this will throw on any validation problem
       rcl_reset_error();
-      rclcpp::expand_topic_or_service_name(
-          real_ros2_func_name_,
-          rcl_node_get_name(rcl_node_handle),
-          rcl_node_get_namespace(rcl_node_handle),
-          true);
+      rclcpp::expand_topic_or_service_name(real_ros2_func_name_, rcl_node_get_name(rcl_node_handle), rcl_node_get_namespace(rcl_node_handle), true);
     }
 
-    AIMRT_WARN("Create ros2 client failed, func name '{}', err info: {}",
-               client_func_wrapper_.info.func_name, rcl_get_error_string().str);
+    AIMRT_WARN("Create ros2 client failed, func name '{}', err info: {}", client_func_wrapper_.info.func_name, rcl_get_error_string().str);
     rcl_reset_error();
   } else {
-    AIMRT_TRACE("Create ros2 client successfully, func name '{}'",
-                client_func_wrapper_.info.func_name);
+    AIMRT_TRACE("Create ros2 client successfully, func name '{}'", client_func_wrapper_.info.func_name);
   }
 
   if (timeout_executor) {
     client_tool_.RegisterTimeoutExecutor(timeout_executor);
-    client_tool_.RegisterTimeoutHandle(
-        [](auto&& client_invoke_wrapper_ptr) {
-          client_invoke_wrapper_ptr->callback(aimrt::rpc::Status(AIMRT_RPC_STATUS_TIMEOUT));
-        });
+    client_tool_.RegisterTimeoutHandle([](auto&& client_invoke_wrapper_ptr) { client_invoke_wrapper_ptr->callback(aimrt::rpc::Status(AIMRT_RPC_STATUS_TIMEOUT)); });
   }
 }
 
@@ -72,12 +60,10 @@ std::shared_ptr<rmw_request_id_t> Ros2AdapterClient::create_request_header() {
   return std::make_shared<rmw_request_id_t>();
 }
 
-void Ros2AdapterClient::handle_response(
-    std::shared_ptr<rmw_request_id_t> request_header, std::shared_ptr<void> response) {
+void Ros2AdapterClient::handle_response(std::shared_ptr<rmw_request_id_t> request_header, std::shared_ptr<void> response) {
   if (!run_flag_.load()) return;
 
-  AIMRT_TRACE("Handle ros2 rsp, func name '{}', seq num '{}'",
-              client_func_wrapper_.info.func_name, request_header->sequence_number);
+  AIMRT_TRACE("Handle ros2 rsp, func name '{}', seq num '{}'", client_func_wrapper_.info.func_name, request_header->sequence_number);
 
   auto msg_recorder = client_tool_.GetRecord(request_header->sequence_number);
   if (!msg_recorder) [[unlikely]] {
@@ -91,21 +77,17 @@ void Ros2AdapterClient::handle_response(
   client_invoke_wrapper_ptr->callback(aimrt::rpc::Status(AIMRT_RPC_STATUS_OK));
 }
 
-void Ros2AdapterClient::Invoke(
-    const std::shared_ptr<runtime::core::rpc::InvokeWrapper>& client_invoke_wrapper_ptr) {
-  AIMRT_TRACE("Invoke ros2 req, func name '{}'",
-              client_invoke_wrapper_ptr->info.func_name);
+void Ros2AdapterClient::Invoke(const std::shared_ptr<runtime::core::rpc::InvokeWrapper>& client_invoke_wrapper_ptr) {
+  AIMRT_TRACE("Invoke ros2 req, func name '{}'", client_invoke_wrapper_ptr->info.func_name);
 
   auto timeout = client_invoke_wrapper_ptr->ctx_ref.Timeout();
   auto record_ptr = client_invoke_wrapper_ptr;
 
   int64_t sequence_number = 0;
-  rcl_ret_t ret = rcl_send_request(
-      get_client_handle().get(), client_invoke_wrapper_ptr->req_ptr, &sequence_number);
+  rcl_ret_t ret = rcl_send_request(get_client_handle().get(), client_invoke_wrapper_ptr->req_ptr, &sequence_number);
 
   if (RCL_RET_OK != ret) [[unlikely]] {
-    AIMRT_WARN("Ros2 client send req failed, func name '{}', err info: {}",
-               client_invoke_wrapper_ptr->info.func_name, rcl_get_error_string().str);
+    AIMRT_WARN("Ros2 client send req failed, func name '{}', err info: {}", client_invoke_wrapper_ptr->info.func_name, rcl_get_error_string().str);
     rcl_reset_error();
     client_invoke_wrapper_ptr->callback(aimrt::rpc::Status(AIMRT_RPC_STATUS_CLI_SEND_REQ_FAILED));
     return;
@@ -134,37 +116,25 @@ Ros2AdapterWrapperClient::Ros2AdapterWrapperClient(
   client_options.qos = qos.get_rmw_qos_profile();
 
   rcl_ret_t ret = rcl_client_init(
-      this->get_client_handle().get(),
-      this->get_rcl_node_handle(),
-      rosidl_typesupport_cpp::get_service_type_support_handle<ros2_plugin_proto::srv::RosRpcWrapper>(),
-      real_ros2_func_name_.c_str(),
-      &client_options);
+      this->get_client_handle().get(), this->get_rcl_node_handle(), rosidl_typesupport_cpp::get_service_type_support_handle<ros2_plugin_proto::srv::RosRpcWrapper>(),
+      real_ros2_func_name_.c_str(), &client_options);
   if (ret != RCL_RET_OK) {
     if (ret == RCL_RET_SERVICE_NAME_INVALID) {
       auto* rcl_node_handle = this->get_rcl_node_handle();
       // this will throw on any validation problem
       rcl_reset_error();
-      rclcpp::expand_topic_or_service_name(
-          real_ros2_func_name_,
-          rcl_node_get_name(rcl_node_handle),
-          rcl_node_get_namespace(rcl_node_handle),
-          true);
+      rclcpp::expand_topic_or_service_name(real_ros2_func_name_, rcl_node_get_name(rcl_node_handle), rcl_node_get_namespace(rcl_node_handle), true);
     }
 
-    AIMRT_WARN("Create ros2 client failed, func name '{}', err info: {}",
-               client_func_wrapper_.info.func_name, rcl_get_error_string().str);
+    AIMRT_WARN("Create ros2 client failed, func name '{}', err info: {}", client_func_wrapper_.info.func_name, rcl_get_error_string().str);
     rcl_reset_error();
   } else {
-    AIMRT_TRACE("Create ros2 client successfully, func name '{}'",
-                client_func_wrapper_.info.func_name);
+    AIMRT_TRACE("Create ros2 client successfully, func name '{}'", client_func_wrapper_.info.func_name);
   }
 
   if (timeout_executor) {
     client_tool_.RegisterTimeoutExecutor(timeout_executor);
-    client_tool_.RegisterTimeoutHandle(
-        [](auto&& client_invoke_wrapper_ptr) {
-          client_invoke_wrapper_ptr->callback(aimrt::rpc::Status(AIMRT_RPC_STATUS_TIMEOUT));
-        });
+    client_tool_.RegisterTimeoutHandle([](auto&& client_invoke_wrapper_ptr) { client_invoke_wrapper_ptr->callback(aimrt::rpc::Status(AIMRT_RPC_STATUS_TIMEOUT)); });
   }
 }
 
@@ -178,12 +148,10 @@ std::shared_ptr<rmw_request_id_t> Ros2AdapterWrapperClient::create_request_heade
   return std::make_shared<rmw_request_id_t>();
 }
 
-void Ros2AdapterWrapperClient::handle_response(
-    std::shared_ptr<rmw_request_id_t> request_header, std::shared_ptr<void> response) {
+void Ros2AdapterWrapperClient::handle_response(std::shared_ptr<rmw_request_id_t> request_header, std::shared_ptr<void> response) {
   if (!run_flag_.load()) return;
 
-  AIMRT_TRACE("Handle ros2 rsp, func name '{}', seq num '{}'",
-              client_func_wrapper_.info.func_name, request_header->sequence_number);
+  AIMRT_TRACE("Handle ros2 rsp, func name '{}', seq num '{}'", client_func_wrapper_.info.func_name, request_header->sequence_number);
 
   auto msg_recorder = client_tool_.GetRecord(request_header->sequence_number);
   if (!msg_recorder) [[unlikely]] {
@@ -202,16 +170,11 @@ void Ros2AdapterWrapperClient::handle_response(
     return;
   }
 
-  aimrt_buffer_view_t buffer_view{
-      .data = wrapper_rsp.data.data(),
-      .len = wrapper_rsp.data.size()};
+  aimrt_buffer_view_t buffer_view{.data = wrapper_rsp.data.data(), .len = wrapper_rsp.data.size()};
 
-  aimrt_buffer_array_view_t buffer_array_view{
-      .data = &buffer_view,
-      .len = 1};
+  aimrt_buffer_array_view_t buffer_array_view{.data = &buffer_view, .len = 1};
 
-  bool deserialize_ret = client_func_wrapper_.info.rsp_type_support_ref.Deserialize(
-      wrapper_rsp.serialization_type, buffer_array_view, client_invoke_wrapper_ptr->rsp_ptr);
+  bool deserialize_ret = client_func_wrapper_.info.rsp_type_support_ref.Deserialize(wrapper_rsp.serialization_type, buffer_array_view, client_invoke_wrapper_ptr->rsp_ptr);
 
   if (!deserialize_ret) {
     // 调用回调
@@ -222,13 +185,11 @@ void Ros2AdapterWrapperClient::handle_response(
   client_invoke_wrapper_ptr->callback(aimrt::rpc::Status(AIMRT_RPC_STATUS_OK));
 }
 
-void Ros2AdapterWrapperClient::Invoke(
-    const std::shared_ptr<runtime::core::rpc::InvokeWrapper>& client_invoke_wrapper_ptr) {
+void Ros2AdapterWrapperClient::Invoke(const std::shared_ptr<runtime::core::rpc::InvokeWrapper>& client_invoke_wrapper_ptr) {
   AIMRT_TRACE("Invoke ros2 req, func name '{}'", client_invoke_wrapper_ptr->info.func_name);
 
   // 序列化 client req
-  auto serialization_type =
-      client_invoke_wrapper_ptr->ctx_ref.GetMetaValue(AIMRT_RPC_CONTEXT_KEY_SERIALIZATION_TYPE);
+  auto serialization_type = client_invoke_wrapper_ptr->ctx_ref.GetMetaValue(AIMRT_RPC_CONTEXT_KEY_SERIALIZATION_TYPE);
 
   auto buffer_array_view_ptr = aimrt::runtime::core::rpc::TrySerializeReqWithCache(*client_invoke_wrapper_ptr, serialization_type);
   if (!buffer_array_view_ptr) [[unlikely]] {
@@ -263,12 +224,10 @@ void Ros2AdapterWrapperClient::Invoke(
   auto record_ptr = client_invoke_wrapper_ptr;
 
   int64_t sequence_number = 0;
-  rcl_ret_t ret = rcl_send_request(
-      get_client_handle().get(), &wrapper_req, &sequence_number);
+  rcl_ret_t ret = rcl_send_request(get_client_handle().get(), &wrapper_req, &sequence_number);
 
   if (RCL_RET_OK != ret) [[unlikely]] {
-    AIMRT_WARN("Ros2 client send req failed, func name '{}', err info: {}",
-               client_invoke_wrapper_ptr->info.func_name, rcl_get_error_string().str);
+    AIMRT_WARN("Ros2 client send req failed, func name '{}', err info: {}", client_invoke_wrapper_ptr->info.func_name, rcl_get_error_string().str);
     rcl_reset_error();
     client_invoke_wrapper_ptr->callback(aimrt::rpc::Status(AIMRT_RPC_STATUS_CLI_SEND_REQ_FAILED));
     return;

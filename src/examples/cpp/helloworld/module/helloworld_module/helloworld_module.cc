@@ -33,8 +33,6 @@ bool HelloWorldModule::Start() {
   return true;
 }
 
-void HelloWorldModule::Shutdown() {
-  AIMRT_INFO("Shutdown succeeded.");
-}
+void HelloWorldModule::Shutdown() { AIMRT_INFO("Shutdown succeeded."); }
 
 }  // namespace aimrt::examples::cpp::helloworld::helloworld_module

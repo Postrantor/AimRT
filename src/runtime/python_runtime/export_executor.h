@@ -23,22 +23,13 @@ inline void ExportExecutorManagerRef(pybind11::object m) {
       .def("GetExecutor", &ExecutorManagerRef::GetExecutor);
 }
 
-inline void PyExecutorRefExecuteWrapper(
-    aimrt::executor::ExecutorRef& executor, std::function<void()>&& task) {
-  executor.Execute(std::move(task));
-}
+inline void PyExecutorRefExecuteWrapper(aimrt::executor::ExecutorRef& executor, std::function<void()>&& task) { executor.Execute(std::move(task)); }
 
-inline void PyExecutorRefExecuteAtWrapper(
-    aimrt::executor::ExecutorRef& executor,
-    std::chrono::system_clock::time_point tp,
-    std::function<void()>&& task) {
+inline void PyExecutorRefExecuteAtWrapper(aimrt::executor::ExecutorRef& executor, std::chrono::system_clock::time_point tp, std::function<void()>&& task) {
   executor.ExecuteAt(tp, std::move(task));
 }
 
-inline void PyExecutorRefExecuteAfterWrapper(
-    aimrt::executor::ExecutorRef& executor,
-    std::chrono::nanoseconds dt,
-    std::function<void()>&& task) {
+inline void PyExecutorRefExecuteAfterWrapper(aimrt::executor::ExecutorRef& executor, std::chrono::nanoseconds dt, std::function<void()>&& task) {
   executor.ExecuteAfter(dt, std::move(task));
 }
 

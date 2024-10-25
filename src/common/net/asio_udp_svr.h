@@ -20,7 +20,7 @@
 namespace aimrt::common::net {
 
 class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
- public:
+public:
   using IOCtx = boost::asio::io_context;
   using Udp = boost::asio::ip::udp;
   using Strand = boost::asio::strand<IOCtx::executor_type>;
@@ -30,8 +30,7 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
   template <class T>
   using Awaitable = boost::asio::awaitable<T>;
 
-  using MsgHandle =
-      std::function<void(const Udp::endpoint&, const std::shared_ptr<Streambuf>&)>;
+  using MsgHandle = std::function<void(const Udp::endpoint&, const std::shared_ptr<Streambuf>&)>;
 
   struct Options {
     /// 监听的地址
@@ -55,11 +54,9 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
 
       if (options.max_session_num < 1) options.max_session_num = 1;
 
-      if (options.mgr_timer_dt < std::chrono::milliseconds(100))
-        options.mgr_timer_dt = std::chrono::milliseconds(100);
+      if (options.mgr_timer_dt < std::chrono::milliseconds(100)) options.mgr_timer_dt = std::chrono::milliseconds(100);
 
-      if (options.max_no_data_duration < std::chrono::seconds(10))
-        options.max_no_data_duration = std::chrono::seconds(10);
+      if (options.max_no_data_duration < std::chrono::seconds(10)) options.max_no_data_duration = std::chrono::seconds(10);
 
       if (options.max_package_size > 65507) options.max_package_size = 65507;
 
@@ -82,9 +79,7 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
   AsioUdpServer& operator=(const AsioUdpServer&) = delete;
 
   void SetLogger(const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr) {
-    AIMRT_CHECK_ERROR_THROW(
-        state_.load() == State::kPreInit,
-        "Method can only be called when state is 'PreInit'.");
+    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
     logger_ptr_ = logger_ptr;
   }
@@ -92,30 +87,22 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
   template <typename... Args>
     requires std::constructible_from<MsgHandle, Args...>
   void RegisterMsgHandle(Args&&... args) {
-    AIMRT_CHECK_ERROR_THROW(
-        state_.load() == State::kPreInit,
-        "Method can only be called when state is 'PreInit'.");
+    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
     msg_handle_ptr_ = std::make_shared<MsgHandle>(std::forward<Args>(args)...);
   }
 
   void Initialize(const Options& options) {
-    AIMRT_CHECK_ERROR_THROW(
-        msg_handle_ptr_,
-        "Msg handle is not set before initialize.");
+    AIMRT_CHECK_ERROR_THROW(msg_handle_ptr_, "Msg handle is not set before initialize.");
 
-    AIMRT_CHECK_ERROR_THROW(
-        std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-        "Method can only be called when state is 'PreInit'.");
+    AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
     options_ = Options::Verify(options);
     session_options_ptr_ = std::make_shared<SessionOptions>(options_);
   }
 
   void Start() {
-    AIMRT_CHECK_ERROR_THROW(
-        std::atomic_exchange(&state_, State::kStart) == State::kInit,
-        "Method can only be called when state is 'Init'.");
+    AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'.");
 
     auto self = shared_from_this();
     boost::asio::co_spawn(
@@ -135,11 +122,8 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
 
               auto msg_buf = std::make_shared<boost::asio::streambuf>();
               boost::asio::ip::udp::endpoint remote_ep;
-              size_t read_data_size = co_await sock_.async_receive_from(
-                  msg_buf->prepare(options_.max_package_size), remote_ep,
-                  boost::asio::use_awaitable);
-              AIMRT_TRACE("udp svr session async read {} bytes from {}",
-                          read_data_size, aimrt::common::util::SSToString(remote_ep));
+              size_t read_data_size = co_await sock_.async_receive_from(msg_buf->prepare(options_.max_package_size), remote_ep, boost::asio::use_awaitable);
+              AIMRT_TRACE("udp svr session async read {} bytes from {}", read_data_size, aimrt::common::util::SSToString(remote_ep));
               msg_buf->commit(read_data_size);
 
               std::shared_ptr<Session> session_ptr;
@@ -148,8 +132,7 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
               if (finditr != session_ptr_map_.end()) {
                 session_ptr = finditr->second;
               } else {
-                session_ptr = std::make_shared<Session>(
-                    io_ptr_, logger_ptr_, msg_handle_ptr_);
+                session_ptr = std::make_shared<Session>(io_ptr_, logger_ptr_, msg_handle_ptr_);
                 session_ptr->Initialize(session_options_ptr_);
                 session_ptr->Start();
                 session_ptr_map_.emplace(remote_ep, session_ptr);
@@ -158,9 +141,7 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
               session_ptr->HandleMsg(msg_buf);
 
             } catch (const std::exception& e) {
-              AIMRT_TRACE(
-                  "udp svr accept connection get exception and exit, exception info: {}",
-                  e.what());
+              AIMRT_TRACE("udp svr accept connection get exception and exit, exception info: {}", e.what());
             }
           }
 
@@ -185,9 +166,7 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
                   session_ptr_map_.erase(itr++);
               }
             } catch (const std::exception& e) {
-              AIMRT_TRACE(
-                  "udp svr timer get exception and exit, exception info: {}",
-                  e.what());
+              AIMRT_TRACE("udp svr timer get exception and exit, exception info: {}", e.what());
             }
           }
 
@@ -199,8 +178,7 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
   }
 
   void Shutdown() {
-    if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-      return;
+    if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 
     auto self = shared_from_this();
     boost::asio::dispatch(mgr_strand_, [this, self]() {
@@ -231,15 +209,12 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
               break;
           }
         } catch (const std::exception& e) {
-          AIMRT_WARN(
-              "udp svr stop get exception at step {}, exception info: {}",
-              stop_step, e.what());
+          AIMRT_WARN("udp svr stop get exception at step {}, exception info: {}", stop_step, e.what());
           ++stop_step;
         }
       }
 
-      for (auto& session_ptr : session_ptr_map_)
-        session_ptr.second->Shutdown();
+      for (auto& session_ptr : session_ptr_map_) session_ptr.second->Shutdown();
 
       session_ptr_map_.clear();
     });
@@ -247,19 +222,16 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
 
   const aimrt::common::util::LoggerWrapper& GetLogger() const { return *logger_ptr_; }
 
- private:
+private:
   struct SessionOptions {
-    explicit SessionOptions(const Options& options)
-        : max_no_data_duration(options.max_no_data_duration) {}
+    explicit SessionOptions(const Options& options) : max_no_data_duration(options.max_no_data_duration) {}
 
     std::chrono::nanoseconds max_no_data_duration;
   };
 
   class Session : public std::enable_shared_from_this<Session> {
-   public:
-    Session(const std::shared_ptr<IOCtx>& io_ptr,
-            const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr,
-            const std::shared_ptr<MsgHandle>& msg_handle_ptr)
+  public:
+    Session(const std::shared_ptr<IOCtx>& io_ptr, const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr, const std::shared_ptr<MsgHandle>& msg_handle_ptr)
         : io_ptr_(io_ptr),
           session_mgr_strand_(boost::asio::make_strand(*io_ptr_)),
           timer_(session_mgr_strand_),
@@ -272,17 +244,13 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
     Session& operator=(const Session&) = delete;
 
     void Initialize(const std::shared_ptr<const SessionOptions>& session_options_ptr) {
-      AIMRT_CHECK_ERROR_THROW(
-          std::atomic_exchange(&state_, SessionState::kInit) == SessionState::kPreInit,
-          "Method can only be called when state is 'PreInit'.");
+      AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, SessionState::kInit) == SessionState::kPreInit, "Method can only be called when state is 'PreInit'.");
 
       session_options_ptr_ = session_options_ptr;
     }
 
     void Start() {
-      AIMRT_CHECK_ERROR_THROW(
-          std::atomic_exchange(&state_, SessionState::kStart) == SessionState::kInit,
-          "Method can only be called when state is 'Init'.");
+      AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, SessionState::kStart) == SessionState::kInit, "Method can only be called when state is 'Init'.");
 
       auto self = shared_from_this();
 
@@ -300,15 +268,12 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
                 } else {
                   AIMRT_WARN(
                       "udp svr session exit due to timeout({}ms), addr {}.",
-                      std::chrono::duration_cast<std::chrono::milliseconds>(session_options_ptr_->max_no_data_duration).count(),
-                      aimrt::common::util::SSToString(remote_ep_));
+                      std::chrono::duration_cast<std::chrono::milliseconds>(session_options_ptr_->max_no_data_duration).count(), aimrt::common::util::SSToString(remote_ep_));
                   break;
                 }
               }
             } catch (const std::exception& e) {
-              AIMRT_TRACE(
-                  "udp svr session timer get exception and exit, addr {}, exception info: {}",
-                  aimrt::common::util::SSToString(remote_ep_), e.what());
+              AIMRT_TRACE("udp svr session timer get exception and exit, addr {}, exception info: {}", aimrt::common::util::SSToString(remote_ep_), e.what());
             }
 
             Shutdown();
@@ -319,8 +284,7 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
     }
 
     void Shutdown() {
-      if (std::atomic_exchange(&state_, SessionState::kShutdown) == SessionState::kShutdown)
-        return;
+      if (std::atomic_exchange(&state_, SessionState::kShutdown) == SessionState::kShutdown) return;
 
       auto self = shared_from_this();
       boost::asio::dispatch(session_mgr_strand_, [this, self]() {
@@ -336,9 +300,7 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
                 break;
             }
           } catch (const std::exception& e) {
-            AIMRT_TRACE(
-                "udp svr session mgr stop get exception at step {}, exception info: {}",
-                stop_step, e.what());
+            AIMRT_TRACE("udp svr session mgr stop get exception at step {}, exception info: {}", stop_step, e.what());
             ++stop_step;
           }
         }
@@ -347,20 +309,18 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
 
     void HandleMsg(const std::shared_ptr<boost::asio::streambuf>& msg_buf_ptr) {
       auto self = shared_from_this();
-      boost::asio::dispatch(
-          *io_ptr_,
-          [this, self, msg_buf_ptr]() {
-            tick_has_data_ = true;
+      boost::asio::dispatch(*io_ptr_, [this, self, msg_buf_ptr]() {
+        tick_has_data_ = true;
 
-            (*msg_handle_ptr_)(remote_ep_, msg_buf_ptr);
-          });
+        (*msg_handle_ptr_)(remote_ep_, msg_buf_ptr);
+      });
     }
 
     const aimrt::common::util::LoggerWrapper& GetLogger() const { return *logger_ptr_; }
 
     bool IsRunning() const { return state_.load() == SessionState::kStart; }
 
-   private:
+  private:
     enum class SessionState : uint32_t {
       kPreInit,
       kInit,
@@ -390,7 +350,7 @@ class AsioUdpServer : public std::enable_shared_from_this<AsioUdpServer> {
     std::atomic_bool tick_has_data_ = false;
   };
 
- private:
+private:
   enum class State : uint32_t {
     kPreInit,
     kInit,

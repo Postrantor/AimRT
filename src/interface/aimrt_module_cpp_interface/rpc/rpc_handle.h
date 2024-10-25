@@ -17,33 +17,25 @@ using ServiceCallback = aimrt::util::Function<aimrt_function_service_callback_op
 using ClientCallback = aimrt::util::Function<aimrt_function_client_callback_ops_t>;
 using ServiceFunc = aimrt::util::Function<aimrt_function_service_func_ops_t>;
 
-inline std::string GetFullFuncName(
-    std::string_view rpc_type, std::string_view service_name, std::string_view func_name) {
+inline std::string GetFullFuncName(std::string_view rpc_type, std::string_view service_name, std::string_view func_name) {
   return std::string(rpc_type) + ":/" + std::string(service_name) + "/" + std::string(func_name);
 }
 
 class ServiceBase {
   friend class RpcHandleRef;
 
- public:
-  ServiceBase(std::string_view rpc_type, std::string_view service_name)
-      : rpc_type_(rpc_type), service_name_(service_name) {}
+public:
+  ServiceBase(std::string_view rpc_type, std::string_view service_name) : rpc_type_(rpc_type), service_name_(service_name) {}
   virtual ~ServiceBase() = default;
 
   ServiceBase(const ServiceBase&) = delete;
   ServiceBase& operator=(const ServiceBase&) = delete;
 
-  void SetServiceName(std::string_view service_name) {
-    service_name_ = service_name;
-  }
+  void SetServiceName(std::string_view service_name) { service_name_ = service_name; }
 
-  std::string_view RpcType() const {
-    return rpc_type_;
-  }
+  std::string_view RpcType() const { return rpc_type_; }
 
-  std::string_view ServiceName() const {
-    return service_name_;
-  }
+  std::string_view ServiceName() const { return service_name_; }
 
   void RegisterServiceFunc(
       std::string_view func_name,
@@ -51,16 +43,15 @@ class ServiceBase {
       const aimrt_type_support_base_t* req_type_support,
       const aimrt_type_support_base_t* rsp_type_support,
       aimrt::rpc::ServiceFunc&& service_func) {
-    service_func_wrapper_vec_.emplace_back(
-        ServiceFuncWrapper{
-            .func_name = std::string(func_name),
-            .custom_type_support_ptr = custom_type_support_ptr,
-            .req_type_support = req_type_support,
-            .rsp_type_support = rsp_type_support,
-            .service_func = std::move(service_func)});
+    service_func_wrapper_vec_.emplace_back(ServiceFuncWrapper{
+        .func_name = std::string(func_name),
+        .custom_type_support_ptr = custom_type_support_ptr,
+        .req_type_support = req_type_support,
+        .rsp_type_support = rsp_type_support,
+        .service_func = std::move(service_func)});
   }
 
- protected:
+protected:
   std::string rpc_type_;
   std::string service_name_;
 
@@ -76,9 +67,8 @@ class ServiceBase {
 };
 
 class CoServiceBase : public ServiceBase {
- public:
-  CoServiceBase(std::string_view rpc_type, std::string_view service_name)
-      : ServiceBase(rpc_type, service_name) {}
+public:
+  CoServiceBase(std::string_view rpc_type, std::string_view service_name) : ServiceBase(rpc_type, service_name) {}
   virtual ~CoServiceBase() = default;
 
   template <typename T>
@@ -89,15 +79,14 @@ class CoServiceBase : public ServiceBase {
 
   auto& GetFilterManager() { return filter_mgr_; }
 
- protected:
+protected:
   CoFilterManager filter_mgr_;
 };
 
 class RpcHandleRef {
- public:
+public:
   RpcHandleRef() = default;
-  explicit RpcHandleRef(const aimrt_rpc_handle_base_t* base_ptr)
-      : base_ptr_(base_ptr) {}
+  explicit RpcHandleRef(const aimrt_rpc_handle_base_t* base_ptr) : base_ptr_(base_ptr) {}
   ~RpcHandleRef() = default;
 
   explicit operator bool() const { return (base_ptr_ != nullptr); }
@@ -117,15 +106,10 @@ class RpcHandleRef {
     bool ret = true;
 
     for (auto& item : service_ptr->service_func_wrapper_vec_) {
-      std::string full_func_name = GetFullFuncName(
-          service_ptr->rpc_type_, service_ptr->service_name_, item.func_name);
+      std::string full_func_name = GetFullFuncName(service_ptr->rpc_type_, service_ptr->service_name_, item.func_name);
 
       ret &= base_ptr_->register_service_func(
-          base_ptr_->impl,
-          aimrt::util::ToAimRTStringView(full_func_name),
-          item.custom_type_support_ptr,
-          item.req_type_support,
-          item.rsp_type_support,
+          base_ptr_->impl, aimrt::util::ToAimRTStringView(full_func_name), item.custom_type_support_ptr, item.req_type_support, item.rsp_type_support,
           item.service_func.NativeHandle());
     }
 
@@ -162,12 +146,7 @@ class RpcHandleRef {
       const aimrt_type_support_base_t* req_type_support,
       const aimrt_type_support_base_t* rsp_type_support) {
     AIMRT_ASSERT(base_ptr_, "Reference is null.");
-    return base_ptr_->register_client_func(
-        base_ptr_->impl,
-        aimrt::util::ToAimRTStringView(full_func_name),
-        custom_type_support_ptr,
-        req_type_support,
-        rsp_type_support);
+    return base_ptr_->register_client_func(base_ptr_->impl, aimrt::util::ToAimRTStringView(full_func_name), custom_type_support_ptr, req_type_support, rsp_type_support);
   }
 
   /**
@@ -188,9 +167,7 @@ class RpcHandleRef {
       const void* custom_type_support_ptr,
       const aimrt_type_support_base_t* req_type_support,
       const aimrt_type_support_base_t* rsp_type_support) {
-    return RegisterClientFunc(
-        GetFullFuncName(rpc_type, service_name, func_name),
-        custom_type_support_ptr, req_type_support, rsp_type_support);
+    return RegisterClientFunc(GetFullFuncName(rpc_type, service_name, func_name), custom_type_support_ptr, req_type_support, rsp_type_support);
   }
 
   /**
@@ -202,20 +179,9 @@ class RpcHandleRef {
    * @param rsp_ptr
    * @param callback
    */
-  void Invoke(
-      std::string_view full_func_name,
-      ContextRef ctx_ref,
-      const void* req_ptr,
-      void* rsp_ptr,
-      aimrt::rpc::ClientCallback&& callback) {
+  void Invoke(std::string_view full_func_name, ContextRef ctx_ref, const void* req_ptr, void* rsp_ptr, aimrt::rpc::ClientCallback&& callback) {
     AIMRT_ASSERT(base_ptr_, "Reference is null.");
-    base_ptr_->invoke(
-        base_ptr_->impl,
-        aimrt::util::ToAimRTStringView(full_func_name),
-        ctx_ref.NativeHandle(),
-        req_ptr,
-        rsp_ptr,
-        callback.NativeHandle());
+    base_ptr_->invoke(base_ptr_->impl, aimrt::util::ToAimRTStringView(full_func_name), ctx_ref.NativeHandle(), req_ptr, rsp_ptr, callback.NativeHandle());
   }
 
   /**
@@ -237,49 +203,37 @@ class RpcHandleRef {
       const void* req_ptr,
       void* rsp_ptr,
       aimrt::rpc::ClientCallback&& callback) {
-    Invoke(
-        GetFullFuncName(rpc_type, service_name, func_name),
-        ctx_ref, req_ptr, rsp_ptr, std::move(callback));
+    Invoke(GetFullFuncName(rpc_type, service_name, func_name), ctx_ref, req_ptr, rsp_ptr, std::move(callback));
   }
 
-  void MergeServerContextToClientContext(
-      const ContextRef server_ctx_ref, ContextRef client_ctx_ref) const {
+  void MergeServerContextToClientContext(const ContextRef server_ctx_ref, ContextRef client_ctx_ref) const {
     AIMRT_ASSERT(base_ptr_, "Reference is null.");
-    base_ptr_->merge_server_context_to_client_context(
-        base_ptr_->impl,
-        server_ctx_ref.NativeHandle(),
-        client_ctx_ref.NativeHandle());
+    base_ptr_->merge_server_context_to_client_context(base_ptr_->impl, server_ctx_ref.NativeHandle(), client_ctx_ref.NativeHandle());
   }
 
- private:
+private:
   const aimrt_rpc_handle_base_t* base_ptr_ = nullptr;
 };
 
 class ProxyBase {
- public:
+public:
   ProxyBase(RpcHandleRef rpc_handle_ref, std::string_view rpc_type, std::string_view service_name)
-      : rpc_handle_ref_(rpc_handle_ref), rpc_type_(rpc_type), service_name_(service_name) {}
+      : rpc_handle_ref_(rpc_handle_ref),
+        rpc_type_(rpc_type),
+        service_name_(service_name) {}
   virtual ~ProxyBase() = default;
 
   ProxyBase(const ProxyBase&) = delete;
   ProxyBase& operator=(const ProxyBase&) = delete;
 
-  void SetServiceName(std::string_view service_name) {
-    service_name_ = service_name;
-  }
+  void SetServiceName(std::string_view service_name) { service_name_ = service_name; }
 
-  std::string_view RpcType() const {
-    return rpc_type_;
-  }
+  std::string_view RpcType() const { return rpc_type_; }
 
-  std::string_view ServiceName() const {
-    return service_name_;
-  }
+  std::string_view ServiceName() const { return service_name_; }
 
   std::shared_ptr<Context> NewContextSharedPtr(ContextRef ctx_ref = ContextRef()) const {
-    auto result_ctx = default_ctx_ptr_
-                          ? std::make_shared<Context>(*default_ctx_ptr_)
-                          : std::make_shared<Context>();
+    auto result_ctx = default_ctx_ptr_ ? std::make_shared<Context>(*default_ctx_ptr_) : std::make_shared<Context>();
     if (ctx_ref) {
       rpc_handle_ref_.MergeServerContextToClientContext(ctx_ref, result_ctx);
     }
@@ -287,15 +241,11 @@ class ProxyBase {
     return result_ctx;
   }
 
-  void SetDefaultContextSharedPtr(const std::shared_ptr<Context>& ctx_ptr) {
-    default_ctx_ptr_ = ctx_ptr;
-  }
+  void SetDefaultContextSharedPtr(const std::shared_ptr<Context>& ctx_ptr) { default_ctx_ptr_ = ctx_ptr; }
 
-  std::shared_ptr<Context> GetDefaultContextSharedPtr() const {
-    return default_ctx_ptr_;
-  }
+  std::shared_ptr<Context> GetDefaultContextSharedPtr() const { return default_ctx_ptr_; }
 
- protected:
+protected:
   RpcHandleRef rpc_handle_ref_;
   std::string rpc_type_;
   std::string service_name_;
@@ -303,9 +253,8 @@ class ProxyBase {
 };
 
 class CoProxyBase : public ProxyBase {
- public:
-  CoProxyBase(RpcHandleRef rpc_handle_ref, std::string_view rpc_type, std::string_view service_name)
-      : ProxyBase(rpc_handle_ref, rpc_type, service_name) {}
+public:
+  CoProxyBase(RpcHandleRef rpc_handle_ref, std::string_view rpc_type, std::string_view service_name) : ProxyBase(rpc_handle_ref, rpc_type, service_name) {}
   virtual ~CoProxyBase() = default;
 
   template <typename T>
@@ -316,7 +265,7 @@ class CoProxyBase : public ProxyBase {
 
   auto& GetFilterManager() { return filter_mgr_; }
 
- protected:
+protected:
   CoFilterManager filter_mgr_;
 };
 

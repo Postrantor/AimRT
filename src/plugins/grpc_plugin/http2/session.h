@@ -26,7 +26,7 @@ class Session;
 using SessionPtr = std::shared_ptr<Session>;
 
 class Stream {
- public:
+public:
   [[nodiscard]] int32_t GetStreamId() const { return stream_id_; }
   void SetStreamId(int32_t stream_id) { stream_id_ = stream_id; }
 
@@ -41,7 +41,7 @@ class Stream {
   [[nodiscard]] const ResponsePtr& GetResponse() const { return response_ptr_; }
   ResponsePtr GetMutableResponse() { return std::move(response_ptr_); }
 
- private:
+private:
   int32_t stream_id_ = 0;
   Session* session_ = nullptr;
   RequestPtr request_ptr_ = nullptr;
@@ -50,13 +50,13 @@ class Stream {
 using StreamPtr = std::shared_ptr<Stream>;
 
 class Session {
- public:
+public:
   struct Http2Settings {
     uint32_t max_concurrent_streams = 100;
     uint32_t initial_window_size = (1U << 31) - 1;
   };
 
- public:
+public:
   virtual ~Session();
 
   virtual int InitSession(Http2Settings settings) = 0;
@@ -77,7 +77,7 @@ class Session {
   virtual int ParseRecvMessage(std::string_view in);
   virtual int GetSendMessage(SimpleBuffer& out);
 
- protected:
+protected:
   Http2Settings settings_;
   nghttp2_session* session_ = nullptr;
   std::unordered_map<int32_t, StreamPtr> streams_;

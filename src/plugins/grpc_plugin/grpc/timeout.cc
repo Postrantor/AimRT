@@ -35,8 +35,6 @@ std::optional<std::chrono::nanoseconds> ParseTimeout(const std::string& timeout_
   return std::nullopt;
 }
 
-std::string FormatTimeout(std::chrono::nanoseconds timeout) {
-  return std::to_string(timeout.count()) + "n";
-}
+std::string FormatTimeout(std::chrono::nanoseconds timeout) { return std::to_string(timeout.count()) + "n"; }
 
 }  // namespace aimrt::plugins::grpc_plugin::grpc

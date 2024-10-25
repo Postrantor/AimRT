@@ -17,10 +17,9 @@ namespace aimrt::executor {
 using Task = aimrt::util::Function<aimrt_function_executor_task_ops_t>;
 
 class ExecutorRef {
- public:
+public:
   ExecutorRef() = default;
-  explicit ExecutorRef(const aimrt_executor_base_t* base_ptr)
-      : base_ptr_(base_ptr) {}
+  explicit ExecutorRef(const aimrt_executor_base_t* base_ptr) : base_ptr_(base_ptr) {}
   ~ExecutorRef() = default;
 
   explicit operator bool() const { return (base_ptr_ != nullptr); }
@@ -67,17 +66,14 @@ class ExecutorRef {
 
     AIMRT_ASSERT(SupportTimerSchedule(), "Current executor does not support timer scheduling.");
 
-    base_ptr_->execute_at_ns(
-        base_ptr_->impl, common::util::GetTimestampNs(tp), task.NativeHandle());
+    base_ptr_->execute_at_ns(base_ptr_->impl, common::util::GetTimestampNs(tp), task.NativeHandle());
   }
 
   void ExecuteAfter(std::chrono::nanoseconds dt, Task&& task) {
-    ExecuteAt(
-        Now() + std::chrono::duration_cast<std::chrono::system_clock::time_point::duration>(dt),
-        std::move(task));
+    ExecuteAt(Now() + std::chrono::duration_cast<std::chrono::system_clock::time_point::duration>(dt), std::move(task));
   }
 
- private:
+private:
   const aimrt_executor_base_t* base_ptr_ = nullptr;
 };
 

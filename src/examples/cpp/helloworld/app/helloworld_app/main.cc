@@ -37,8 +37,7 @@ int32_t main(int32_t argc, char** argv) {
     core.Initialize(options);
 
     // Create Module
-    aimrt::CoreRef module_handle(
-        core.GetModuleManager().CreateModule("HelloWorldModule"));
+    aimrt::CoreRef module_handle(core.GetModuleManager().CreateModule("HelloWorldModule"));
     AIMRT_HL_INFO(module_handle.GetLogger(), "This is an example log.");
 
     // Read cfg
@@ -65,8 +64,7 @@ int32_t main(int32_t argc, char** argv) {
 
     global_core_ptr = nullptr;
   } catch (const std::exception& e) {
-    std::cout << "AimRT run with exception and exit. " << e.what()
-              << std::endl;
+    std::cout << "AimRT run with exception and exit. " << e.what() << std::endl;
     return -1;
   }
 

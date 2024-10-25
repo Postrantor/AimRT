@@ -11,12 +11,12 @@
 namespace aimrt::plugins::parameter_plugin {
 
 class ParameterPlugin : public AimRTCorePluginBase {
- public:
+public:
   struct Options {
     std::string service_name;
   };
 
- public:
+public:
   ParameterPlugin() = default;
   ~ParameterPlugin() override = default;
 
@@ -25,11 +25,11 @@ class ParameterPlugin : public AimRTCorePluginBase {
   bool Initialize(runtime::core::AimRTCore* core_ptr) noexcept override;
   void Shutdown() noexcept override;
 
- private:
+private:
   void SetPluginLogger();
   void RegisterRpcService();
 
- private:
+private:
   runtime::core::AimRTCore* core_ptr_ = nullptr;
 
   Options options_;

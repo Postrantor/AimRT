@@ -8,7 +8,7 @@
 namespace aimrt::examples::cpp::pb_rpc::normal_rpc_async_server_module {
 
 class ExampleServiceAsyncServiceImpl : public aimrt::protocols::example::ExampleServiceAsyncService {
- public:
+public:
   ExampleServiceAsyncServiceImpl() = default;
   ~ExampleServiceAsyncServiceImpl() override = default;
 

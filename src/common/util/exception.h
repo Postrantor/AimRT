@@ -10,17 +10,16 @@
 namespace aimrt::common::util {
 
 class AimRTException : public std::exception {
- public:
+public:
   template <typename... Args>
     requires std::constructible_from<std::string, Args...>
-  AimRTException(Args... args)
-      : err_msg_(std::forward<Args>(args)...) {}
+  AimRTException(Args... args) : err_msg_(std::forward<Args>(args)...) {}
 
   ~AimRTException() noexcept override {}
 
   const char* what() const noexcept override { return err_msg_.c_str(); }
 
- private:
+private:
   std::string err_msg_;
 };
 

@@ -23,8 +23,7 @@ struct convert<aimrt::plugins::time_manipulator_plugin::TimeManipulatorPlugin::O
   static bool decode(const Node& node, Options& rhs) {
     if (!node.IsMap()) return false;
 
-    if (node["service_name"])
-      rhs.service_name = node["service_name"].as<std::string>();
+    if (node["service_name"]) rhs.service_name = node["service_name"].as<std::string>();
 
     return true;
   }
@@ -45,14 +44,11 @@ bool TimeManipulatorPlugin::Initialize(runtime::core::AimRTCore* core_ptr) noexc
 
     init_flag_ = true;
 
-    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPostInitLog,
-                                [this] { SetPluginLogger(); });
+    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPostInitLog, [this] { SetPluginLogger(); });
 
-    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPreInitExecutor,
-                                [this] { RegisterTimeManipulatorExecutor(); });
+    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPreInitExecutor, [this] { RegisterTimeManipulatorExecutor(); });
 
-    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPreInitModules,
-                                [this] { RegisterRpcService(); });
+    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPreInitModules, [this] { RegisterRpcService(); });
 
     plugin_options_node = options_;
     core_ptr_->GetPluginManager().UpdatePluginOptionsNode(Name(), plugin_options_node);
@@ -74,29 +70,20 @@ void TimeManipulatorPlugin::Shutdown() noexcept {
   }
 }
 
-void TimeManipulatorPlugin::SetPluginLogger() {
-  SetLogger(aimrt::logger::LoggerRef(
-      core_ptr_->GetLoggerManager().GetLoggerProxy().NativeHandle()));
-}
+void TimeManipulatorPlugin::SetPluginLogger() { SetLogger(aimrt::logger::LoggerRef(core_ptr_->GetLoggerManager().GetLoggerProxy().NativeHandle())); }
 
 void TimeManipulatorPlugin::RegisterTimeManipulatorExecutor() {
-  core_ptr_->GetExecutorManager().RegisterExecutorGenFunc(
-      "time_manipulator",
-      [this]() -> std::unique_ptr<aimrt::runtime::core::executor::ExecutorBase> {
-        auto ptr = std::make_unique<TimeManipulatorExecutor>();
-        ptr->RegisterGetExecutorFunc(
-            [this](std::string_view executor_name) -> aimrt::executor::ExecutorRef {
-              return core_ptr_->GetExecutorManager().GetExecutor(executor_name);
-            });
-        return ptr;
-      });
+  core_ptr_->GetExecutorManager().RegisterExecutorGenFunc("time_manipulator", [this]() -> std::unique_ptr<aimrt::runtime::core::executor::ExecutorBase> {
+    auto ptr = std::make_unique<TimeManipulatorExecutor>();
+    ptr->RegisterGetExecutorFunc([this](std::string_view executor_name) -> aimrt::executor::ExecutorRef { return core_ptr_->GetExecutorManager().GetExecutor(executor_name); });
+    return ptr;
+  });
 }
 
 void TimeManipulatorPlugin::RegisterRpcService() {
   service_ptr_ = std::make_unique<TimeManipulatorServiceImpl>();
 
-  if (!options_.service_name.empty())
-    service_ptr_->SetServiceName(options_.service_name);
+  if (!options_.service_name.empty()) service_ptr_->SetServiceName(options_.service_name);
 
   const auto& executor_vec = core_ptr_->GetExecutorManager().GetAllExecutors();
 
@@ -111,8 +98,7 @@ void TimeManipulatorPlugin::RegisterRpcService() {
     }
   }
 
-  auto rpc_handle_ref = aimrt::rpc::RpcHandleRef(
-      core_ptr_->GetRpcManager().GetRpcHandleProxy().NativeHandle());
+  auto rpc_handle_ref = aimrt::rpc::RpcHandleRef(core_ptr_->GetRpcManager().GetRpcHandleProxy().NativeHandle());
 
   bool ret = rpc_handle_ref.RegisterService(service_ptr_.get());
   AIMRT_CHECK_ERROR(ret, "Register service failed.");

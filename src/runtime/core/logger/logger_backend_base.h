@@ -10,7 +10,7 @@
 namespace aimrt::runtime::core::logger {
 
 class LoggerBackendBase {
- public:
+public:
   LoggerBackendBase() = default;
   virtual ~LoggerBackendBase() = default;
 

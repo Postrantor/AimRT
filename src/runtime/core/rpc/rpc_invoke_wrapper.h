@@ -33,18 +33,8 @@ struct InvokeWrapper {
 
   std::function<void(aimrt::rpc::Status)> callback;
 
-  std::unordered_map<
-      std::string,
-      std::shared_ptr<aimrt::util::BufferArrayView>,
-      aimrt::common::util::StringHash,
-      std::equal_to<>>
-      req_serialization_cache;
-  std::unordered_map<
-      std::string,
-      std::shared_ptr<aimrt::util::BufferArrayView>,
-      aimrt::common::util::StringHash,
-      std::equal_to<>>
-      rsp_serialization_cache;
+  std::unordered_map<std::string, std::shared_ptr<aimrt::util::BufferArrayView>, aimrt::common::util::StringHash, std::equal_to<>> req_serialization_cache;
+  std::unordered_map<std::string, std::shared_ptr<aimrt::util::BufferArrayView>, aimrt::common::util::StringHash, std::equal_to<>> rsp_serialization_cache;
 };
 
 }  // namespace aimrt::runtime::core::rpc

@@ -11,13 +11,11 @@
 namespace aimrt::examples::cpp::logger::logger_bench_module {
 
 class LoggerBenchModule : public aimrt::ModuleBase {
- public:
+public:
   LoggerBenchModule() = default;
   ~LoggerBenchModule() override = default;
 
-  ModuleInfo Info() const override {
-    return ModuleInfo{.name = "LoggerBenchModule"};
-  }
+  ModuleInfo Info() const override { return ModuleInfo{.name = "LoggerBenchModule"}; }
 
   bool Initialize(aimrt::CoreRef aimrt_ptr) override;
 
@@ -25,10 +23,10 @@ class LoggerBenchModule : public aimrt::ModuleBase {
 
   void Shutdown() override;
 
- private:
+private:
   auto GetLogger() { return core_.GetLogger(); }
 
- private:
+private:
   aimrt::CoreRef core_;
 
   std::vector<uint32_t> log_data_size_vec_;

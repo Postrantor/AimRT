@@ -34,8 +34,7 @@
 
 namespace aimrt::common::ros2_util {
 
-static std::vector<test_msgs::msg::BasicTypes::SharedPtr>
-GetMessagesBasicTypes() {
+static std::vector<test_msgs::msg::BasicTypes::SharedPtr> GetMessagesBasicTypes() {
   std::vector<test_msgs::msg::BasicTypes::SharedPtr> messages;
   {
     auto msg = std::make_shared<test_msgs::msg::BasicTypes>();
@@ -108,8 +107,7 @@ GetMessagesBasicTypes() {
   return messages;
 }
 
-static std::vector<test_msgs::msg::Arrays::SharedPtr>
-GetMessagesArrays() {
+static std::vector<test_msgs::msg::Arrays::SharedPtr> GetMessagesArrays() {
   auto basic_types_msgs = GetMessagesBasicTypes();
   std::vector<test_msgs::msg::Arrays::SharedPtr> messages;
   {
@@ -123,9 +121,7 @@ GetMessagesArrays() {
     msg->uint8_values = {{0, (std::numeric_limits<uint8_t>::max)(), 0}};
     msg->int16_values = {{0, (std::numeric_limits<int16_t>::max)(), (std::numeric_limits<int16_t>::min)()}};
     msg->uint16_values = {{0, (std::numeric_limits<uint16_t>::max)(), 0}};
-    msg->int32_values = {{static_cast<int32_t>(0),
-                          (std::numeric_limits<int32_t>::max)(),
-                          (std::numeric_limits<int32_t>::min)()}};
+    msg->int32_values = {{static_cast<int32_t>(0), (std::numeric_limits<int32_t>::max)(), (std::numeric_limits<int32_t>::min)()}};
     msg->uint32_values = {{0, (std::numeric_limits<uint32_t>::max)(), 0}};
     msg->int64_values[0] = 0;
     msg->int64_values[1] = (std::numeric_limits<int64_t>::max)();
@@ -140,8 +136,7 @@ GetMessagesArrays() {
   return messages;
 }
 
-static std::vector<test_msgs::msg::BoundedSequences::SharedPtr>
-GetMessagesBoundedSequences() {
+static std::vector<test_msgs::msg::BoundedSequences::SharedPtr> GetMessagesBoundedSequences() {
   auto basic_types_msgs = GetMessagesBasicTypes();
   std::vector<test_msgs::msg::BoundedSequences::SharedPtr> messages;
   {
@@ -156,9 +151,7 @@ GetMessagesBoundedSequences() {
     msg->int16_values = {{0, (std::numeric_limits<int16_t>::max)(), (std::numeric_limits<int16_t>::min)()}};
     msg->uint16_values = {{0, 1, (std::numeric_limits<uint16_t>::max)()}};
     // The narrowing static cast is required to avoid build errors on Windows.
-    msg->int32_values = {{static_cast<int32_t>(0),
-                          (std::numeric_limits<int32_t>::max)(),
-                          (std::numeric_limits<int32_t>::min)()}};
+    msg->int32_values = {{static_cast<int32_t>(0), (std::numeric_limits<int32_t>::max)(), (std::numeric_limits<int32_t>::min)()}};
     msg->uint32_values = {{0, 1, (std::numeric_limits<uint32_t>::max)()}};
     msg->int64_values.resize(3);
     msg->int64_values[0] = 0;
@@ -182,8 +175,7 @@ GetMessagesBoundedSequences() {
   return messages;
 }
 
-static std::vector<test_msgs::msg::UnboundedSequences::SharedPtr>
-GetMessagesUnboundedSequences() {
+static std::vector<test_msgs::msg::UnboundedSequences::SharedPtr> GetMessagesUnboundedSequences() {
   auto basic_types_msgs = GetMessagesBasicTypes();
   std::vector<test_msgs::msg::UnboundedSequences::SharedPtr> messages;
   {
@@ -238,9 +230,7 @@ GetMessagesUnboundedSequences() {
     msg->int16_values = {{0, (std::numeric_limits<int16_t>::max)(), (std::numeric_limits<int16_t>::min)()}};
     msg->uint16_values = {{0, (std::numeric_limits<uint16_t>::max)()}};
     // The narrowing static cast is required to avoid build errors on Windows.
-    msg->int32_values = {{static_cast<int32_t>(0),
-                          (std::numeric_limits<int32_t>::max)(),
-                          (std::numeric_limits<int32_t>::min)()}};
+    msg->int32_values = {{static_cast<int32_t>(0), (std::numeric_limits<int32_t>::max)(), (std::numeric_limits<int32_t>::min)()}};
     msg->uint32_values = {{0, (std::numeric_limits<uint32_t>::max)()}};
     msg->int64_values.resize(3);
     msg->int64_values[0] = 0;
@@ -303,8 +293,7 @@ GetMessagesUnboundedSequences() {
   return messages;
 }
 
-static std::vector<test_msgs::msg::MultiNested::SharedPtr>
-GetMessagesMultiNested() {
+static std::vector<test_msgs::msg::MultiNested::SharedPtr> GetMessagesMultiNested() {
   auto arrays_msgs = GetMessagesArrays();
   auto bounded_sequences_msgs = GetMessagesBoundedSequences();
   auto unbounded_sequences_msgs = GetMessagesUnboundedSequences();
@@ -330,13 +319,11 @@ GetMessagesMultiNested() {
     }
     msg->bounded_sequence_of_bounded_sequences.resize(sequence_size);
     for (std::size_t i = 0u; i < sequence_size; ++i) {
-      msg->bounded_sequence_of_bounded_sequences[i] =
-          *bounded_sequences_msgs[i % num_bounded_sequences];
+      msg->bounded_sequence_of_bounded_sequences[i] = *bounded_sequences_msgs[i % num_bounded_sequences];
     }
     msg->bounded_sequence_of_unbounded_sequences.resize(sequence_size);
     for (std::size_t i = 0u; i < sequence_size; ++i) {
-      msg->bounded_sequence_of_unbounded_sequences[i] =
-          *unbounded_sequences_msgs[i % num_unbounded_sequences];
+      msg->bounded_sequence_of_unbounded_sequences[i] = *unbounded_sequences_msgs[i % num_unbounded_sequences];
     }
     msg->unbounded_sequence_of_arrays.resize(sequence_size);
     for (std::size_t i = 0u; i < sequence_size; ++i) {
@@ -344,21 +331,18 @@ GetMessagesMultiNested() {
     }
     msg->unbounded_sequence_of_bounded_sequences.resize(sequence_size);
     for (std::size_t i = 0u; i < sequence_size; ++i) {
-      msg->unbounded_sequence_of_bounded_sequences[i] =
-          *bounded_sequences_msgs[i % num_bounded_sequences];
+      msg->unbounded_sequence_of_bounded_sequences[i] = *bounded_sequences_msgs[i % num_bounded_sequences];
     }
     msg->unbounded_sequence_of_unbounded_sequences.resize(sequence_size);
     for (std::size_t i = 0u; i < sequence_size; ++i) {
-      msg->unbounded_sequence_of_unbounded_sequences[i] =
-          *unbounded_sequences_msgs[i % num_unbounded_sequences];
+      msg->unbounded_sequence_of_unbounded_sequences[i] = *unbounded_sequences_msgs[i % num_unbounded_sequences];
     }
     messages.push_back(msg);
   }
   return messages;
 }
 
-static std::vector<test_msgs::msg::Nested::SharedPtr>
-GetMessagesNested() {
+static std::vector<test_msgs::msg::Nested::SharedPtr> GetMessagesNested() {
   std::vector<test_msgs::msg::Nested::SharedPtr> messages;
   auto basic_types_msgs = GetMessagesBasicTypes();
   for (auto basic_types_msg : basic_types_msgs) {
@@ -370,18 +354,15 @@ GetMessagesNested() {
 }
 
 template <class T>
-typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
-AlmostEqual(T x, T y, int ulp) {
-  return std::fabs(x - y) <= std::numeric_limits<T>::epsilon() * std::fabs(x + y) * ulp ||
-         std::fabs(x - y) < std::numeric_limits<T>::min();
+typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type AlmostEqual(T x, T y, int ulp) {
+  return std::fabs(x - y) <= std::numeric_limits<T>::epsilon() * std::fabs(x + y) * ulp || std::fabs(x - y) < std::numeric_limits<T>::min();
 }
 
 template <class RosType>
 bool TestJsonToRos2Message(
     const std::string& json_str,
     const RosType& check_message,
-    std::function<bool(const RosType&, const RosType&)> check_func =
-        [](const RosType& lhs, const RosType& rhs) -> bool { return lhs == rhs; }) {
+    std::function<bool(const RosType&, const RosType&)> check_func = [](const RosType& lhs, const RosType& rhs) -> bool { return lhs == rhs; }) {
   RosType message;
   bool ret = JsonToMessage(json_str, GetIntrospectionTypeSupport<RosType>(), &message);
   if (!ret) return false;
@@ -409,9 +390,7 @@ TEST(JsonToRos2Message, BasicType_Bool) {
 TEST(JsonToRos2Message, BasicType_Float32) {
   using RosType = ::example_interfaces::msg::Float32;
 
-  auto check_func = [](const RosType& lhs, const RosType& rhs) -> bool {
-    return AlmostEqual(lhs.data, rhs.data, 2);
-  };
+  auto check_func = [](const RosType& lhs, const RosType& rhs) -> bool { return AlmostEqual(lhs.data, rhs.data, 2); };
 
   {
     std::string json_str = "{\"data\":42.42}";
@@ -424,9 +403,7 @@ TEST(JsonToRos2Message, BasicType_Float32) {
 TEST(JsonToRos2Message, BasicType_Float64) {
   using RosType = ::example_interfaces::msg::Float64;
 
-  auto check_func = [](const RosType& lhs, const RosType& rhs) -> bool {
-    return AlmostEqual(lhs.data, rhs.data, 2);
-  };
+  auto check_func = [](const RosType& lhs, const RosType& rhs) -> bool { return AlmostEqual(lhs.data, rhs.data, 2); };
 
   {
     std::string json_str = "{\"data\":42424242424242.42}";

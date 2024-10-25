@@ -11,10 +11,8 @@
 namespace aimrt::runtime::core::configurator {
 
 class ConfiguratorProxy {
- public:
-  explicit ConfiguratorProxy(std::string_view config_file_path = "")
-      : config_file_path_(config_file_path),
-        base_(GenBase(this)) {}
+public:
+  explicit ConfiguratorProxy(std::string_view config_file_path = "") : config_file_path_(config_file_path), base_(GenBase(this)) {}
   ~ConfiguratorProxy() = default;
 
   ConfiguratorProxy(const ConfiguratorProxy&) = delete;
@@ -22,16 +20,14 @@ class ConfiguratorProxy {
 
   const aimrt_configurator_base_t* NativeHandle() const { return &base_; }
 
- private:
+private:
   static aimrt_configurator_base_t GenBase(void* impl) {
     return aimrt_configurator_base_t{
-        .config_file_path = [](void* impl) -> aimrt_string_view_t {
-          return aimrt::util::ToAimRTStringView(static_cast<ConfiguratorProxy*>(impl)->config_file_path_);
-        },
+        .config_file_path = [](void* impl) -> aimrt_string_view_t { return aimrt::util::ToAimRTStringView(static_cast<ConfiguratorProxy*>(impl)->config_file_path_); },
         .impl = impl};
   }
 
- private:
+private:
   const std::string config_file_path_;
   const aimrt_configurator_base_t base_;
 };

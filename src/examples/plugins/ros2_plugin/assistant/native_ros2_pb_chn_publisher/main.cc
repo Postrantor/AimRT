@@ -10,34 +10,30 @@
 #include "ros2_plugin_proto/msg/ros_msg_wrapper.hpp"
 
 class RosTestWrapperChannelPublisher : public rclcpp::Node {
- public:
-  RosTestWrapperChannelPublisher()
-      : Node("native_ros2_pb_chn_publisher") {
+public:
+  RosTestWrapperChannelPublisher() : Node("native_ros2_pb_chn_publisher") {
     using namespace std::chrono_literals;
 
-    publisher_ = this->create_publisher<ros2_plugin_proto::msg::RosMsgWrapper>(
-        "test_topic/pb_3Aaimrt_2Eprotocols_2Eexample_2EExampleEventMsg", 10);
-    timer_ = this->create_wall_timer(
-        500ms,
-        [this]() -> void {
-          // serialize protobuf msg to RosMsgWrapper msg
-          aimrt::protocols::example::ExampleEventMsg msg;
-          msg.set_msg("hello world");
-          size_t serialized_size = msg.ByteSizeLong();
+    publisher_ = this->create_publisher<ros2_plugin_proto::msg::RosMsgWrapper>("test_topic/pb_3Aaimrt_2Eprotocols_2Eexample_2EExampleEventMsg", 10);
+    timer_ = this->create_wall_timer(500ms, [this]() -> void {
+      // serialize protobuf msg to RosMsgWrapper msg
+      aimrt::protocols::example::ExampleEventMsg msg;
+      msg.set_msg("hello world");
+      size_t serialized_size = msg.ByteSizeLong();
 
-          ros2_plugin_proto::msg::RosMsgWrapper wrapper_msg;
-          wrapper_msg.serialization_type = "pb";
+      ros2_plugin_proto::msg::RosMsgWrapper wrapper_msg;
+      wrapper_msg.serialization_type = "pb";
 
-          wrapper_msg.data.resize(serialized_size);
-          msg.SerializeToArray(wrapper_msg.data.data(), serialized_size);
+      wrapper_msg.data.resize(serialized_size);
+      msg.SerializeToArray(wrapper_msg.data.data(), serialized_size);
 
-          RCLCPP_INFO(get_logger(), "Publishing msg: %s", msg.msg().c_str());
+      RCLCPP_INFO(get_logger(), "Publishing msg: %s", msg.msg().c_str());
 
-          publisher_->publish(wrapper_msg);
-        });
+      publisher_->publish(wrapper_msg);
+    });
   }
 
- private:
+private:
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<ros2_plugin_proto::msg::RosMsgWrapper>::SharedPtr publisher_;
   size_t count_ = 0;

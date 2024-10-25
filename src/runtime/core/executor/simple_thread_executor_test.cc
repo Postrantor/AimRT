@@ -20,8 +20,7 @@ thread_bind_cpu: [0]
   simple_thread_executor.Start();
   std::chrono::system_clock::time_point tp = std::chrono::system_clock::now();
   bool is_executed = false;
-  aimrt::executor::Task &&task = aimrt::executor::Task(
-      [&is_executed]() mutable { is_executed = true; });
+  aimrt::executor::Task &&task = aimrt::executor::Task([&is_executed]() mutable { is_executed = true; });
 
   simple_thread_executor.Execute(std::ref(task));
   std::this_thread::sleep_for(std::chrono::milliseconds(100));

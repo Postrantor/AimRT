@@ -10,7 +10,7 @@
 using RosTestRpc = example_ros2::srv::RosTestRpc;
 
 class RosTestRpcServer : public rclcpp::Node {
- public:
+public:
   RosTestRpcServer(const std::string& name) : Node(name) {
     RCLCPP_INFO(this->get_logger(), "Start node '%s'", name.c_str());
 
@@ -22,17 +22,13 @@ class RosTestRpcServer : public rclcpp::Node {
 
     // create service
     service_ = this->create_service<RosTestRpc>(
-        "/example_ros2/srv/RosTestRpc",
-        std::bind(&RosTestRpcServer::CoRpcHandle, this, std::placeholders::_1,
-                  std::placeholders::_2),
-        qos.get_rmw_qos_profile());
+        "/example_ros2/srv/RosTestRpc", std::bind(&RosTestRpcServer::CoRpcHandle, this, std::placeholders::_1, std::placeholders::_2), qos.get_rmw_qos_profile());
   }
 
- private:
+private:
   rclcpp::Service<RosTestRpc>::SharedPtr service_;
 
-  void CoRpcHandle(const std::shared_ptr<RosTestRpc::Request>& request,
-                   const std::shared_ptr<RosTestRpc::Response>& response) {
+  void CoRpcHandle(const std::shared_ptr<RosTestRpc::Request>& request, const std::shared_ptr<RosTestRpc::Response>& response) {
     response->code = 123;
     RCLCPP_INFO(this->get_logger(), "handle service");
   };

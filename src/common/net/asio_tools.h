@@ -21,12 +21,11 @@ namespace aimrt::common::net {
  * signals_同时承担了work_guard的功能，保证没有显式Stop之前io不会退出。
  */
 class AsioExecutor {
- public:
+public:
   explicit AsioExecutor(uint32_t threads_num = std::max<uint32_t>(std::thread::hardware_concurrency(), 1))
       : threads_num_(threads_num),
         io_ptr_(std::make_shared<boost::asio::io_context>(threads_num)),
-        work_guard_(io_ptr_->get_executor()) {
-  }
+        work_guard_(io_ptr_->get_executor()) {}
 
   ~AsioExecutor() {
     try {
@@ -83,10 +82,9 @@ class AsioExecutor {
     if (std::atomic_exchange(&state_, State::kStart) != State::kPreStart) [[unlikely]]
       throw std::runtime_error("Method can only be called when state is 'PreStart'.");
 
-    std::for_each(start_func_vec_.begin(), start_func_vec_.end(),
-                  [](const std::function<void()>& f) {
-                    if (f) f();
-                  });
+    std::for_each(start_func_vec_.begin(), start_func_vec_.end(), [](const std::function<void()>& f) {
+      if (f) f();
+    });
 
     start_func_vec_.clear();
 
@@ -123,10 +121,9 @@ class AsioExecutor {
       return;
 
     // 并不需要调用io_.stop()。当io_上所有任务都运行完毕后，会自动停止
-    std::for_each(stop_func_vec_.rbegin(), stop_func_vec_.rend(),
-                  [](const std::function<void()>& f) {
-                    if (f) f();
-                  });
+    std::for_each(stop_func_vec_.rbegin(), stop_func_vec_.rend(), [](const std::function<void()>& f) {
+      if (f) f();
+    });
 
     stop_func_vec_.clear();
 
@@ -143,11 +140,7 @@ class AsioExecutor {
 
     auto sig_ptr = std::make_shared<boost::asio::signal_set>(*io_ptr_, SIGINT, SIGTERM);
 
-    start_func_vec_.emplace_back([this, sig_ptr] {
-      sig_ptr->async_wait([this, sig_ptr](auto, auto) {
-        Shutdown();
-      });
-    });
+    start_func_vec_.emplace_back([this, sig_ptr] { sig_ptr->async_wait([this, sig_ptr](auto, auto) { Shutdown(); }); });
 
     stop_func_vec_.emplace_back([sig_ptr] {
       sig_ptr->cancel();
@@ -167,7 +160,7 @@ class AsioExecutor {
    */
   uint32_t ThreadsNum() const { return threads_num_; }
 
- private:
+private:
   enum class State : uint32_t {
     kPreStart,
     kStart,

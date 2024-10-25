@@ -10,13 +10,11 @@
 namespace aimrt::plugins::log_control_plugin {
 
 class LogControlServiceImpl : public aimrt::protocols::log_control_plugin::LogControlServiceCoService {
- public:
+public:
   LogControlServiceImpl() = default;
   ~LogControlServiceImpl() override = default;
 
-  void SetLoggerManager(aimrt::runtime::core::logger::LoggerManager* ptr) {
-    logger_manager_ptr_ = ptr;
-  }
+  void SetLoggerManager(aimrt::runtime::core::logger::LoggerManager* ptr) { logger_manager_ptr_ = ptr; }
 
   aimrt::co::Task<aimrt::rpc::Status> GetModuleLogLevel(
       aimrt::rpc::ContextRef ctx_ref,
@@ -28,15 +26,13 @@ class LogControlServiceImpl : public aimrt::protocols::log_control_plugin::LogCo
       const ::aimrt::protocols::log_control_plugin::SetModuleLogLevelReq& req,
       ::aimrt::protocols::log_control_plugin::SetModuleLogLevelRsp& rsp) override;
 
- private:
+private:
   enum class ErrorCode : uint32_t {
     kSuc = 0,
     kInvalidModuleName = 1,
   };
 
-  static constexpr std::string_view kErrorInfoArray[] = {
-      "",
-      "INVALID_MODULE_NAME"};
+  static constexpr std::string_view kErrorInfoArray[] = {"", "INVALID_MODULE_NAME"};
 
   template <typename T>
   void SetErrorCode(ErrorCode code, T& rsp) {

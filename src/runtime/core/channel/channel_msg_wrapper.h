@@ -39,12 +39,7 @@ struct MsgWrapper {
   aimrt::channel::ContextRef ctx_ref;
 
   /// serialization cache
-  std::unordered_map<
-      std::string,
-      std::shared_ptr<aimrt::util::BufferArrayView>,
-      aimrt::common::util::StringHash,
-      std::equal_to<>>
-      serialization_cache;
+  std::unordered_map<std::string, std::shared_ptr<aimrt::util::BufferArrayView>, aimrt::common::util::StringHash, std::equal_to<>> serialization_cache;
 
   /// msg cache
   std::shared_ptr<void> msg_cache_ptr;

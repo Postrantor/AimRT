@@ -9,7 +9,7 @@
 namespace aimrt::common::util {
 
 class LightSignal {
- public:
+public:
   LightSignal() = default;
   ~LightSignal() = default;
 
@@ -37,7 +37,7 @@ class LightSignal {
     flag_ = false;
   }
 
- private:
+private:
   std::mutex mutex_;
   std::condition_variable cond_;
   bool flag_ = false;

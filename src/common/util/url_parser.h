@@ -17,8 +17,7 @@ namespace aimrt::common::util {
  * @tparam StringType
  */
 template <class StringType = std::string_view>
-  requires(std::is_same_v<StringType, std::string_view> ||
-           std::is_same_v<StringType, std::string>)
+  requires(std::is_same_v<StringType, std::string_view> || std::is_same_v<StringType, std::string>)
 struct Url {
   StringType protocol;  // 协议
   StringType host;      // host
@@ -36,18 +35,13 @@ struct Url {
  */
 template <class StringType = std::string_view>
 std::optional<Url<StringType>> ParseUrl(std::string_view url_str) {
-  std::regex url_regex(
-      R"(^(([^:\/?#]+)://)?(([^\/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?)",
-      std::regex::ECMAScript);
+  std::regex url_regex(R"(^(([^:\/?#]+)://)?(([^\/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?)", std::regex::ECMAScript);
   std::match_results<std::string_view::const_iterator> url_match_result;
 
-  if (!std::regex_match(url_str.begin(), url_str.end(), url_match_result, url_regex))
-    return std::nullopt;
+  if (!std::regex_match(url_str.begin(), url_str.end(), url_match_result, url_regex)) return std::nullopt;
 
   Url<StringType> url;
-  if (url_match_result[2].matched)
-    url.protocol =
-        StringType(url_match_result[2].first, url_match_result[2].second);
+  if (url_match_result[2].matched) url.protocol = StringType(url_match_result[2].first, url_match_result[2].second);
   if (url_match_result[4].matched) {
     StringType auth(url_match_result[4].first, url_match_result[4].second);
     size_t pos = auth.find_first_of(':');
@@ -58,12 +52,9 @@ std::optional<Url<StringType>> ParseUrl(std::string_view url_str) {
       url.host = auth;
     }
   }
-  if (url_match_result[5].matched)
-    url.path = StringType(url_match_result[5].first, url_match_result[5].second);
-  if (url_match_result[7].matched)
-    url.query = StringType(url_match_result[7].first, url_match_result[7].second);
-  if (url_match_result[9].matched)
-    url.fragment = StringType(url_match_result[9].first, url_match_result[9].second);
+  if (url_match_result[5].matched) url.path = StringType(url_match_result[5].first, url_match_result[5].second);
+  if (url_match_result[7].matched) url.query = StringType(url_match_result[7].first, url_match_result[7].second);
+  if (url_match_result[9].matched) url.fragment = StringType(url_match_result[9].first, url_match_result[9].second);
 
   return std::optional<Url<StringType>>{url};
 }

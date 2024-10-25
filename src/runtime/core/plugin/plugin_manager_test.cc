@@ -19,7 +19,7 @@ TEST(PluginManagerTest, Initialize1) {
 TEST(PluginManagerTest, Initialize2) {
   // 定义一个 MockPlugin
   class MockPlugin : public AimRTCorePluginBase {
-   public:
+  public:
     std::string_view Name() const noexcept override { return "test_plugin"; }
     bool Initialize(runtime::core::AimRTCore* core_ptr) noexcept override {
       is_initialized_ = true;

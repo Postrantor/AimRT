@@ -10,7 +10,7 @@
 namespace aimrt::plugins::mqtt_plugin {
 
 class MqttRpcBackend : public runtime::core::rpc::RpcBackendBase {
- public:
+public:
   struct Options {
     std::string timeout_executor;
 
@@ -29,12 +29,8 @@ class MqttRpcBackend : public runtime::core::rpc::RpcBackendBase {
     std::vector<ServerOptions> servers_options;
   };
 
- public:
-  MqttRpcBackend(
-      const std::string& client_id,
-      MQTTAsync& client,
-      uint32_t max_pkg_size,
-      const std::shared_ptr<MsgHandleRegistry>& msg_handle_registry_ptr)
+public:
+  MqttRpcBackend(const std::string& client_id, MQTTAsync& client, uint32_t max_pkg_size, const std::shared_ptr<MsgHandleRegistry>& msg_handle_registry_ptr)
       : client_id_(client_id),
         client_(client),
         max_pkg_size_(max_pkg_size),
@@ -48,37 +44,27 @@ class MqttRpcBackend : public runtime::core::rpc::RpcBackendBase {
   void Start() override;
   void Shutdown() override;
 
-  void SetRpcRegistry(const runtime::core::rpc::RpcRegistry* rpc_registry_ptr) noexcept override {
-    rpc_registry_ptr_ = rpc_registry_ptr;
-  }
+  void SetRpcRegistry(const runtime::core::rpc::RpcRegistry* rpc_registry_ptr) noexcept override { rpc_registry_ptr_ = rpc_registry_ptr; }
 
-  bool RegisterServiceFunc(
-      const runtime::core::rpc::ServiceFuncWrapper& service_func_wrapper) noexcept override;
-  bool RegisterClientFunc(
-      const runtime::core::rpc::ClientFuncWrapper& client_func_wrapper) noexcept override;
-  void Invoke(
-      const std::shared_ptr<runtime::core::rpc::InvokeWrapper>& client_invoke_wrapper_ptr) noexcept override;
+  bool RegisterServiceFunc(const runtime::core::rpc::ServiceFuncWrapper& service_func_wrapper) noexcept override;
+  bool RegisterClientFunc(const runtime::core::rpc::ClientFuncWrapper& client_func_wrapper) noexcept override;
+  void Invoke(const std::shared_ptr<runtime::core::rpc::InvokeWrapper>& client_invoke_wrapper_ptr) noexcept override;
 
   void RegisterGetExecutorFunc(const std::function<executor::ExecutorRef(std::string_view)>& get_executor_func);
 
   void SubscribeMqttTopic();
   void UnSubscribeMqttTopic();
 
- private:
+private:
   static std::string_view GetRealFuncName(std::string_view func_name) {
     if (func_name.substr(0, 5) == "ros2:") return func_name.substr(5);
     if (func_name.substr(0, 3) == "pb:") return func_name.substr(3);
     return func_name;
   }
 
-  void ReturnRspWithStatusCode(
-      std::string_view mqtt_pub_topic,
-      int qos,
-      std::string_view serialization_type,
-      const char* req_id_buf,
-      uint32_t code);
+  void ReturnRspWithStatusCode(std::string_view mqtt_pub_topic, int qos, std::string_view serialization_type, const char* req_id_buf, uint32_t code);
 
- private:
+private:
   enum class State : uint32_t {
     kPreInit,
     kInit,
@@ -113,8 +99,7 @@ class MqttRpcBackend : public runtime::core::rpc::RpcBackendBase {
   };
   std::unordered_map<std::string_view, ClientCfgInfo> client_cfg_info_map_;
 
-  std::unique_ptr<runtime::core::util::RpcClientTool<std::shared_ptr<runtime::core::rpc::InvokeWrapper>>>
-      client_tool_ptr_;
+  std::unique_ptr<runtime::core::util::RpcClientTool<std::shared_ptr<runtime::core::rpc::InvokeWrapper>>> client_tool_ptr_;
 };
 
 }  // namespace aimrt::plugins::mqtt_plugin

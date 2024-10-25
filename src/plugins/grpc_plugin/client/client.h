@@ -27,7 +27,7 @@ using Response = http2::Response;
 using ResponsePtr = std::shared_ptr<Response>;
 
 class AsioHttp2Client : public std::enable_shared_from_this<AsioHttp2Client> {
- public:
+public:
   explicit AsioHttp2Client(const std::shared_ptr<IOCtx>& io_ptr)
       : io_ptr_(io_ptr),
         mgr_strand_(boost::asio::make_strand(*io_ptr_)),
@@ -39,31 +39,22 @@ class AsioHttp2Client : public std::enable_shared_from_this<AsioHttp2Client> {
   AsioHttp2Client& operator=(const AsioHttp2Client&) = delete;
 
   void SetLogger(const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr) {
-    AIMRT_CHECK_ERROR_THROW(
-        state_.load() == State::kPreInit,
-        "Method can only be called when state is 'PreInit'.");
+    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
     logger_ptr_ = logger_ptr;
   }
 
   void Initialize(const ClientOptions& options) {
-    AIMRT_CHECK_ERROR_THROW(
-        std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-        "Method can only be called when state is 'PreInit'.");
+    AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
     options_ = ClientOptions::Verify(options);
     connection_options_ptr_ = std::make_shared<ConnectionOptions>(options_);
   }
 
-  void Start() {
-    AIMRT_CHECK_ERROR_THROW(
-        std::atomic_exchange(&state_, State::kStart) == State::kInit,
-        "Method can only be called when state is 'Init'.");
-  }
+  void Start() { AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'."); }
 
   void Shutdown() {
-    if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-      return;
+    if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 
     auto self = shared_from_this();
     boost::asio::dispatch(mgr_strand_, [this, self]() {
@@ -74,14 +65,11 @@ class AsioHttp2Client : public std::enable_shared_from_this<AsioHttp2Client> {
     });
   }
 
-  Awaitable<ResponsePtr> HttpSendRecvCo(const RequestPtr& req_ptr,
-                                        std::chrono::nanoseconds timeout = std::chrono::seconds(5)) {
+  Awaitable<ResponsePtr> HttpSendRecvCo(const RequestPtr& req_ptr, std::chrono::nanoseconds timeout = std::chrono::seconds(5)) {
     return boost::asio::co_spawn(
         mgr_strand_,
         [this, &req_ptr, timeout]() -> Awaitable<ResponsePtr> {
-          AIMRT_CHECK_ERROR_THROW(
-              state_.load() == State::kStart,
-              "Method can only be called when state is 'Start'.");
+          AIMRT_CHECK_ERROR_THROW(state_.load() == State::kStart, "Method can only be called when state is 'Start'.");
 
           std::shared_ptr<Connection> connection_ptr;
 
@@ -114,7 +102,7 @@ class AsioHttp2Client : public std::enable_shared_from_this<AsioHttp2Client> {
 
   bool IsRunning() const { return state_.load() == State::kStart; }
 
- private:
+private:
   enum class State : uint32_t {
     kPreInit,
     kInit,

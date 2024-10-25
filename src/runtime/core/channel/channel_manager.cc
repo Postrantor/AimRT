@@ -47,11 +47,9 @@ struct convert<aimrt::runtime::core::channel::ChannelManager::Options> {
 
     if (node["backends"] && node["backends"].IsSequence()) {
       for (const auto& backend_options_node : node["backends"]) {
-        auto backend_options = Options::BackendOptions{
-            .type = backend_options_node["type"].as<std::string>()};
+        auto backend_options = Options::BackendOptions{.type = backend_options_node["type"].as<std::string>()};
 
-        if (backend_options_node["options"])
-          backend_options.options = backend_options_node["options"];
+        if (backend_options_node["options"]) backend_options.options = backend_options_node["options"];
 
         rhs.backends_options.emplace_back(std::move(backend_options));
       }
@@ -63,8 +61,7 @@ struct convert<aimrt::runtime::core::channel::ChannelManager::Options> {
             .topic_name = pub_topic_options_node["topic_name"].as<std::string>(),
             .enable_backends = pub_topic_options_node["enable_backends"].as<std::vector<std::string>>()};
 
-        if (pub_topic_options_node["enable_filters"])
-          pub_topic_options.enable_filters = pub_topic_options_node["enable_filters"].as<std::vector<std::string>>();
+        if (pub_topic_options_node["enable_filters"]) pub_topic_options.enable_filters = pub_topic_options_node["enable_filters"].as<std::vector<std::string>>();
 
         rhs.pub_topics_options.emplace_back(std::move(pub_topic_options));
       }
@@ -76,8 +73,7 @@ struct convert<aimrt::runtime::core::channel::ChannelManager::Options> {
             .topic_name = sub_topic_options_node["topic_name"].as<std::string>(),
             .enable_backends = sub_topic_options_node["enable_backends"].as<std::vector<std::string>>()};
 
-        if (sub_topic_options_node["enable_filters"])
-          sub_topic_options.enable_filters = sub_topic_options_node["enable_filters"].as<std::vector<std::string>>();
+        if (sub_topic_options_node["enable_filters"]) sub_topic_options.enable_filters = sub_topic_options_node["enable_filters"].as<std::vector<std::string>>();
 
         rhs.sub_topics_options.emplace_back(std::move(sub_topic_options));
       }
@@ -94,12 +90,9 @@ void ChannelManager::Initialize(YAML::Node options_node) {
   RegisterLocalChannelBackend();
   RegisterDebugLogFilter();
 
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-      "Channel manager can only be initialized once.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "Channel manager can only be initialized once.");
 
-  if (options_node && !options_node.IsNull())
-    options_ = options_node.as<Options>();
+  if (options_node && !options_node.IsNull()) options_ = options_node.as<Options>();
 
   channel_registry_ptr_ = std::make_unique<ChannelRegistry>();
   channel_registry_ptr_->SetLogger(logger_ptr_);
@@ -113,15 +106,9 @@ void ChannelManager::Initialize(YAML::Node options_node) {
 
   // 根据配置初始化指定的backend
   for (auto& backend_options : options_.backends_options) {
-    auto finditr = std::find_if(
-        channel_backend_vec_.begin(), channel_backend_vec_.end(),
-        [&backend_options](const auto& ptr) {
-          return ptr->Name() == backend_options.type;
-        });
+    auto finditr = std::find_if(channel_backend_vec_.begin(), channel_backend_vec_.end(), [&backend_options](const auto& ptr) { return ptr->Name() == backend_options.type; });
 
-    AIMRT_CHECK_ERROR_THROW(finditr != channel_backend_vec_.end(),
-                            "Invalid channel backend type '{}'",
-                            backend_options.type);
+    AIMRT_CHECK_ERROR_THROW(finditr != channel_backend_vec_.end(), "Invalid channel backend type '{}'", backend_options.type);
 
     (*finditr)->SetChannelRegistry(channel_registry_ptr_.get());
     (*finditr)->Initialize(backend_options.options);
@@ -139,8 +126,7 @@ void ChannelManager::Initialize(YAML::Node options_node) {
     for (const auto& backend_name : item.enable_backends) {
       AIMRT_CHECK_ERROR_THROW(
           std::find(channel_backend_name_vec.begin(), channel_backend_name_vec.end(), backend_name) != channel_backend_name_vec.end(),
-          "Invalid channel backend type '{}' for pub topic '{}'",
-          backend_name, item.topic_name);
+          "Invalid channel backend type '{}' for pub topic '{}'", backend_name, item.topic_name);
     }
 
     pub_backends_rules.emplace_back(item.topic_name, item.enable_backends);
@@ -155,8 +141,7 @@ void ChannelManager::Initialize(YAML::Node options_node) {
     for (const auto& backend_name : item.enable_backends) {
       AIMRT_CHECK_ERROR_THROW(
           std::find(channel_backend_name_vec.begin(), channel_backend_name_vec.end(), backend_name) != channel_backend_name_vec.end(),
-          "Invalid channel backend type '{}' for sub topic '{}'",
-          backend_name, item.topic_name);
+          "Invalid channel backend type '{}' for sub topic '{}'", backend_name, item.topic_name);
     }
 
     sub_backends_rules.emplace_back(item.topic_name, item.enable_backends);
@@ -174,9 +159,7 @@ void ChannelManager::Initialize(YAML::Node options_node) {
 }
 
 void ChannelManager::Start() {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kStart) == State::kInit,
-      "Method can only be called when state is 'Init'.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'.");
 
   channel_backend_manager_.Start();
   channel_handle_proxy_start_flag_.store(true);
@@ -185,8 +168,7 @@ void ChannelManager::Start() {
 }
 
 void ChannelManager::Shutdown() {
-  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-    return;
+  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 
   AIMRT_INFO("Channel manager shutdown.");
 
@@ -205,12 +187,9 @@ void ChannelManager::Shutdown() {
 }
 
 std::list<std::pair<std::string, std::string>> ChannelManager::GenInitializationReport() const {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kInit,
-      "Method can only be called when state is 'Init'.");
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kInit, "Method can only be called when state is 'Init'.");
 
-  std::vector<std::vector<std::string>> pub_topic_info_table =
-      {{"topic", "msg type", "module", "backends", "filters"}};
+  std::vector<std::vector<std::string>> pub_topic_info_table = {{"topic", "msg type", "module", "backends", "filters"}};
 
   const auto& pub_topic_backend_info = channel_backend_manager_.GetPubTopicBackendInfo();
   const auto& pub_topic_index_map = channel_registry_ptr_->GetPubTopicIndexMap();
@@ -218,8 +197,7 @@ std::list<std::pair<std::string, std::string>> ChannelManager::GenInitialization
   for (const auto& pub_topic_index_itr : pub_topic_index_map) {
     auto topic_name = pub_topic_index_itr.first;
     auto pub_topic_backend_itr = pub_topic_backend_info.find(topic_name);
-    AIMRT_CHECK_ERROR_THROW(pub_topic_backend_itr != pub_topic_backend_info.end(),
-                            "Invalid channel registry info.");
+    AIMRT_CHECK_ERROR_THROW(pub_topic_backend_itr != pub_topic_backend_info.end(), "Invalid channel registry info.");
 
     auto filter_name_vec = publish_filter_manager_.GetFilterNameVec(topic_name);
 
@@ -234,8 +212,7 @@ std::list<std::pair<std::string, std::string>> ChannelManager::GenInitialization
     }
   }
 
-  std::vector<std::vector<std::string>> sub_topic_info_table =
-      {{"topic", "msg type", "module", "backends", "filters"}};
+  std::vector<std::vector<std::string>> sub_topic_info_table = {{"topic", "msg type", "module", "backends", "filters"}};
 
   const auto& sub_topic_backend_info = channel_backend_manager_.GetSubTopicBackendInfo();
   const auto& sub_topic_index_map = channel_registry_ptr_->GetSubTopicIndexMap();
@@ -243,8 +220,7 @@ std::list<std::pair<std::string, std::string>> ChannelManager::GenInitialization
   for (const auto& sub_topic_index_itr : sub_topic_index_map) {
     auto topic_name = sub_topic_index_itr.first;
     auto sub_topic_backend_itr = sub_topic_backend_info.find(topic_name);
-    AIMRT_CHECK_ERROR_THROW(sub_topic_backend_itr != sub_topic_backend_info.end(),
-                            "Invalid channel registry info.");
+    AIMRT_CHECK_ERROR_THROW(sub_topic_backend_itr != sub_topic_backend_info.end(), "Invalid channel registry info.");
 
     auto filter_name_vec = subscribe_filter_manager_.GetFilterNameVec(topic_name);
 
@@ -261,8 +237,7 @@ std::list<std::pair<std::string, std::string>> ChannelManager::GenInitialization
 
   std::vector<std::string> channel_backend_name_vec;
   channel_backend_name_vec.reserve(channel_backend_vec_.size());
-  for (const auto& item : channel_backend_vec_)
-    channel_backend_name_vec.emplace_back(item->Name());
+  for (const auto& item : channel_backend_vec_) channel_backend_name_vec.emplace_back(item->Name());
 
   std::string channel_backend_name_vec_str;
   if (channel_backend_name_vec.empty()) {
@@ -301,141 +276,99 @@ std::list<std::pair<std::string, std::string>> ChannelManager::GenInitialization
   return report;
 }
 
-void ChannelManager::RegisterChannelBackend(
-    std::unique_ptr<ChannelBackendBase>&& channel_backend_ptr) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kPreInit,
-      "Method can only be called when state is 'PreInit'.");
+void ChannelManager::RegisterChannelBackend(std::unique_ptr<ChannelBackendBase>&& channel_backend_ptr) {
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
   channel_backend_vec_.emplace_back(std::move(channel_backend_ptr));
 }
 
-void ChannelManager::RegisterGetExecutorFunc(
-    const std::function<executor::ExecutorRef(std::string_view)>& get_executor_func) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kPreInit,
-      "Method can only be called when state is 'PreInit'.");
+void ChannelManager::RegisterGetExecutorFunc(const std::function<executor::ExecutorRef(std::string_view)>& get_executor_func) {
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
   get_executor_func_ = get_executor_func;
 }
 
-const ChannelHandleProxy& ChannelManager::GetChannelHandleProxy(
-    const util::ModuleDetailInfo& module_info) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kInit,
-      "Method can only be called when state is 'Init'.");
+const ChannelHandleProxy& ChannelManager::GetChannelHandleProxy(const util::ModuleDetailInfo& module_info) {
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kInit, "Method can only be called when state is 'Init'.");
 
   auto itr = channel_handle_proxy_wrap_map_.find(module_info.name);
-  if (itr != channel_handle_proxy_wrap_map_.end())
-    return itr->second->channel_handle_proxy;
+  if (itr != channel_handle_proxy_wrap_map_.end()) return itr->second->channel_handle_proxy;
 
   auto emplace_ret = channel_handle_proxy_wrap_map_.emplace(
-      module_info.name,
-      std::make_unique<ChannelHandleProxyWrap>(
-          module_info.pkg_path,
-          module_info.name,
-          *logger_ptr_,
-          channel_backend_manager_,
-          passed_context_meta_keys_,
-          channel_handle_proxy_start_flag_));
+      module_info.name, std::make_unique<ChannelHandleProxyWrap>(
+                            module_info.pkg_path, module_info.name, *logger_ptr_, channel_backend_manager_, passed_context_meta_keys_, channel_handle_proxy_start_flag_));
 
   return emplace_ret.first->second->channel_handle_proxy;
 }
 
 void ChannelManager::RegisterPublishFilter(std::string_view name, FrameworkAsyncChannelFilter&& filter) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kPreInit,
-      "Method can only be called when state is 'PreInit'.");
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
   publish_filter_manager_.RegisterFilter(name, std::move(filter));
 }
 
 void ChannelManager::RegisterSubscribeFilter(std::string_view name, FrameworkAsyncChannelFilter&& filter) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kPreInit,
-      "Method can only be called when state is 'PreInit'.");
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
   subscribe_filter_manager_.RegisterFilter(name, std::move(filter));
 }
 
 void ChannelManager::AddPassedContextMetaKeys(const std::unordered_set<std::string>& keys) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kPreInit,
-      "Method can only be called when state is 'PreInit'.");
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
   passed_context_meta_keys_.insert(keys.begin(), keys.end());
 }
 
 const ChannelRegistry* ChannelManager::GetChannelRegistry() const {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kInit,
-      "Method can only be called when state is 'Init'.");
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kInit, "Method can only be called when state is 'Init'.");
   return channel_registry_ptr_.get();
 }
 
 const std::vector<ChannelBackendBase*>& ChannelManager::GetUsedChannelBackend() const {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kInit,
-      "Method can only be called when state is 'Init'.");
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kInit, "Method can only be called when state is 'Init'.");
   return used_channel_backend_vec_;
 }
 
 void ChannelManager::RegisterLocalChannelBackend() {
-  std::unique_ptr<ChannelBackendBase> local_channel_backend_ptr =
-      std::make_unique<LocalChannelBackend>();
+  std::unique_ptr<ChannelBackendBase> local_channel_backend_ptr = std::make_unique<LocalChannelBackend>();
 
-  static_cast<LocalChannelBackend*>(local_channel_backend_ptr.get())
-      ->RegisterGetExecutorFunc(get_executor_func_);
+  static_cast<LocalChannelBackend*>(local_channel_backend_ptr.get())->RegisterGetExecutorFunc(get_executor_func_);
 
-  static_cast<LocalChannelBackend*>(local_channel_backend_ptr.get())
-      ->SetLogger(logger_ptr_);
+  static_cast<LocalChannelBackend*>(local_channel_backend_ptr.get())->SetLogger(logger_ptr_);
 
   RegisterChannelBackend(std::move(local_channel_backend_ptr));
 }
 
 void ChannelManager::RegisterDebugLogFilter() {
-  RegisterPublishFilter(
-      "debug_log",
-      [this](MsgWrapper& msg_wrapper, FrameworkAsyncChannelHandle&& h) {
-        auto buf_ptr = TrySerializeMsgWithCache(msg_wrapper, "json");
+  RegisterPublishFilter("debug_log", [this](MsgWrapper& msg_wrapper, FrameworkAsyncChannelHandle&& h) {
+    auto buf_ptr = TrySerializeMsgWithCache(msg_wrapper, "json");
 
-        if (buf_ptr) {
-          auto msg_str = buf_ptr->JoinToString();
+    if (buf_ptr) {
+      auto msg_str = buf_ptr->JoinToString();
 
-          AIMRT_INFO("Channel publish a new msg. msg type: {}, topic name: {}, context: {}, msg: {}",
-                     msg_wrapper.info.msg_type,
-                     msg_wrapper.info.topic_name,
-                     msg_wrapper.ctx_ref.ToString(),
-                     msg_str);
-        } else {
-          AIMRT_INFO("Channel publish a new msg. msg type: {}, topic name: {}, context: {}",
-                     msg_wrapper.info.msg_type,
-                     msg_wrapper.info.topic_name,
-                     msg_wrapper.ctx_ref.ToString());
-        }
+      AIMRT_INFO(
+          "Channel publish a new msg. msg type: {}, topic name: {}, context: {}, msg: {}", msg_wrapper.info.msg_type, msg_wrapper.info.topic_name, msg_wrapper.ctx_ref.ToString(),
+          msg_str);
+    } else {
+      AIMRT_INFO("Channel publish a new msg. msg type: {}, topic name: {}, context: {}", msg_wrapper.info.msg_type, msg_wrapper.info.topic_name, msg_wrapper.ctx_ref.ToString());
+    }
 
-        h(msg_wrapper);
-      });
+    h(msg_wrapper);
+  });
 
-  RegisterSubscribeFilter(
-      "debug_log",
-      [this](MsgWrapper& msg_wrapper, FrameworkAsyncChannelHandle&& h) {
-        auto buf_ptr = TrySerializeMsgWithCache(msg_wrapper, "json");
+  RegisterSubscribeFilter("debug_log", [this](MsgWrapper& msg_wrapper, FrameworkAsyncChannelHandle&& h) {
+    auto buf_ptr = TrySerializeMsgWithCache(msg_wrapper, "json");
 
-        if (buf_ptr) {
-          auto msg_str = buf_ptr->JoinToString();
+    if (buf_ptr) {
+      auto msg_str = buf_ptr->JoinToString();
 
-          AIMRT_INFO("Channel subscriber handle a new msg. msg type: {}, topic name: {}, context: {}, msg: {}",
-                     msg_wrapper.info.msg_type,
-                     msg_wrapper.info.topic_name,
-                     msg_wrapper.ctx_ref.ToString(),
-                     msg_str);
-        } else {
-          AIMRT_INFO("Channel subscriber handle a new msg. msg type: {}, topic name: {}, context: {}",
-                     msg_wrapper.info.msg_type,
-                     msg_wrapper.info.topic_name,
-                     msg_wrapper.ctx_ref.ToString());
-        }
+      AIMRT_INFO(
+          "Channel subscriber handle a new msg. msg type: {}, topic name: {}, context: {}, msg: {}", msg_wrapper.info.msg_type, msg_wrapper.info.topic_name,
+          msg_wrapper.ctx_ref.ToString(), msg_str);
+    } else {
+      AIMRT_INFO(
+          "Channel subscriber handle a new msg. msg type: {}, topic name: {}, context: {}", msg_wrapper.info.msg_type, msg_wrapper.info.topic_name, msg_wrapper.ctx_ref.ToString());
+    }
 
-        h(msg_wrapper);
-      });
+    h(msg_wrapper);
+  });
 }
 
 }  // namespace aimrt::runtime::core::channel

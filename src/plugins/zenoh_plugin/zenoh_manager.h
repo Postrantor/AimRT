@@ -9,7 +9,7 @@
 
 namespace aimrt::plugins::zenoh_plugin {
 class ZenohManager {
- public:
+public:
   using MsgHandleFunc = std::function<void(const z_loaned_sample_t* message)>;
   ZenohManager() = default;
   ~ZenohManager() = default;
@@ -27,7 +27,7 @@ class ZenohManager {
 
   void Publish(const std::string& topic, char* serialized_data_ptr, uint64_t serialized_data_len);
 
- private:
+private:
   static void PrintZenohCgf(z_owned_config_t z_config) {
     z_owned_string_t out_config_string;
     zc_config_to_string(z_loan(z_config), &out_config_string);

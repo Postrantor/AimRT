@@ -10,13 +10,11 @@
 namespace aimrt::examples::cpp::executor::executor_module {
 
 class ExecutorModule : public aimrt::ModuleBase {
- public:
+public:
   ExecutorModule() = default;
   ~ExecutorModule() override = default;
 
-  ModuleInfo Info() const override {
-    return ModuleInfo{.name = "ExecutorModule"};
-  }
+  ModuleInfo Info() const override { return ModuleInfo{.name = "ExecutorModule"}; }
 
   bool Initialize(aimrt::CoreRef aimrt_ptr) override;
 
@@ -24,14 +22,14 @@ class ExecutorModule : public aimrt::ModuleBase {
 
   void Shutdown() override;
 
- private:
+private:
   auto GetLogger() { return core_.GetLogger(); }
 
   void SimpleExecuteDemo();
   void ThreadSafeDemo();
   void TimeScheduleDemo();
 
- private:
+private:
   aimrt::CoreRef core_;
 
   aimrt::executor::ExecutorRef work_executor_;

@@ -16,9 +16,7 @@ wheel_size: [1000, 600]
   std::string_view name = "test_time_wheel_executor";
 
   TimeWheelExecutor executor;
-  executor.RegisterGetExecutorFunc([](auto) {
-    return aimrt::executor::ExecutorRef();
-  });
+  executor.RegisterGetExecutorFunc([](auto) { return aimrt::executor::ExecutorRef(); });
   executor.Initialize(name, options_node);
 
   EXPECT_EQ(executor.Type(), "time_wheel");
@@ -38,17 +36,14 @@ wheel_size: [1000, 600]
   std::string_view name = "test_time_wheel_executor";
 
   TimeWheelExecutor executor;
-  executor.RegisterGetExecutorFunc([](auto) {
-    return aimrt::executor::ExecutorRef();
-  });
+  executor.RegisterGetExecutorFunc([](auto) { return aimrt::executor::ExecutorRef(); });
   executor.Initialize(name, options_node);
   executor.Start();
 
   EXPECT_FALSE(executor.IsInCurrentExecutor());
 
   bool ret = false;
-  executor.Execute(
-      [&]() { ret = executor.IsInCurrentExecutor(); });
+  executor.Execute([&]() { ret = executor.IsInCurrentExecutor(); });
 
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
   EXPECT_TRUE(ret);
@@ -65,16 +60,12 @@ wheel_size: [1000, 600]
   std::string_view name = "test_time_wheel_executor";
 
   TimeWheelExecutor executor;
-  executor.RegisterGetExecutorFunc([](auto) {
-    return aimrt::executor::ExecutorRef();
-  });
+  executor.RegisterGetExecutorFunc([](auto) { return aimrt::executor::ExecutorRef(); });
   executor.Initialize(name, options_node);
   executor.Start();
 
   bool ret = false;
-  executor.ExecuteAt(
-      executor.Now() + std::chrono::milliseconds(100),
-      [&]() { ret = true; });
+  executor.ExecuteAt(executor.Now() + std::chrono::milliseconds(100), [&]() { ret = true; });
 
   EXPECT_FALSE(ret);
 

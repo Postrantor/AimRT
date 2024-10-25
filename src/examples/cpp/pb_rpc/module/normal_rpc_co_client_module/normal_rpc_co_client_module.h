@@ -16,13 +16,11 @@
 namespace aimrt::examples::cpp::pb_rpc::normal_rpc_co_client_module {
 
 class NormalRpcCoClientModule : public aimrt::ModuleBase {
- public:
+public:
   NormalRpcCoClientModule() = default;
   ~NormalRpcCoClientModule() override = default;
 
-  ModuleInfo Info() const override {
-    return ModuleInfo{.name = "NormalRpcCoClientModule"};
-  }
+  ModuleInfo Info() const override { return ModuleInfo{.name = "NormalRpcCoClientModule"}; }
 
   bool Initialize(aimrt::CoreRef core) override;
 
@@ -30,12 +28,12 @@ class NormalRpcCoClientModule : public aimrt::ModuleBase {
 
   void Shutdown() override;
 
- private:
+private:
   auto GetLogger() { return core_.GetLogger(); }
 
   co::Task<void> MainLoop();
 
- private:
+private:
   aimrt::CoreRef core_;
   aimrt::executor::ExecutorRef executor_;
 

@@ -12,15 +12,11 @@
 namespace aimrt::runtime::core::rpc {
 
 void RpcBackendManager::Initialize() {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-      "Rpc backend manager can only be initialized once.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "Rpc backend manager can only be initialized once.");
 }
 
 void RpcBackendManager::Start() {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kStart) == State::kInit,
-      "Method can only be called when state is 'Init'.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'.");
 
   for (auto& backend : rpc_backend_index_vec_) {
     AIMRT_TRACE("Start rpc backend '{}'.", backend->Name());
@@ -29,8 +25,7 @@ void RpcBackendManager::Start() {
 }
 
 void RpcBackendManager::Shutdown() {
-  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-    return;
+  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 
   for (auto& backend : rpc_backend_index_vec_) {
     AIMRT_TRACE("Shutdown rpc backend '{}'.", backend->Name());
@@ -39,62 +34,42 @@ void RpcBackendManager::Shutdown() {
 }
 
 void RpcBackendManager::SetRpcRegistry(RpcRegistry* rpc_registry_ptr) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kPreInit,
-      "Method can only be called when state is 'PreInit'.");
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
   rpc_registry_ptr_ = rpc_registry_ptr;
 }
 
 void RpcBackendManager::SetClientFrameworkAsyncRpcFilterManager(FrameworkAsyncRpcFilterManager* ptr) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kPreInit,
-      "Method can only be called when state is 'PreInit'.");
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
   client_filter_manager_ptr_ = ptr;
 }
 
 void RpcBackendManager::SetServerFrameworkAsyncRpcFilterManager(FrameworkAsyncRpcFilterManager* ptr) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kPreInit,
-      "Method can only be called when state is 'PreInit'.");
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
   server_filter_manager_ptr_ = ptr;
 }
 
-void RpcBackendManager::SetClientsFiltersRules(
-    const std::vector<std::pair<std::string, std::vector<std::string>>>& rules) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kPreInit,
-      "Method can only be called when state is 'PreInit'.");
+void RpcBackendManager::SetClientsFiltersRules(const std::vector<std::pair<std::string, std::vector<std::string>>>& rules) {
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
   clients_filters_rules_ = rules;
 }
 
-void RpcBackendManager::SetServersFiltersRules(
-    const std::vector<std::pair<std::string, std::vector<std::string>>>& rules) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kPreInit,
-      "Method can only be called when state is 'PreInit'.");
+void RpcBackendManager::SetServersFiltersRules(const std::vector<std::pair<std::string, std::vector<std::string>>>& rules) {
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
   servers_filters_rules_ = rules;
 }
 
-void RpcBackendManager::SetClientsBackendsRules(
-    const std::vector<std::pair<std::string, std::vector<std::string>>>& rules) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kPreInit,
-      "Method can only be called when state is 'PreInit'.");
+void RpcBackendManager::SetClientsBackendsRules(const std::vector<std::pair<std::string, std::vector<std::string>>>& rules) {
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
   clients_backends_rules_ = rules;
 }
 
-void RpcBackendManager::SetServersBackendsRules(
-    const std::vector<std::pair<std::string, std::vector<std::string>>>& rules) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kPreInit,
-      "Method can only be called when state is 'PreInit'.");
+void RpcBackendManager::SetServersBackendsRules(const std::vector<std::pair<std::string, std::vector<std::string>>>& rules) {
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
   servers_backends_rules_ = rules;
 }
 
 void RpcBackendManager::RegisterRpcBackend(RpcBackendBase* rpc_backend_ptr) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kPreInit,
-      "Method can only be called when state is 'PreInit'.");
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
   rpc_backend_index_vec_.emplace_back(rpc_backend_ptr);
   rpc_backend_index_map_.emplace(rpc_backend_ptr->Name(), rpc_backend_ptr);
@@ -127,30 +102,19 @@ bool RpcBackendManager::RegisterServiceFunc(RegisterServiceFuncProxyInfoWrapper&
 
   auto service_func_shared_ptr = std::make_shared<aimrt::rpc::ServiceFunc>(wrapper.service_func);
 
-  service_func_wrapper_ptr->service_func =
-      [this, &filter_collector, service_func_shared_ptr](
-          const std::shared_ptr<InvokeWrapper>& invoke_wrapper_ptr) {
-        filter_collector.InvokeRpc(
-            [service_func_ptr = service_func_shared_ptr.get()](
-                const std::shared_ptr<InvokeWrapper>& invoke_wrapper_ptr) {
-              aimrt::rpc::ServiceCallback service_callback(
-                  [callback{std::move(invoke_wrapper_ptr->callback)}](uint32_t status) {
-                    callback(aimrt::rpc::Status(status));
-                  });
+  service_func_wrapper_ptr->service_func = [this, &filter_collector, service_func_shared_ptr](const std::shared_ptr<InvokeWrapper>& invoke_wrapper_ptr) {
+    filter_collector.InvokeRpc(
+        [service_func_ptr = service_func_shared_ptr.get()](const std::shared_ptr<InvokeWrapper>& invoke_wrapper_ptr) {
+          aimrt::rpc::ServiceCallback service_callback([callback{std::move(invoke_wrapper_ptr->callback)}](uint32_t status) { callback(aimrt::rpc::Status(status)); });
 
-              (*service_func_ptr)(
-                  invoke_wrapper_ptr->ctx_ref.NativeHandle(),
-                  invoke_wrapper_ptr->req_ptr,
-                  invoke_wrapper_ptr->rsp_ptr,
-                  service_callback.NativeHandle());
-            },
-            invoke_wrapper_ptr);
-      };
+          (*service_func_ptr)(invoke_wrapper_ptr->ctx_ref.NativeHandle(), invoke_wrapper_ptr->req_ptr, invoke_wrapper_ptr->rsp_ptr, service_callback.NativeHandle());
+        },
+        invoke_wrapper_ptr);
+  };
 
   const auto& service_func_wrapper_ref = *service_func_wrapper_ptr;
 
-  if (!rpc_registry_ptr_->RegisterServiceFunc(std::move(service_func_wrapper_ptr)))
-    return false;
+  if (!rpc_registry_ptr_->RegisterServiceFunc(std::move(service_func_wrapper_ptr))) return false;
 
   auto backend_itr = servers_backend_index_map_.find(func_name);
   if (backend_itr == servers_backend_index_map_.end()) {
@@ -192,8 +156,7 @@ bool RpcBackendManager::RegisterClientFunc(RegisterClientFuncProxyInfoWrapper&& 
   // 注册 func wrapper
   const auto& client_func_wrapper_ref = *client_func_wrapper_ptr;
 
-  if (!rpc_registry_ptr_->RegisterClientFunc(std::move(client_func_wrapper_ptr)))
-    return false;
+  if (!rpc_registry_ptr_->RegisterClientFunc(std::move(client_func_wrapper_ptr))) return false;
 
   auto backend_itr = clients_backend_index_map_.find(func_name);
   if (backend_itr == clients_backend_index_map_.end()) {
@@ -222,21 +185,18 @@ void RpcBackendManager::Invoke(InvokeProxyInfoWrapper&& wrapper) {
   aimrt::rpc::ContextRef ctx_ref(wrapper.ctx_ptr);
 
   // 找注册的func
-  const auto* client_func_wrapper_ptr = rpc_registry_ptr_->GetClientFuncWrapperPtr(
-      func_name, wrapper.pkg_path, wrapper.module_name);
+  const auto* client_func_wrapper_ptr = rpc_registry_ptr_->GetClientFuncWrapperPtr(func_name, wrapper.pkg_path, wrapper.module_name);
 
   // func未注册
   if (client_func_wrapper_ptr == nullptr) [[unlikely]] {
-    AIMRT_WARN("Func is not registered, func: {}, pkg: {}, module: {}",
-               func_name, wrapper.pkg_path, wrapper.module_name);
+    AIMRT_WARN("Func is not registered, func: {}, pkg: {}, module: {}", func_name, wrapper.pkg_path, wrapper.module_name);
 
     client_callback(AIMRT_RPC_STATUS_CLI_FUNC_NOT_REGISTERED);
     return;
   }
 
   // 检查ctx
-  if (ctx_ref.GetType() != aimrt_rpc_context_type_t::AIMRT_RPC_CLIENT_CONTEXT ||
-      ctx_ref.CheckUsed()) {
+  if (ctx_ref.GetType() != aimrt_rpc_context_type_t::AIMRT_RPC_CLIENT_CONTEXT || ctx_ref.CheckUsed()) {
     client_callback(AIMRT_RPC_STATUS_CLI_INVALID_CONTEXT);
     return;
   }
@@ -247,17 +207,10 @@ void RpcBackendManager::Invoke(InvokeProxyInfoWrapper&& wrapper) {
   const auto& filter_collector = client_filter_manager_ptr_->GetFilterCollector(func_name);
 
   // 创建wrapper
-  auto client_invoke_wrapper_ptr = std::make_shared<InvokeWrapper>(
-      InvokeWrapper{
-          .info = client_func_wrapper_ptr->info,
-          .req_ptr = wrapper.req_ptr,
-          .rsp_ptr = wrapper.rsp_ptr,
-          .ctx_ref = ctx_ref});
+  auto client_invoke_wrapper_ptr =
+      std::make_shared<InvokeWrapper>(InvokeWrapper{.info = client_func_wrapper_ptr->info, .req_ptr = wrapper.req_ptr, .rsp_ptr = wrapper.rsp_ptr, .ctx_ref = ctx_ref});
 
-  client_invoke_wrapper_ptr->callback =
-      [client_callback_ptr{std::move(client_callback_ptr)}](aimrt::rpc::Status status) {
-        (*client_callback_ptr)(status.Code());
-      };
+  client_invoke_wrapper_ptr->callback = [client_callback_ptr{std::move(client_callback_ptr)}](aimrt::rpc::Status status) { (*client_callback_ptr)(status.Code()); };
 
   // 发起调用
   filter_collector.InvokeRpc(
@@ -322,8 +275,7 @@ RpcBackendManager::FuncBackendInfoMap RpcBackendManager::GetClientsBackendInfo()
   for (const auto& itr : clients_backend_index_map_) {
     std::vector<std::string_view> backends_name;
     backends_name.reserve(itr.second.size());
-    for (const auto& item : itr.second)
-      backends_name.emplace_back(item->Name());
+    for (const auto& item : itr.second) backends_name.emplace_back(item->Name());
 
     result.emplace(itr.first, std::move(backends_name));
   }
@@ -335,8 +287,7 @@ RpcBackendManager::FuncBackendInfoMap RpcBackendManager::GetServersBackendInfo()
   std::unordered_map<std::string_view, std::vector<std::string_view>> result;
   for (const auto& itr : servers_backend_index_map_) {
     std::vector<std::string_view> backends_name;
-    for (const auto& item : itr.second)
-      backends_name.emplace_back(item->Name());
+    for (const auto& item : itr.second) backends_name.emplace_back(item->Name());
 
     result.emplace(itr.first, std::move(backends_name));
   }
@@ -344,9 +295,7 @@ RpcBackendManager::FuncBackendInfoMap RpcBackendManager::GetServersBackendInfo()
   return result;
 }
 
-std::vector<RpcBackendBase*> RpcBackendManager::GetBackendsByRules(
-    std::string_view func_name,
-    const std::vector<std::pair<std::string, std::vector<std::string>>>& rules) {
+std::vector<RpcBackendBase*> RpcBackendManager::GetBackendsByRules(std::string_view func_name, const std::vector<std::pair<std::string, std::vector<std::string>>>& rules) {
   for (const auto& item : rules) {
     const auto& func_regex = item.first;
     const auto& enable_backends = item.second;
@@ -356,11 +305,9 @@ std::vector<RpcBackendBase*> RpcBackendManager::GetBackendsByRules(
         std::vector<RpcBackendBase*> backend_ptr_vec;
 
         for (const auto& backend_name : enable_backends) {
-          auto itr = std::find_if(
-              rpc_backend_index_vec_.begin(), rpc_backend_index_vec_.end(),
-              [&backend_name](const RpcBackendBase* backend_ptr) -> bool {
-                return backend_ptr->Name() == backend_name;
-              });
+          auto itr = std::find_if(rpc_backend_index_vec_.begin(), rpc_backend_index_vec_.end(), [&backend_name](const RpcBackendBase* backend_ptr) -> bool {
+            return backend_ptr->Name() == backend_name;
+          });
 
           if (itr == rpc_backend_index_vec_.end()) [[unlikely]] {
             AIMRT_WARN("Can not find '{}' in backend list.", backend_name);
@@ -373,17 +320,14 @@ std::vector<RpcBackendBase*> RpcBackendManager::GetBackendsByRules(
         return backend_ptr_vec;
       }
     } catch (const std::exception& e) {
-      AIMRT_WARN("Regex get exception, expr: {}, string: {}, exception info: {}",
-                 func_regex, func_name, e.what());
+      AIMRT_WARN("Regex get exception, expr: {}, string: {}, exception info: {}", func_regex, func_name, e.what());
     }
   }
 
   return {};
 }
 
-std::vector<std::string> RpcBackendManager::GetFilterRules(
-    std::string_view func_name,
-    const std::vector<std::pair<std::string, std::vector<std::string>>>& rules) {
+std::vector<std::string> RpcBackendManager::GetFilterRules(std::string_view func_name, const std::vector<std::pair<std::string, std::vector<std::string>>>& rules) {
   for (const auto& item : rules) {
     const auto& func_regex = item.first;
     const auto& filters = item.second;
@@ -393,8 +337,7 @@ std::vector<std::string> RpcBackendManager::GetFilterRules(
         return filters;
       }
     } catch (const std::exception& e) {
-      AIMRT_WARN("Regex get exception, expr: {}, string: {}, exception info: {}",
-                 func_regex, func_name, e.what());
+      AIMRT_WARN("Regex get exception, expr: {}, string: {}, exception info: {}", func_regex, func_name, e.what());
     }
   }
 

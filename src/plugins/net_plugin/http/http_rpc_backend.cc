@@ -41,9 +41,8 @@ struct convert<aimrt::plugins::net_plugin::HttpRpcBackend::Options> {
   static bool decode(const Node& node, Options& rhs) {
     if (node["clients_options"] && node["clients_options"].IsSequence()) {
       for (const auto& client_options_node : node["clients_options"]) {
-        auto client_options = Options::ClientOptions{
-            .func_name = client_options_node["func_name"].as<std::string>(),
-            .server_url = client_options_node["server_url"].as<std::string>()};
+        auto client_options =
+            Options::ClientOptions{.func_name = client_options_node["func_name"].as<std::string>(), .server_url = client_options_node["server_url"].as<std::string>()};
 
         rhs.clients_options.emplace_back(std::move(client_options));
       }
@@ -51,8 +50,7 @@ struct convert<aimrt::plugins::net_plugin::HttpRpcBackend::Options> {
 
     if (node["servers_options"] && node["servers_options"].IsSequence()) {
       for (const auto& server_options_node : node["servers_options"]) {
-        auto server_options = Options::ServerOptions{
-            .func_name = server_options_node["func_name"].as<std::string>()};
+        auto server_options = Options::ServerOptions{.func_name = server_options_node["func_name"].as<std::string>()};
 
         rhs.servers_options.emplace_back(std::move(server_options));
       }
@@ -66,32 +64,23 @@ struct convert<aimrt::plugins::net_plugin::HttpRpcBackend::Options> {
 namespace aimrt::plugins::net_plugin {
 
 void HttpRpcBackend::Initialize(YAML::Node options_node) {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-      "Http Rpc backend can only be initialized once.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "Http Rpc backend can only be initialized once.");
 
-  if (options_node && !options_node.IsNull())
-    options_ = options_node.as<Options>();
+  if (options_node && !options_node.IsNull()) options_ = options_node.as<Options>();
 
   options_node = options_;
 }
 
-void HttpRpcBackend::Start() {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kStart) == State::kInit,
-      "Method can only be called when state is 'Init'.");
-}
+void HttpRpcBackend::Start() { AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'."); }
 
 void HttpRpcBackend::Shutdown() {
-  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-    return;
+  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 
   http_svr_ptr_->Shutdown();
   http_cli_pool_ptr_->Shutdown();
 }
 
-bool HttpRpcBackend::RegisterServiceFunc(
-    const runtime::core::rpc::ServiceFuncWrapper& service_func_wrapper) noexcept {
+bool HttpRpcBackend::RegisterServiceFunc(const runtime::core::rpc::ServiceFuncWrapper& service_func_wrapper) noexcept {
   try {
     if (state_.load() != State::kInit) {
       AIMRT_ERROR("Service func can only be registered when state is 'Init'.");
@@ -101,18 +90,14 @@ bool HttpRpcBackend::RegisterServiceFunc(
     namespace asio = boost::asio;
     namespace http = boost::beast::http;
 
-    std::string pattern =
-        std::string("/rpc") + std::string(GetRealFuncName(service_func_wrapper.info.func_name));
+    std::string pattern = std::string("/rpc") + std::string(GetRealFuncName(service_func_wrapper.info.func_name));
 
     aimrt::common::net::AsioHttpServer::HttpHandle<http::dynamic_body> http_handle =
         [this, &service_func_wrapper](
-            const http::request<http::dynamic_body>& req,
-            http::response<http::dynamic_body>& rsp,
-            std::chrono::nanoseconds timeout)
-        -> asio::awaitable<aimrt::common::net::AsioHttpServer::HttpHandleStatus> {
+            const http::request<http::dynamic_body>& req, http::response<http::dynamic_body>& rsp,
+            std::chrono::nanoseconds timeout) -> asio::awaitable<aimrt::common::net::AsioHttpServer::HttpHandleStatus> {
       // 创建 service invoke wrapper
-      auto service_invoke_wrapper_ptr = std::make_shared<runtime::core::rpc::InvokeWrapper>(
-          runtime::core::rpc::InvokeWrapper{.info = service_func_wrapper.info});
+      auto service_invoke_wrapper_ptr = std::make_shared<runtime::core::rpc::InvokeWrapper>(runtime::core::rpc::InvokeWrapper{.info = service_func_wrapper.info});
       const auto& info = service_invoke_wrapper_ptr->info;
 
       // 创建 service ctx
@@ -122,13 +107,11 @@ bool HttpRpcBackend::RegisterServiceFunc(
       // 序列化类型
       std::string serialization_type;
       auto req_content_type_itr = req.find(http::field::content_type);
-      AIMRT_CHECK_ERROR_THROW(req_content_type_itr != req.end(),
-                              "Http req has no content type.");
+      AIMRT_CHECK_ERROR_THROW(req_content_type_itr != req.end(), "Http req has no content type.");
 
       auto req_content_type_boost_sw = req_content_type_itr->value();
       std::string_view req_content_type(req_content_type_boost_sw.data(), req_content_type_boost_sw.size());
-      if (req_content_type == "application/json" ||
-          req_content_type == "application/json charset=utf-8") {
+      if (req_content_type == "application/json" || req_content_type == "application/json charset=utf-8") {
         serialization_type = "json";
         rsp.set(http::field::content_type, "application/json");
       } else if (req_content_type == "application/protobuf") {
@@ -145,9 +128,7 @@ bool HttpRpcBackend::RegisterServiceFunc(
 
       // 从http header中读取其他字段到context中
       for (auto const& field : req) {
-        ctx_ptr->SetMetaValue(
-            aimrt::common::util::HttpHeaderDecode(field.name_string()),
-            aimrt::common::util::HttpHeaderDecode(field.value()));
+        ctx_ptr->SetMetaValue(aimrt::common::util::HttpHeaderDecode(field.name_string()), aimrt::common::util::HttpHeaderDecode(field.value()));
       }
 
       ctx_ptr->SetFunctionName(info.func_name);
@@ -160,20 +141,15 @@ bool HttpRpcBackend::RegisterServiceFunc(
       std::vector<aimrt_buffer_view_t> buffer_view_vec;
 
       for (auto const buf : boost::beast::buffers_range_ref(req_beast_buf)) {
-        buffer_view_vec.emplace_back(aimrt_buffer_view_t{
-            .data = const_cast<void*>(buf.data()),
-            .len = buf.size()});
+        buffer_view_vec.emplace_back(aimrt_buffer_view_t{.data = const_cast<void*>(buf.data()), .len = buf.size()});
       }
 
-      aimrt_buffer_array_view_t buffer_array_view{
-          .data = buffer_view_vec.data(),
-          .len = buffer_view_vec.size()};
+      aimrt_buffer_array_view_t buffer_array_view{.data = buffer_view_vec.data(), .len = buffer_view_vec.size()};
 
       std::shared_ptr<void> service_req_ptr = info.req_type_support_ref.CreateSharedPtr();
       service_invoke_wrapper_ptr->req_ptr = service_req_ptr.get();
 
-      bool deserialize_ret = info.req_type_support_ref.Deserialize(
-          serialization_type, buffer_array_view, service_req_ptr.get());
+      bool deserialize_ret = info.req_type_support_ref.Deserialize(serialization_type, buffer_array_view, service_req_ptr.get());
 
       AIMRT_CHECK_ERROR_THROW(deserialize_ret, "Http req deserialize failed.");
 
@@ -186,68 +162,57 @@ bool HttpRpcBackend::RegisterServiceFunc(
       auto sig_timer_ptr = std::make_shared<asio::steady_timer>(*io_ptr_, std::chrono::nanoseconds::max());
       std::atomic_bool handle_flag = false;
 
-      service_invoke_wrapper_ptr->callback =
-          [service_invoke_wrapper_ptr,
-           ctx_ptr,
-           &req,
-           &rsp,
-           service_req_ptr,
-           service_rsp_ptr,
-           serialization_type{std::move(serialization_type)},
-           sig_timer_ptr,
-           &handle_flag,
-           &ret_code](aimrt::rpc::Status status) {
-            if (!status.OK()) [[unlikely]] {
-              ret_code = status.Code();
+      service_invoke_wrapper_ptr->callback = [service_invoke_wrapper_ptr, ctx_ptr, &req, &rsp, service_req_ptr, service_rsp_ptr, serialization_type{std::move(serialization_type)},
+                                              sig_timer_ptr, &handle_flag, &ret_code](aimrt::rpc::Status status) {
+        if (!status.OK()) [[unlikely]] {
+          ret_code = status.Code();
 
-            } else {
-              // service rsp序列化
-              auto buffer_array_view_ptr = aimrt::runtime::core::rpc::TrySerializeRspWithCache(*service_invoke_wrapper_ptr, serialization_type);
+        } else {
+          // service rsp序列化
+          auto buffer_array_view_ptr = aimrt::runtime::core::rpc::TrySerializeRspWithCache(*service_invoke_wrapper_ptr, serialization_type);
 
-              if (!buffer_array_view_ptr) [[unlikely]] {
-                ret_code = AIMRT_RPC_STATUS_SVR_SERIALIZATION_FAILED;
-              } else {
-                // 填http rsp包，直接复制过去
-                size_t rsp_size = buffer_array_view_ptr->BufferSize();
-                auto rsp_beast_buf = rsp.body().prepare(rsp_size);
+          if (!buffer_array_view_ptr) [[unlikely]] {
+            ret_code = AIMRT_RPC_STATUS_SVR_SERIALIZATION_FAILED;
+          } else {
+            // 填http rsp包，直接复制过去
+            size_t rsp_size = buffer_array_view_ptr->BufferSize();
+            auto rsp_beast_buf = rsp.body().prepare(rsp_size);
 
-                const auto* data = buffer_array_view_ptr->Data();
-                auto buffer_array_pos = 0;
-                size_t buffer_pos = 0;
+            const auto* data = buffer_array_view_ptr->Data();
+            auto buffer_array_pos = 0;
+            size_t buffer_pos = 0;
 
-                for (auto buf : boost::beast::buffers_range_ref(rsp_beast_buf)) {
-                  size_t cur_beast_buf_pos = 0;
-                  while (cur_beast_buf_pos < buf.size()) {
-                    size_t cur_beast_buffer_size = buf.size() - cur_beast_buf_pos;
-                    size_t cur_buffer_size = data[buffer_array_pos].len - buffer_pos;
+            for (auto buf : boost::beast::buffers_range_ref(rsp_beast_buf)) {
+              size_t cur_beast_buf_pos = 0;
+              while (cur_beast_buf_pos < buf.size()) {
+                size_t cur_beast_buffer_size = buf.size() - cur_beast_buf_pos;
+                size_t cur_buffer_size = data[buffer_array_pos].len - buffer_pos;
 
-                    size_t cur_copy_size = std::min(cur_beast_buffer_size, cur_buffer_size);
+                size_t cur_copy_size = std::min(cur_beast_buffer_size, cur_buffer_size);
 
-                    memcpy(static_cast<char*>(buf.data()) + cur_beast_buf_pos,
-                           static_cast<const char*>(data[buffer_array_pos].data) + buffer_pos,
-                           cur_copy_size);
+                memcpy(static_cast<char*>(buf.data()) + cur_beast_buf_pos, static_cast<const char*>(data[buffer_array_pos].data) + buffer_pos, cur_copy_size);
 
-                    buffer_pos += cur_copy_size;
-                    if (buffer_pos == data[buffer_array_pos].len) {
-                      ++buffer_array_pos;
-                      buffer_pos = 0;
-                    }
-
-                    cur_beast_buf_pos += cur_copy_size;
-                  }
+                buffer_pos += cur_copy_size;
+                if (buffer_pos == data[buffer_array_pos].len) {
+                  ++buffer_array_pos;
+                  buffer_pos = 0;
                 }
-                rsp.body().commit(rsp_size);
 
-                rsp.keep_alive(req.keep_alive());
-                rsp.prepare_payload();
+                cur_beast_buf_pos += cur_copy_size;
               }
             }
+            rsp.body().commit(rsp_size);
 
-            handle_flag.store(true);
+            rsp.keep_alive(req.keep_alive());
+            rsp.prepare_payload();
+          }
+        }
 
-            // TODO: 这里可能会有提前cancel的风险。可能的解决方案：多cancel几次？
-            sig_timer_ptr->cancel();
-          };
+        handle_flag.store(true);
+
+        // TODO: 这里可能会有提前cancel的风险。可能的解决方案：多cancel几次？
+        sig_timer_ptr->cancel();
+      };
 
       // service rpc调用
       service_func_wrapper.service_func(service_invoke_wrapper_ptr);
@@ -261,8 +226,7 @@ bool HttpRpcBackend::RegisterServiceFunc(
       co_return aimrt::common::net::AsioHttpServer::HttpHandleStatus::kOk;
     };
 
-    http_svr_ptr_->RegisterHttpHandleFunc<http::dynamic_body>(
-        pattern, std::move(http_handle));
+    http_svr_ptr_->RegisterHttpHandleFunc<http::dynamic_body>(pattern, std::move(http_handle));
     AIMRT_INFO("Register http handle for rpc, uri '{}'", pattern);
 
     return true;
@@ -272,8 +236,7 @@ bool HttpRpcBackend::RegisterServiceFunc(
   }
 }
 
-bool HttpRpcBackend::RegisterClientFunc(
-    const runtime::core::rpc::ClientFuncWrapper& client_func_wrapper) noexcept {
+bool HttpRpcBackend::RegisterClientFunc(const runtime::core::rpc::ClientFuncWrapper& client_func_wrapper) noexcept {
   try {
     if (state_.load() != State::kInit) {
       AIMRT_ERROR("Client func can only be registered when state is 'Init'.");
@@ -282,14 +245,12 @@ bool HttpRpcBackend::RegisterClientFunc(
 
     const auto& info = client_func_wrapper.info;
 
-    auto find_client_option = std::find_if(
-        options_.clients_options.begin(), options_.clients_options.end(),
-        [func_name = GetRealFuncName(info.func_name)](const Options::ClientOptions& client_option) {
+    auto find_client_option =
+        std::find_if(options_.clients_options.begin(), options_.clients_options.end(), [func_name = GetRealFuncName(info.func_name)](const Options::ClientOptions& client_option) {
           try {
             return std::regex_match(func_name.begin(), func_name.end(), std::regex(client_option.func_name, std::regex::ECMAScript));
           } catch (const std::exception& e) {
-            AIMRT_WARN("Regex get exception, expr: {}, string: {}, exception info: {}",
-                       client_option.func_name, func_name, e.what());
+            AIMRT_WARN("Regex get exception, expr: {}, string: {}, exception info: {}", client_option.func_name, func_name, e.what());
             return false;
           }
         });
@@ -305,8 +266,7 @@ bool HttpRpcBackend::RegisterClientFunc(
   }
 }
 
-void HttpRpcBackend::Invoke(
-    const std::shared_ptr<runtime::core::rpc::InvokeWrapper>& client_invoke_wrapper_ptr) noexcept {
+void HttpRpcBackend::Invoke(const std::shared_ptr<runtime::core::rpc::InvokeWrapper>& client_invoke_wrapper_ptr) noexcept {
   try {
     if (state_.load() != State::kStart) [[unlikely]] {
       AIMRT_WARN("Method can only be called when state is 'Start'.");
@@ -343,9 +303,7 @@ void HttpRpcBackend::Invoke(
 
     asio::co_spawn(
         *io_ptr_,
-        [http_cli_pool_ptr{http_cli_pool_ptr_},
-         client_invoke_wrapper_ptr,
-         url]() -> asio::awaitable<void> {
+        [http_cli_pool_ptr{http_cli_pool_ptr_}, client_invoke_wrapper_ptr, url]() -> asio::awaitable<void> {
           const auto& info = client_invoke_wrapper_ptr->info;
 
           std::string url_path(url->path);
@@ -354,9 +312,7 @@ void HttpRpcBackend::Invoke(
           }
 
           try {
-            aimrt::common::net::AsioHttpClient::Options cli_options{
-                .host = std::string(url->host),
-                .service = std::string(url->service)};
+            aimrt::common::net::AsioHttpClient::Options cli_options{.host = std::string(url->host), .service = std::string(url->service)};
 
             auto client_ptr = co_await http_cli_pool_ptr->GetClient(cli_options);
             if (!client_ptr) [[unlikely]] {
@@ -370,13 +326,10 @@ void HttpRpcBackend::Invoke(
             req.set(http::field::user_agent, "aimrt");
 
             auto timeout = client_invoke_wrapper_ptr->ctx_ref.Timeout();
-            if (timeout <= std::chrono::nanoseconds(0))
-              timeout = std::chrono::seconds(5);
-            req.set(http::field::timeout,
-                    std::to_string(std::chrono::duration_cast<std::chrono::seconds>(timeout).count()));
+            if (timeout <= std::chrono::nanoseconds(0)) timeout = std::chrono::seconds(5);
+            req.set(http::field::timeout, std::to_string(std::chrono::duration_cast<std::chrono::seconds>(timeout).count()));
 
-            std::string serialization_type(
-                client_invoke_wrapper_ptr->ctx_ref.GetMetaValue(AIMRT_RPC_CONTEXT_KEY_SERIALIZATION_TYPE));
+            std::string serialization_type(client_invoke_wrapper_ptr->ctx_ref.GetMetaValue(AIMRT_RPC_CONTEXT_KEY_SERIALIZATION_TYPE));
             if (serialization_type == "json") {
               req.set(http::field::content_type, "application/json");
             } else if (serialization_type == "pb") {
@@ -391,9 +344,7 @@ void HttpRpcBackend::Invoke(
             // 向http header中设置其他context meta字段
             std::vector<std::string_view> meta_keys = client_invoke_wrapper_ptr->ctx_ref.GetMetaKeys();
             for (const auto& item : meta_keys) {
-              req.set(
-                  aimrt::common::util::HttpHeaderEncode(item),
-                  aimrt::common::util::HttpHeaderEncode(client_invoke_wrapper_ptr->ctx_ref.GetMetaValue(item)));
+              req.set(aimrt::common::util::HttpHeaderEncode(item), aimrt::common::util::HttpHeaderEncode(client_invoke_wrapper_ptr->ctx_ref.GetMetaValue(item)));
             }
 
             // client req序列化
@@ -420,9 +371,7 @@ void HttpRpcBackend::Invoke(
 
                 size_t cur_copy_size = std::min(cur_beast_buffer_size, cur_buffer_size);
 
-                memcpy(static_cast<char*>(buf.data()) + cur_beast_buf_pos,
-                       static_cast<const char*>(data[buffer_array_pos].data) + buffer_pos,
-                       cur_copy_size);
+                memcpy(static_cast<char*>(buf.data()) + cur_beast_buf_pos, static_cast<const char*>(data[buffer_array_pos].data) + buffer_pos, cur_copy_size);
 
                 buffer_pos += cur_copy_size;
                 if (buffer_pos == data[buffer_array_pos].len) {
@@ -447,17 +396,12 @@ void HttpRpcBackend::Invoke(
             std::vector<aimrt_buffer_view_t> buffer_view_vec;
 
             for (auto const buf : boost::beast::buffers_range_ref(rsp_beast_buf)) {
-              buffer_view_vec.emplace_back(aimrt_buffer_view_t{
-                  .data = buf.data(),
-                  .len = buf.size()});
+              buffer_view_vec.emplace_back(aimrt_buffer_view_t{.data = buf.data(), .len = buf.size()});
             }
 
-            aimrt_buffer_array_view_t buffer_array_view{
-                .data = buffer_view_vec.data(),
-                .len = buffer_view_vec.size()};
+            aimrt_buffer_array_view_t buffer_array_view{.data = buffer_view_vec.data(), .len = buffer_view_vec.size()};
 
-            bool deserialize_ret = info.rsp_type_support_ref.Deserialize(
-                serialization_type, buffer_array_view, client_invoke_wrapper_ptr->rsp_ptr);
+            bool deserialize_ret = info.rsp_type_support_ref.Deserialize(serialization_type, buffer_array_view, client_invoke_wrapper_ptr->rsp_ptr);
 
             if (!deserialize_ret) {
               // 反序列化失败

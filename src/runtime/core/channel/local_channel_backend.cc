@@ -15,8 +15,7 @@ struct convert<aimrt::runtime::core::channel::LocalChannelBackend::Options> {
     Node node;
 
     node["subscriber_use_inline_executor"] = rhs.subscriber_use_inline_executor;
-    if (!rhs.subscriber_use_inline_executor)
-      node["subscriber_executor"] = rhs.subscriber_executor;
+    if (!rhs.subscriber_use_inline_executor) node["subscriber_executor"] = rhs.subscriber_executor;
 
     return node;
   }
@@ -25,8 +24,7 @@ struct convert<aimrt::runtime::core::channel::LocalChannelBackend::Options> {
     if (!node.IsMap()) return false;
 
     rhs.subscriber_use_inline_executor = node["subscriber_use_inline_executor"].as<bool>();
-    if (!rhs.subscriber_use_inline_executor)
-      rhs.subscriber_executor = node["subscriber_executor"].as<std::string>();
+    if (!rhs.subscriber_use_inline_executor) rhs.subscriber_executor = node["subscriber_executor"].as<std::string>();
 
     return true;
   }
@@ -36,45 +34,32 @@ struct convert<aimrt::runtime::core::channel::LocalChannelBackend::Options> {
 namespace aimrt::runtime::core::channel {
 
 void LocalChannelBackend::Initialize(YAML::Node options_node) {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-      "Local channel backend can only be initialized once.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "Local channel backend can only be initialized once.");
 
-  if (options_node && !options_node.IsNull())
-    options_ = options_node.as<Options>();
+  if (options_node && !options_node.IsNull()) options_ = options_node.as<Options>();
 
   if (!options_.subscriber_use_inline_executor) {
-    AIMRT_CHECK_ERROR_THROW(
-        get_executor_func_,
-        "Get executor function is not set before initialize.");
+    AIMRT_CHECK_ERROR_THROW(get_executor_func_, "Get executor function is not set before initialize.");
 
     subscribe_executor_ref_ = get_executor_func_(options_.subscriber_executor);
 
-    AIMRT_CHECK_ERROR_THROW(
-        subscribe_executor_ref_,
-        "Invalid local subscriber executor '{}'.", options_.subscriber_executor);
+    AIMRT_CHECK_ERROR_THROW(subscribe_executor_ref_, "Invalid local subscriber executor '{}'.", options_.subscriber_executor);
   }
 
   options_node = options_;
 }
 
-void LocalChannelBackend::Start() {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kStart) == State::kInit,
-      "Method can only be called when state is 'Init'.");
-}
+void LocalChannelBackend::Start() { AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'."); }
 
 void LocalChannelBackend::Shutdown() {
-  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-    return;
+  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 
   subscribe_index_map_.clear();
 
   get_executor_func_ = std::function<executor::ExecutorRef(std::string_view)>();
 }
 
-bool LocalChannelBackend::RegisterPublishType(
-    const PublishTypeWrapper& publish_type_wrapper) noexcept {
+bool LocalChannelBackend::RegisterPublishType(const PublishTypeWrapper& publish_type_wrapper) noexcept {
   try {
     if (state_.load() != State::kInit) {
       AIMRT_ERROR("Publish type can only be registered when state is 'Init'.");
@@ -126,21 +111,16 @@ void LocalChannelBackend::Publish(MsgWrapper& msg_wrapper) noexcept {
 
     // 确定序列化类型
     auto serialization_type = msg_wrapper.ctx_ref.GetSerializationType();
-    if (serialization_type.empty())
-      serialization_type = pub_info.msg_type_support_ref.DefaultSerializationType();
+    if (serialization_type.empty()) serialization_type = pub_info.msg_type_support_ref.DefaultSerializationType();
 
     // 遍历每个pkg
     for (const auto& subscribe_pkg_path_itr : subscribe_index_map_find_topic_itr->second) {
       std::string_view cur_sub_pkg_path = subscribe_pkg_path_itr.first;
 
-      const auto* module_sub_wrapper_map_ptr = channel_registry_ptr_->GetModuleSubscribeWrapperMapPtr(
-          pub_info.msg_type, pub_info.topic_name, cur_sub_pkg_path);
+      const auto* module_sub_wrapper_map_ptr = channel_registry_ptr_->GetModuleSubscribeWrapperMapPtr(pub_info.msg_type, pub_info.topic_name, cur_sub_pkg_path);
 
-      if (module_sub_wrapper_map_ptr == nullptr ||
-          module_sub_wrapper_map_ptr->empty()) [[unlikely]] {
-        AIMRT_ERROR(
-            "Can not find registry info, pkg_path: {}, topic_name: {}, msg_type: {}",
-            cur_sub_pkg_path, pub_info.topic_name, pub_info.msg_type);
+      if (module_sub_wrapper_map_ptr == nullptr || module_sub_wrapper_map_ptr->empty()) [[unlikely]] {
+        AIMRT_ERROR("Can not find registry info, pkg_path: {}, topic_name: {}, msg_type: {}", cur_sub_pkg_path, pub_info.topic_name, pub_info.msg_type);
         continue;
       }
 
@@ -184,9 +164,7 @@ void LocalChannelBackend::Publish(MsgWrapper& msg_wrapper) noexcept {
 
           if (subscribe_executor_ref_) {
             subscribe_executor_ref_.Execute(
-                [sub_wrapper_ptr, ctx_ptr, sub_msg_warpper{std::move(sub_msg_warpper)}]() mutable {
-                  sub_wrapper_ptr->callback(sub_msg_warpper, [ctx_ptr]() {});
-                });
+                [sub_wrapper_ptr, ctx_ptr, sub_msg_warpper{std::move(sub_msg_warpper)}]() mutable { sub_wrapper_ptr->callback(sub_msg_warpper, [ctx_ptr]() {}); });
           } else {
             sub_wrapper_ptr->callback(sub_msg_warpper, [ctx_ptr]() {});
           }
@@ -207,17 +185,11 @@ void LocalChannelBackend::Publish(MsgWrapper& msg_wrapper) noexcept {
           const auto* sub_wrapper_ptr = sub_wrapper_itr.second;
 
           // 创建该 pkg-module 下的 MsgWrapper
-          MsgWrapper sub_msg_warpper{
-              .info = sub_wrapper_ptr->info,
-              .msg_ptr = nullptr,
-              .ctx_ref = ctx_ptr,
-              .serialization_cache = msg_wrapper.serialization_cache};
+          MsgWrapper sub_msg_warpper{.info = sub_wrapper_ptr->info, .msg_ptr = nullptr, .ctx_ref = ctx_ptr, .serialization_cache = msg_wrapper.serialization_cache};
 
           if (subscribe_executor_ref_) {
             subscribe_executor_ref_.Execute(
-                [sub_wrapper_ptr, ctx_ptr, sub_msg_warpper{std::move(sub_msg_warpper)}]() mutable {
-                  sub_wrapper_ptr->callback(sub_msg_warpper, [ctx_ptr]() {});
-                });
+                [sub_wrapper_ptr, ctx_ptr, sub_msg_warpper{std::move(sub_msg_warpper)}]() mutable { sub_wrapper_ptr->callback(sub_msg_warpper, [ctx_ptr]() {}); });
           } else {
             sub_wrapper_ptr->callback(sub_msg_warpper, [ctx_ptr]() {});
           }
@@ -229,11 +201,8 @@ void LocalChannelBackend::Publish(MsgWrapper& msg_wrapper) noexcept {
   }
 }
 
-void LocalChannelBackend::RegisterGetExecutorFunc(
-    const std::function<executor::ExecutorRef(std::string_view)>& get_executor_func) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kPreInit,
-      "Method can only be called when state is 'PreInit'.");
+void LocalChannelBackend::RegisterGetExecutorFunc(const std::function<executor::ExecutorRef(std::string_view)>& get_executor_func) {
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
   get_executor_func_ = get_executor_func;
 }

@@ -15,7 +15,7 @@
 namespace aimrt::plugins::mqtt_plugin {
 
 class MsgHandleRegistry {
- public:
+public:
   using MsgHandleFunc = std::function<void(MQTTAsync_message* message)>;
 
   MsgHandleRegistry() = default;
@@ -55,7 +55,7 @@ class MsgHandleRegistry {
     if (std::atomic_exchange(&shutdown_flag_, true)) return;
   }
 
- private:
+private:
   std::atomic_bool shutdown_flag_ = false;
 
   using UriMsgHandleMap = std::unordered_map<std::string, MsgHandleFunc, aimrt::common::util::StringHash, std::equal_to<>>;

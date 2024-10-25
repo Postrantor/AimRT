@@ -12,7 +12,7 @@
 namespace aimrt::plugins::ros2_plugin {
 
 class Ros2AdapterSubscription : public rclcpp::SubscriptionBase {
- public:
+public:
   Ros2AdapterSubscription(
       rclcpp::node_interfaces::NodeBaseInterface* node_base,
       const rosidl_message_type_support_t& type_support_handle,
@@ -28,28 +28,22 @@ class Ros2AdapterSubscription : public rclcpp::SubscriptionBase {
 
   std::shared_ptr<void> create_message() override;
 
-  std::shared_ptr<rclcpp::SerializedMessage> create_serialized_message()
-      override;
+  std::shared_ptr<rclcpp::SerializedMessage> create_serialized_message() override;
 
-  void handle_message(std::shared_ptr<void>& message,
-                      const rclcpp::MessageInfo& message_info) override;
+  void handle_message(std::shared_ptr<void>& message, const rclcpp::MessageInfo& message_info) override;
 
-  void handle_serialized_message(
-      const std::shared_ptr<rclcpp::SerializedMessage>& serialized_message,
-      const rclcpp::MessageInfo& message_info) override;
+  void handle_serialized_message(const std::shared_ptr<rclcpp::SerializedMessage>& serialized_message, const rclcpp::MessageInfo& message_info) override;
 
-  void handle_loaned_message(void* loaned_message,
-                             const rclcpp::MessageInfo& message_info) override;
+  void handle_loaned_message(void* loaned_message, const rclcpp::MessageInfo& message_info) override;
 
   void return_message(std::shared_ptr<void>& message) override;
 
-  void return_serialized_message(
-      std::shared_ptr<rclcpp::SerializedMessage>& message) override;
+  void return_serialized_message(std::shared_ptr<rclcpp::SerializedMessage>& message) override;
 
   void Start() { run_flag_.store(true); }
   void Shutdown() { run_flag_.store(false); }
 
- private:
+private:
   std::atomic_bool run_flag_ = false;
   const runtime::core::channel::SubscribeWrapper& subscribe_wrapper_;
   const aimrt::runtime::core::channel::SubscribeTool& sub_tool_;

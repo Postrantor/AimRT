@@ -11,13 +11,11 @@
 namespace aimrt::examples::cpp::pb_chn::benchmark_publisher_module {
 
 class BenchmarkPublisherModule : public aimrt::ModuleBase {
- public:
+public:
   BenchmarkPublisherModule() = default;
   ~BenchmarkPublisherModule() override = default;
 
-  ModuleInfo Info() const override {
-    return ModuleInfo{.name = "BenchmarkPublisherModule"};
-  }
+  ModuleInfo Info() const override { return ModuleInfo{.name = "BenchmarkPublisherModule"}; }
 
   bool Initialize(aimrt::CoreRef core) override;
 
@@ -25,7 +23,7 @@ class BenchmarkPublisherModule : public aimrt::ModuleBase {
 
   void Shutdown() override;
 
- private:
+private:
   auto GetLogger() { return core_.GetLogger(); }
 
   void MainLoop();
@@ -39,7 +37,7 @@ class BenchmarkPublisherModule : public aimrt::ModuleBase {
 
   void StartSinglePlan(uint32_t plan_id, BenchPlan plan);
 
- private:
+private:
   aimrt::CoreRef core_;
 
   std::atomic_bool run_flag_ = true;

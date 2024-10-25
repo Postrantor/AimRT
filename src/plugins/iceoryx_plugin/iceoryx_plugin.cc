@@ -19,8 +19,7 @@ struct convert<aimrt::plugins::iceoryx_plugin::IceoryxPlugin::Options> {
   static bool decode(const Node &node, Options &rhs) {
     if (!node.IsMap()) return false;
 
-    if (node["shm_init_size"])
-      rhs.shm_init_size = node["shm_init_size"].as<uint64_t>();
+    if (node["shm_init_size"]) rhs.shm_init_size = node["shm_init_size"].as<uint64_t>();
 
     return true;
   }
@@ -43,11 +42,9 @@ bool IceoryxPlugin::Initialize(runtime::core::AimRTCore *core_ptr) noexcept {
 
     iceoryx_manager_ptr_->Initialize();
 
-    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPostInitLog,
-                                [this] { SetPluginLogger(); });
+    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPostInitLog, [this] { SetPluginLogger(); });
 
-    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPreInitChannel,
-                                [this] { RegisterIceoryxChannelBackend(); });
+    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPreInitChannel, [this] { RegisterIceoryxChannelBackend(); });
 
     plugin_options_node = options_;
     core_ptr_->GetPluginManager().UpdatePluginOptionsNode(Name(), plugin_options_node);
@@ -73,14 +70,10 @@ void IceoryxPlugin::Shutdown() noexcept {
   }
 }
 
-void IceoryxPlugin::SetPluginLogger() {
-  SetLogger(aimrt::logger::LoggerRef(
-      core_ptr_->GetLoggerManager().GetLoggerProxy().NativeHandle()));
-}
+void IceoryxPlugin::SetPluginLogger() { SetLogger(aimrt::logger::LoggerRef(core_ptr_->GetLoggerManager().GetLoggerProxy().NativeHandle())); }
 
 void IceoryxPlugin::RegisterIceoryxChannelBackend() {
-  std::unique_ptr<runtime::core::channel::ChannelBackendBase> iceoryx_channel_backend_ptr =
-      std::make_unique<IceoryxChannelBackend>(iceoryx_manager_ptr_, options_.shm_init_size);
+  std::unique_ptr<runtime::core::channel::ChannelBackendBase> iceoryx_channel_backend_ptr = std::make_unique<IceoryxChannelBackend>(iceoryx_manager_ptr_, options_.shm_init_size);
 
   core_ptr_->GetChannelManager().RegisterChannelBackend(std::move(iceoryx_channel_backend_ptr));
 }

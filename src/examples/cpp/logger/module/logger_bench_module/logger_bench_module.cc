@@ -37,8 +37,7 @@ bool LoggerBenchModule::Start() {
   work_executor.Execute([this, work_executor]() {
     using namespace std::chrono;
 
-    std::vector<std::vector<std::string>> result_table =
-        {{"log num", "log data size", "total duration(us)", "avg latency(ns)"}};
+    std::vector<std::vector<std::string>> result_table = {{"log num", "log data size", "total duration(us)", "avg latency(ns)"}};
 
     size_t bench_num = log_data_size_vec_.size();
 
@@ -63,12 +62,9 @@ bool LoggerBenchModule::Start() {
 
       auto total_duration = end_time_point - start_time_point;
 
-      result_table.emplace_back(
-          std::vector<std::string>{
-              std::to_string(log_bench_num_),
-              std::to_string(log_data_size),
-              std::to_string(duration_cast<nanoseconds>(total_duration).count()),
-              std::to_string(duration_cast<nanoseconds>(total_duration).count() / log_bench_num_)});
+      result_table.emplace_back(std::vector<std::string>{
+          std::to_string(log_bench_num_), std::to_string(log_data_size), std::to_string(duration_cast<nanoseconds>(total_duration).count()),
+          std::to_string(duration_cast<nanoseconds>(total_duration).count() / log_bench_num_)});
 
       std::this_thread::sleep_for(std::chrono::seconds(5));
     }

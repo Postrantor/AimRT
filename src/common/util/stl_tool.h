@@ -15,25 +15,22 @@
 namespace aimrt::common::util {
 
 template <typename T>
-concept IterableType =
-    requires(T t, typename T::value_type v) {
-      { t.begin() } -> std::same_as<typename T::iterator>;
-      { t.end() } -> std::same_as<typename T::iterator>;
-      { t.size() } -> std::same_as<typename T::size_type>;
-    };
+concept IterableType = requires(T t, typename T::value_type v) {
+                         { t.begin() } -> std::same_as<typename T::iterator>;
+                         { t.end() } -> std::same_as<typename T::iterator>;
+                         { t.size() } -> std::same_as<typename T::size_type>;
+                       };
 
 template <typename T>
-concept MapType =
-    requires(T t, typename T::key_type k) {
-      { t.begin() } -> std::same_as<typename T::iterator>;
-      { t.end() } -> std::same_as<typename T::iterator>;
-      { t.size() } -> std::same_as<typename T::size_type>;
-      { t[k] } -> std::same_as<typename T::mapped_type&>;
-    };
+concept MapType = requires(T t, typename T::key_type k) {
+                    { t.begin() } -> std::same_as<typename T::iterator>;
+                    { t.end() } -> std::same_as<typename T::iterator>;
+                    { t.size() } -> std::same_as<typename T::size_type>;
+                    { t[k] } -> std::same_as<typename T::mapped_type&>;
+                  };
 
 template <IterableType T>
-std::string Container2Str(
-    const T& t, const std::function<std::string(const typename T::value_type&)>& f) {
+std::string Container2Str(const T& t, const std::function<std::string(const typename T::value_type&)>& f) {
   std::stringstream ss;
   ss << "size = " << t.size() << '\n';
   if (!f) return ss.str();
@@ -59,19 +56,15 @@ std::string Container2Str(
 
 template <IterableType T>
 std::string Container2Str(const T& t) {
-  return Container2Str(
-      t,
-      [](const typename T::value_type& obj) {
-        std::stringstream ss;
-        ss << obj;
-        return ss.str();
-      });
+  return Container2Str(t, [](const typename T::value_type& obj) {
+    std::stringstream ss;
+    ss << obj;
+    return ss.str();
+  });
 }
 
 template <MapType T>
-std::string Map2Str(const T& m,
-                    const std::function<std::string(const typename T::key_type&)>& fkey,
-                    const std::function<std::string(const typename T::mapped_type&)>& fval) {
+std::string Map2Str(const T& m, const std::function<std::string(const typename T::key_type&)>& fkey, const std::function<std::string(const typename T::mapped_type&)>& fval) {
   std::stringstream ss;
   ss << "size = " << m.size() << '\n';
   if (!fkey) return ss.str();
@@ -171,8 +164,7 @@ bool CheckMapEqual(const T& map1, const T& map2) {
   auto itr2 = map2.begin();
 
   for (size_t ii = 0; ii < len; ++ii) {
-    if ((itr1->first != itr2->first) || (itr1->second != itr2->second))
-      return false;
+    if ((itr1->first != itr2->first) || (itr1->second != itr2->second)) return false;
     ++itr1;
     ++itr2;
   }

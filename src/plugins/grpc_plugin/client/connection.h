@@ -52,9 +52,8 @@ namespace asio = boost::asio;
 using asio::experimental::awaitable_operators::operator||;
 
 class Connection : public std::enable_shared_from_this<Connection> {
- public:
-  Connection(const std::shared_ptr<boost::asio::io_context>& io_ptr,
-             const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr)
+public:
+  Connection(const std::shared_ptr<boost::asio::io_context>& io_ptr, const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr)
       : io_ptr_(io_ptr),
         socket_strand_(asio::make_strand(*io_ptr)),
         socket_(socket_strand_),
@@ -68,18 +67,14 @@ class Connection : public std::enable_shared_from_this<Connection> {
   Connection& operator=(const Connection&) = delete;
 
   void Initialize(const std::shared_ptr<const ConnectionOptions>& options_ptr) {
-    AIMRT_CHECK_ERROR_THROW(
-        std::atomic_exchange(&state_, ConnectionState::kInit) == ConnectionState::kPreInit,
-        "Method can only be called when state is 'PreInit'.");
+    AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, ConnectionState::kInit) == ConnectionState::kPreInit, "Method can only be called when state is 'PreInit'.");
 
     options_ptr_ = options_ptr;
     nghttp2_session_.InitSession(options_ptr->http2_settings);
   }
 
   void Start() {
-    AIMRT_CHECK_ERROR_THROW(
-        std::atomic_exchange(&state_, ConnectionState::kStart) == ConnectionState::kInit,
-        "Method can only be called when state is 'Init'.");
+    AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, ConnectionState::kStart) == ConnectionState::kInit, "Method can only be called when state is 'Init'.");
 
     auto self = this->shared_from_this();
 
@@ -92,17 +87,16 @@ class Connection : public std::enable_shared_from_this<Connection> {
               co_await timer_.async_wait(boost::asio::use_awaitable);
 
               if (!tick_has_data_) {
-                AIMRT_TRACE("Http2 cli session exit due to timeout({} ms), remote addr {}",
-                            chrono::duration_cast<chrono::milliseconds>(options_ptr_->max_no_data_duration).count(),
-                            RemoteAddr());
+                AIMRT_TRACE(
+                    "Http2 cli session exit due to timeout({} ms), remote addr {}", chrono::duration_cast<chrono::milliseconds>(options_ptr_->max_no_data_duration).count(),
+                    RemoteAddr());
                 break;
               }
 
               tick_has_data_ = false;
             }
           } catch (const std::exception& e) {
-            AIMRT_TRACE("Http2 cli session got exception and exit, remote addr {}, exception info: {}",
-                        RemoteAddr(), e.what());
+            AIMRT_TRACE("Http2 cli session got exception and exit, remote addr {}, exception info: {}", RemoteAddr(), e.what());
           }
 
           Shutdown();
@@ -113,8 +107,7 @@ class Connection : public std::enable_shared_from_this<Connection> {
   }
 
   void Shutdown() {
-    if (std::atomic_exchange(&state_, ConnectionState::kShutdown) == ConnectionState::kShutdown)
-      return;
+    if (std::atomic_exchange(&state_, ConnectionState::kShutdown) == ConnectionState::kShutdown) return;
 
     auto self = shared_from_this();
     boost::asio::dispatch(socket_strand_, [this, self]() {
@@ -123,8 +116,7 @@ class Connection : public std::enable_shared_from_this<Connection> {
         socket_.cancel();
         socket_.close();
       } catch (const std::exception& e) {
-        AIMRT_TRACE("Http cli session shutdown failed, remote addr {}, exception info: {}",
-                    RemoteAddr(), e.what());
+        AIMRT_TRACE("Http cli session shutdown failed, remote addr {}, exception info: {}", RemoteAddr(), e.what());
       }
     });
 
@@ -132,20 +124,16 @@ class Connection : public std::enable_shared_from_this<Connection> {
       try {
         timer_.cancel();
       } catch (const std::exception& e) {
-        AIMRT_TRACE("Http cli session mgr shutdown failed, remote addr {}, exception info: {}",
-                    RemoteAddr(), e.what());
+        AIMRT_TRACE("Http cli session mgr shutdown failed, remote addr {}, exception info: {}", RemoteAddr(), e.what());
       }
     });
   }
 
-  Awaitable<ResponsePtr> HttpSendRecvCo(const RequestPtr& req_ptr,
-                                        std::chrono::nanoseconds timeout = std::chrono::seconds(5)) {
+  Awaitable<ResponsePtr> HttpSendRecvCo(const RequestPtr& req_ptr, std::chrono::nanoseconds timeout = std::chrono::seconds(5)) {
     return boost::asio::co_spawn(
         socket_strand_,
         [this, &req_ptr, timeout]() -> Awaitable<ResponsePtr> {
-          AIMRT_CHECK_ERROR_THROW(
-              state_.load() == ConnectionState::kStart,
-              "Method can only be called when state is 'Start'.");
+          AIMRT_CHECK_ERROR_THROW(state_.load() == ConnectionState::kStart, "Method can only be called when state is 'Start'.");
 
           try {
             auto start_time_point = chrono::steady_clock::now();
@@ -156,23 +144,17 @@ class Connection : public std::enable_shared_from_this<Connection> {
 
               // resolve
               asio::ip::tcp::resolver resolver(socket_strand_);
-              auto const dst = co_await resolver.async_resolve(
-                  options_ptr_->host,
-                  options_ptr_->service,
-                  asio::use_awaitable);
+              auto const dst = co_await resolver.async_resolve(options_ptr_->host, options_ptr_->service, asio::use_awaitable);
 
               cur_duration = chrono::steady_clock::now() - start_time_point;
               auto connect_timeout = timeout - cur_duration;
-              AIMRT_CHECK_ERROR_THROW(connect_timeout > chrono::nanoseconds::zero(),
-                                      "Timeout before connection attempt.");
+              AIMRT_CHECK_ERROR_THROW(connect_timeout > chrono::nanoseconds::zero(), "Timeout before connection attempt.");
 
               asio::steady_timer connect_timer(socket_strand_, connect_timeout);
 
-              co_await (asio::async_connect(socket_, dst, asio::use_awaitable) ||
-                        connect_timer.async_wait(asio::use_awaitable));
+              co_await (asio::async_connect(socket_, dst, asio::use_awaitable) || connect_timer.async_wait(asio::use_awaitable));
 
-              AIMRT_CHECK_ERROR_THROW(connect_timer.expiry() >= chrono::steady_clock::now(),
-                                      "Timeout for connection attempt.");
+              AIMRT_CHECK_ERROR_THROW(connect_timer.expiry() >= chrono::steady_clock::now(), "Timeout for connection attempt.");
               AIMRT_CHECK_ERROR_THROW(socket_.is_open(), "Failed to connect to server.");
 
               remote_addr_ = aimrt::common::util::SSToString(socket_.remote_endpoint());
@@ -183,21 +165,15 @@ class Connection : public std::enable_shared_from_this<Connection> {
             cur_duration = chrono::steady_clock::now() - start_time_point;
             AIMRT_CHECK_ERROR_THROW(cur_duration < timeout, "Timeout.");
 
-            AIMRT_TRACE("Http2 cli session async write, remote addr {}, timeout {}ms.",
-                        RemoteAddr(),
-                        chrono::duration_cast<chrono::milliseconds>(timeout - cur_duration).count());
+            AIMRT_TRACE("Http2 cli session async write, remote addr {}, timeout {}ms.", RemoteAddr(), chrono::duration_cast<chrono::milliseconds>(timeout - cur_duration).count());
             int submit_ok = nghttp2_session_.SubmitRequest(req_ptr);
             AIMRT_CHECK_ERROR_THROW(submit_ok == 0, "Failed to submit request.");
             http2::SimpleBuffer send_buf(8192);
             nghttp2_session_.GetSendMessage(send_buf);
             if (!send_buf.Empty()) {
               auto write_timer = asio::steady_timer(socket_strand_, timeout - cur_duration);
-              auto write_result = co_await (asio::async_write(socket_,
-                                                              asio::buffer(send_buf.GetStringView()),
-                                                              asio::use_awaitable) ||
-                                            write_timer.async_wait(asio::use_awaitable));
-              AIMRT_CHECK_ERROR_THROW(write_timer.expiry() >= chrono::steady_clock::now(),
-                                      "Timeout for write.");
+              auto write_result = co_await (asio::async_write(socket_, asio::buffer(send_buf.GetStringView()), asio::use_awaitable) || write_timer.async_wait(asio::use_awaitable));
+              AIMRT_CHECK_ERROR_THROW(write_timer.expiry() >= chrono::steady_clock::now(), "Timeout for write.");
               size_t nwrite = std::get<0>(write_result);
               AIMRT_TRACE("Http2 cli session write {} bytes to {}.", nwrite, RemoteAddr());
               tick_has_data_ = true;
@@ -210,10 +186,8 @@ class Connection : public std::enable_shared_from_this<Connection> {
             while (nghttp2_session_.ResponseListEmpty()) {
               std::array<uint8_t, 65536> buf;
               auto read_timer = asio::steady_timer(socket_strand_, timeout - cur_duration);
-              auto read_result = co_await (socket_.async_read_some(asio::buffer(buf), asio::use_awaitable) ||
-                                           read_timer.async_wait(asio::use_awaitable));
-              AIMRT_CHECK_ERROR_THROW(read_timer.expiry() >= chrono::steady_clock::now(),
-                                      "Timeout for read.");
+              auto read_result = co_await (socket_.async_read_some(asio::buffer(buf), asio::use_awaitable) || read_timer.async_wait(asio::use_awaitable));
+              AIMRT_CHECK_ERROR_THROW(read_timer.expiry() >= chrono::steady_clock::now(), "Timeout for read.");
               size_t nread = std::get<0>(read_result);
               AIMRT_TRACE("Http2 cli session read {} bytes from {}.", nread, RemoteAddr());
               tick_has_data_ = true;
@@ -230,31 +204,24 @@ class Connection : public std::enable_shared_from_this<Connection> {
             co_return rsp_list.front();
           } catch (const std::exception& e) {
             Shutdown();
-            AIMRT_WARN_THROW("Http2 cli session send & recv failed and exit, remote addr {}, exception info: {}",
-                             RemoteAddr(), e.what());
+            AIMRT_WARN_THROW("Http2 cli session send & recv failed and exit, remote addr {}, exception info: {}", RemoteAddr(), e.what());
           }
         },
         boost::asio::use_awaitable);
   }
 
-  const aimrt::common::util::LoggerWrapper& GetLogger() const {
-    return *logger_ptr_;
-  }
+  const aimrt::common::util::LoggerWrapper& GetLogger() const { return *logger_ptr_; }
 
   bool CheckIdleAndUse() {
     bool is_idle = std::atomic_exchange(&idle_flag_, false);
     return is_idle && state_ == ConnectionState::kStart;
   }
 
-  std::string_view RemoteAddr() const {
-    return remote_addr_;
-  }
+  std::string_view RemoteAddr() const { return remote_addr_; }
 
-  bool IsRunning() const {
-    return state_ == ConnectionState::kStart;
-  }
+  bool IsRunning() const { return state_ == ConnectionState::kStart; }
 
- private:
+private:
   enum class ConnectionState : uint32_t {
     kPreInit,
     kInit,

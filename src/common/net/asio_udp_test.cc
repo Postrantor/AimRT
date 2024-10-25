@@ -25,11 +25,9 @@ TEST(NET_TEST, UDP_base) {
 
   // start cli
   auto udp_cli_ptr = std::make_shared<AsioUdpClient>(cli_sys_ptr->IO());
-  udp_cli_ptr->Initialize(AsioUdpClient::Options{
-      .svr_ep = asio::ip::udp::endpoint{asio::ip::address_v4({127, 0, 0, 1}), 53927}});
+  udp_cli_ptr->Initialize(AsioUdpClient::Options{.svr_ep = asio::ip::udp::endpoint{asio::ip::address_v4({127, 0, 0, 1}), 53927}});
 
-  cli_sys_ptr->RegisterSvrFunc([udp_cli_ptr] { udp_cli_ptr->Start(); },
-                               [udp_cli_ptr] { udp_cli_ptr->Shutdown(); });
+  cli_sys_ptr->RegisterSvrFunc([udp_cli_ptr] { udp_cli_ptr->Start(); }, [udp_cli_ptr] { udp_cli_ptr->Shutdown(); });
 
   std::thread t_cli([cli_sys_ptr] {
     AIMRT_INFO("cli_sys_ptr start.");
@@ -42,19 +40,13 @@ TEST(NET_TEST, UDP_base) {
   std::thread t_svr([svr_sys_ptr, &result_str] {
     AIMRT_INFO("svr_sys_ptr start.");
     auto udp_svr_ptr = std::make_shared<AsioUdpServer>(svr_sys_ptr->IO());
-    udp_svr_ptr->RegisterMsgHandle(
-        [&result_str](const asio::ip::udp::endpoint &ep,
-                      const std::shared_ptr<asio::streambuf> &msg_buf_ptr) {
-          result_str = std::string(
-              static_cast<const char *>(msg_buf_ptr->data().data()),
-              msg_buf_ptr->size());
-          AIMRT_INFO("svr get a msg from {}, size: {}, data: {}",
-                     aimrt::common::util::SSToString(ep), msg_buf_ptr->size(), result_str);
-        });
+    udp_svr_ptr->RegisterMsgHandle([&result_str](const asio::ip::udp::endpoint &ep, const std::shared_ptr<asio::streambuf> &msg_buf_ptr) {
+      result_str = std::string(static_cast<const char *>(msg_buf_ptr->data().data()), msg_buf_ptr->size());
+      AIMRT_INFO("svr get a msg from {}, size: {}, data: {}", aimrt::common::util::SSToString(ep), msg_buf_ptr->size(), result_str);
+    });
     udp_svr_ptr->Initialize(AsioUdpServer::Options{});
 
-    svr_sys_ptr->RegisterSvrFunc([udp_svr_ptr] { udp_svr_ptr->Start(); },
-                                 [udp_svr_ptr] { udp_svr_ptr->Shutdown(); });
+    svr_sys_ptr->RegisterSvrFunc([udp_svr_ptr] { udp_svr_ptr->Start(); }, [udp_svr_ptr] { udp_svr_ptr->Shutdown(); });
 
     svr_sys_ptr->Start();
     svr_sys_ptr->Join();

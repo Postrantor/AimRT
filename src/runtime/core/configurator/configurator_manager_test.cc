@@ -13,7 +13,7 @@ namespace aimrt::runtime::core::configurator {
 const std::filesystem::path kConfiguratorManagerTestPath = "./configurator_manager_test_cfg.yaml";
 
 class ConfiguratorManagerTest : public ::testing::Test {
- protected:
+protected:
   void SetUp() override {
     configurator_manager_.Initialize(kConfiguratorManagerTestPath);
 
@@ -22,9 +22,7 @@ class ConfiguratorManagerTest : public ::testing::Test {
     EXPECT_EQ(configurator_options_node.IsDefined(), true);
   }
 
-  void TearDown() override {
-    configurator_manager_.Shutdown();
-  }
+  void TearDown() override { configurator_manager_.Shutdown(); }
 
   static void SetUpTestCase() {
     const auto *cfg_content = R"str(
@@ -103,9 +101,7 @@ TEST_F(ConfiguratorManagerTest, get_configuratorProxy_with_configured_module_nam
 
   const auto *h = configurator_manager_.GetConfiguratorProxy(detail_info).NativeHandle();
   ASSERT_NE(h, nullptr);
-  EXPECT_EQ(
-      std::filesystem::path(aimrt::util::ToStdStringView(h->config_file_path(h->impl))),
-      std::filesystem::path("./cfg/tmp/temp_cfg_file_for_ConfiguratorManagerTest.yaml"));
+  EXPECT_EQ(std::filesystem::path(aimrt::util::ToStdStringView(h->config_file_path(h->impl))), std::filesystem::path("./cfg/tmp/temp_cfg_file_for_ConfiguratorManagerTest.yaml"));
 }
 
 }  // namespace aimrt::runtime::core::configurator

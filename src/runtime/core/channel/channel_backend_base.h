@@ -10,7 +10,7 @@
 namespace aimrt::runtime::core::channel {
 
 class ChannelBackendBase {
- public:
+public:
   ChannelBackendBase() = default;
   virtual ~ChannelBackendBase() = default;
 
@@ -42,8 +42,7 @@ class ChannelBackendBase {
    * @param publish_type_wrapper
    * @return Register result
    */
-  virtual bool RegisterPublishType(
-      const PublishTypeWrapper& publish_type_wrapper) noexcept = 0;
+  virtual bool RegisterPublishType(const PublishTypeWrapper& publish_type_wrapper) noexcept = 0;
 
   /**
    * @brief Subscribe

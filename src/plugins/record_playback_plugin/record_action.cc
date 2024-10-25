@@ -48,11 +48,9 @@ struct convert<aimrt::plugins::record_playback_plugin::RecordAction::Options> {
 
     rhs.bag_path = node["bag_path"].as<std::string>();
 
-    if (node["max_bag_size_m"])
-      rhs.max_bag_size_m = node["max_bag_size_m"].as<uint32_t>();
+    if (node["max_bag_size_m"]) rhs.max_bag_size_m = node["max_bag_size_m"].as<uint32_t>();
 
-    if (node["max_bag_num"])
-      rhs.max_bag_num = node["max_bag_num"].as<uint32_t>();
+    if (node["max_bag_num"]) rhs.max_bag_num = node["max_bag_num"].as<uint32_t>();
 
     auto mode = aimrt::common::util::StrToLower(node["mode"].as<std::string>());
     if (mode == "imd") {
@@ -63,19 +61,15 @@ struct convert<aimrt::plugins::record_playback_plugin::RecordAction::Options> {
       throw aimrt::common::util::AimRTException("Invalid record mode: " + mode);
     }
 
-    if (node["max_preparation_duration_s"])
-      rhs.max_preparation_duration_s = node["max_preparation_duration_s"].as<uint64_t>();
+    if (node["max_preparation_duration_s"]) rhs.max_preparation_duration_s = node["max_preparation_duration_s"].as<uint64_t>();
 
     rhs.executor = node["executor"].as<std::string>();
 
     if (node["topic_meta_list"] && node["topic_meta_list"].IsSequence()) {
       for (const auto& topic_meta_node : node["topic_meta_list"]) {
-        auto topic_meta = Options::TopicMeta{
-            .topic_name = topic_meta_node["topic_name"].as<std::string>(),
-            .msg_type = topic_meta_node["msg_type"].as<std::string>()};
+        auto topic_meta = Options::TopicMeta{.topic_name = topic_meta_node["topic_name"].as<std::string>(), .msg_type = topic_meta_node["msg_type"].as<std::string>()};
 
-        if (topic_meta_node["serialization_type"])
-          topic_meta.serialization_type = topic_meta_node["serialization_type"].as<std::string>();
+        if (topic_meta_node["serialization_type"]) topic_meta.serialization_type = topic_meta_node["serialization_type"].as<std::string>();
 
         rhs.topic_meta_list.emplace_back(std::move(topic_meta));
       }
@@ -90,30 +84,22 @@ struct convert<aimrt::plugins::record_playback_plugin::RecordAction::Options> {
 namespace aimrt::plugins::record_playback_plugin {
 
 void RecordAction::Initialize(YAML::Node options) {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-      "Local channel backend can only be initialized once.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "Local channel backend can only be initialized once.");
 
-  if (options && !options.IsNull())
-    options_ = options.as<Options>();
+  if (options && !options.IsNull()) options_ = options.as<Options>();
 
-  AIMRT_CHECK_ERROR_THROW(
-      get_type_support_func_,
-      "Get type support function is not set before initialize.");
+  AIMRT_CHECK_ERROR_THROW(get_type_support_func_, "Get type support function is not set before initialize.");
 
   // 检查 topic meta
   for (auto& topic_meta : options_.topic_meta_list) {
     // 检查消息类型
     auto type_support_ref = get_type_support_func_(topic_meta.msg_type);
-    AIMRT_CHECK_ERROR_THROW(type_support_ref,
-                            "Can not find type '{}' in any type support pkg!", topic_meta.msg_type);
+    AIMRT_CHECK_ERROR_THROW(type_support_ref, "Can not find type '{}' in any type support pkg!", topic_meta.msg_type);
 
     // 检查序列化类型
     if (!topic_meta.serialization_type.empty()) {
       bool check_ret = type_support_ref.CheckSerializationTypeSupported(topic_meta.serialization_type);
-      AIMRT_CHECK_ERROR_THROW(check_ret,
-                              "Msg type '{}' does not support serialization type '{}'.",
-                              topic_meta.msg_type, topic_meta.serialization_type);
+      AIMRT_CHECK_ERROR_THROW(check_ret, "Msg type '{}' does not support serialization type '{}'.", topic_meta.msg_type, topic_meta.serialization_type);
     } else {
       topic_meta.serialization_type = type_support_ref.DefaultSerializationType();
     }
@@ -122,9 +108,9 @@ void RecordAction::Initialize(YAML::Node options) {
   // bag_path
   auto tm = aimrt::common::util::GetCurTm();
   char buf[17];  // _YYYYMMDD_hhmmss
-  snprintf(buf, sizeof(buf), "_%04d%02d%02d_%02d%02d%02d",
-           (tm.tm_year + 1900) % 10000u, (tm.tm_mon + 1) % 100u, (tm.tm_mday) % 100u,
-           (tm.tm_hour) % 100u, (tm.tm_min) % 100u, (tm.tm_sec) % 100u);
+  snprintf(
+      buf, sizeof(buf), "_%04d%02d%02d_%02d%02d%02d", (tm.tm_year + 1900) % 10000u, (tm.tm_mon + 1) % 100u, (tm.tm_mday) % 100u, (tm.tm_hour) % 100u, (tm.tm_min) % 100u,
+      (tm.tm_sec) % 100u);
   bag_base_name_ = "aimrtbag" + std::string(buf);
 
   std::filesystem::path parent_bag_path = std::filesystem::absolute(options_.bag_path);
@@ -134,8 +120,7 @@ void RecordAction::Initialize(YAML::Node options) {
   options_.bag_path = std::filesystem::canonical(parent_bag_path).string();
 
   real_bag_path_ = parent_bag_path / bag_base_name_;
-  AIMRT_CHECK_ERROR_THROW(!std::filesystem::exists(real_bag_path_),
-                          "Bag path '{}' is exist!", real_bag_path_.string());
+  AIMRT_CHECK_ERROR_THROW(!std::filesystem::exists(real_bag_path_), "Bag path '{}' is exist!", real_bag_path_.string());
 
   std::filesystem::create_directories(real_bag_path_);
 
@@ -144,14 +129,10 @@ void RecordAction::Initialize(YAML::Node options) {
   metadata_.version = kVersion;
 
   for (auto& topic_meta_option : options_.topic_meta_list) {
-    TopicMetaKey key{
-        .topic_name = topic_meta_option.topic_name,
-        .msg_type = topic_meta_option.msg_type};
+    TopicMetaKey key{.topic_name = topic_meta_option.topic_name, .msg_type = topic_meta_option.msg_type};
 
     AIMRT_CHECK_ERROR_THROW(
-        topic_meta_map_.find(key) == topic_meta_map_.end(),
-        "Duplicate topic meta, topic name: {}, msg type: {}.",
-        topic_meta_option.topic_name, topic_meta_option.msg_type);
+        topic_meta_map_.find(key) == topic_meta_map_.end(), "Duplicate topic meta, topic name: {}, msg type: {}.", topic_meta_option.topic_name, topic_meta_option.msg_type);
 
     uint32_t topic_id = metadata_.topics.size();
     TopicMeta topic_meta{
@@ -173,15 +154,10 @@ void RecordAction::Initialize(YAML::Node options) {
   options = options_;
 }
 
-void RecordAction::Start() {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kStart) == State::kInit,
-      "Method can only be called when state is 'Init'.");
-}
+void RecordAction::Start() { AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'."); }
 
 void RecordAction::Shutdown() {
-  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-    return;
+  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 
   std::promise<void> stop_promise;
   executor_.Execute([this, &stop_promise]() {
@@ -192,35 +168,23 @@ void RecordAction::Shutdown() {
 }
 
 void RecordAction::InitExecutor() {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kInit,
-      "Method can only be called when state is 'Init'.");
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kInit, "Method can only be called when state is 'Init'.");
 
-  AIMRT_CHECK_ERROR_THROW(
-      get_executor_func_,
-      "Get executor function is not set before initialize.");
+  AIMRT_CHECK_ERROR_THROW(get_executor_func_, "Get executor function is not set before initialize.");
 
   executor_ = get_executor_func_(options_.executor);
-  AIMRT_CHECK_ERROR_THROW(
-      executor_, "Can not get executor {}.", options_.executor);
-  AIMRT_CHECK_ERROR_THROW(
-      executor_.ThreadSafe(), "Record executor {} is not thread safe!", options_.executor);
+  AIMRT_CHECK_ERROR_THROW(executor_, "Can not get executor {}.", options_.executor);
+  AIMRT_CHECK_ERROR_THROW(executor_.ThreadSafe(), "Record executor {} is not thread safe!", options_.executor);
 }
 
-void RecordAction::RegisterGetExecutorFunc(
-    const std::function<executor::ExecutorRef(std::string_view)>& get_executor_func) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kPreInit,
-      "Method can only be called when state is 'PreInit'.");
+void RecordAction::RegisterGetExecutorFunc(const std::function<executor::ExecutorRef(std::string_view)>& get_executor_func) {
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
   get_executor_func_ = get_executor_func;
 }
 
-void RecordAction::RegisterGetTypeSupportFunc(
-    const std::function<aimrt::util::TypeSupportRef(std::string_view)>& get_type_support_func) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kPreInit,
-      "Method can only be called when state is 'PreInit'.");
+void RecordAction::RegisterGetTypeSupportFunc(const std::function<aimrt::util::TypeSupportRef(std::string_view)>& get_type_support_func) {
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
   get_type_support_func_ = get_type_support_func;
 }
@@ -274,9 +238,7 @@ void RecordAction::AddRecord(OneRecord&& record) {
 }
 
 bool RecordAction::StartSignalRecord(uint64_t preparation_duration_s, uint64_t record_duration_s) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kStart,
-      "Method can only be called when state is 'Start'.");
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kStart, "Method can only be called when state is 'Start'.");
 
   if (options_.mode != Options::Mode::kSignal) [[unlikely]] {
     AIMRT_WARN("Cur action mode is not signal mode.");
@@ -288,75 +250,68 @@ bool RecordAction::StartSignalRecord(uint64_t preparation_duration_s, uint64_t r
     return false;
   }
 
-  executor_.Execute(
-      [this, preparation_duration_s, record_duration_s]() {
-        if (state_.load() != State::kStart) [[unlikely]] {
-          return;
-        }
+  executor_.Execute([this, preparation_duration_s, record_duration_s]() {
+    if (state_.load() != State::kStart) [[unlikely]] {
+      return;
+    }
 
-        if (recording_flag_) {
-          AIMRT_WARN("Recording is already in progress");
-          return;
-        }
+    if (recording_flag_) {
+      AIMRT_WARN("Recording is already in progress");
+      return;
+    }
 
-        recording_flag_ = true;
+    recording_flag_ = true;
 
-        uint64_t now = aimrt::common::util::GetCurTimestampNs();
+    uint64_t now = aimrt::common::util::GetCurTimestampNs();
 
-        stop_record_timestamp_ = now + record_duration_s * 1000000000;
+    stop_record_timestamp_ = now + record_duration_s * 1000000000;
 
-        uint64_t start_record_timestamp = now - preparation_duration_s * 1000000000;
+    uint64_t start_record_timestamp = now - preparation_duration_s * 1000000000;
 
-        // 二分查找到缓存中需要开始记录的地方
-        size_t last_cache_size = last_cache_.size();
-        size_t cur_cache_size = cur_cache_.size();
-        size_t all_cache_size = last_cache_size + cur_cache_size;
+    // 二分查找到缓存中需要开始记录的地方
+    size_t last_cache_size = last_cache_.size();
+    size_t cur_cache_size = cur_cache_.size();
+    size_t all_cache_size = last_cache_size + cur_cache_size;
 
-        if (all_cache_size == 0) return;
+    if (all_cache_size == 0) return;
 
-        auto get_cahce_timestamp = [&](size_t idx) {
-          return (idx < last_cache_size)
-                     ? last_cache_[idx].timestamp
-                     : cur_cache_[idx - last_cache_size].timestamp;
-        };
+    auto get_cahce_timestamp = [&](size_t idx) { return (idx < last_cache_size) ? last_cache_[idx].timestamp : cur_cache_[idx - last_cache_size].timestamp; };
 
-        size_t low = 0, high = all_cache_size - 1;
+    size_t low = 0, high = all_cache_size - 1;
 
-        while (low < high) {
-          size_t mid = low + (high - low) / 2;
-          if (get_cahce_timestamp(mid) < start_record_timestamp)
-            low = mid + 1;
-          else
-            high = mid;
-        }
+    while (low < high) {
+      size_t mid = low + (high - low) / 2;
+      if (get_cahce_timestamp(mid) < start_record_timestamp)
+        low = mid + 1;
+      else
+        high = mid;
+    }
 
-        // 将缓存写入db
-        if (low < last_cache_size) {
-          for (size_t ii = low; ii < last_cache_size; ++ii) {
-            AddRecordImpl(std::move(last_cache_[ii]));
-          }
+    // 将缓存写入db
+    if (low < last_cache_size) {
+      for (size_t ii = low; ii < last_cache_size; ++ii) {
+        AddRecordImpl(std::move(last_cache_[ii]));
+      }
 
-          for (size_t ii = 0; ii < cur_cache_size; ++ii) {
-            AddRecordImpl(std::move(cur_cache_[ii]));
-          }
-        } else {
-          for (size_t ii = low - last_cache_size; ii < cur_cache_size; ++ii) {
-            AddRecordImpl(std::move(cur_cache_[ii]));
-          }
-        }
+      for (size_t ii = 0; ii < cur_cache_size; ++ii) {
+        AddRecordImpl(std::move(cur_cache_[ii]));
+      }
+    } else {
+      for (size_t ii = low - last_cache_size; ii < cur_cache_size; ++ii) {
+        AddRecordImpl(std::move(cur_cache_[ii]));
+      }
+    }
 
-        // 清空缓存
-        last_cache_.clear();
-        cur_cache_.clear();
-      });
+    // 清空缓存
+    last_cache_.clear();
+    cur_cache_.clear();
+  });
 
   return true;
 }
 
 void RecordAction::StopSignalRecord() {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kStart,
-      "Method can only be called when state is 'Start'.");
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kStart, "Method can only be called when state is 'Start'.");
 
   if (options_.mode != Options::Mode::kSignal) [[unlikely]] {
     AIMRT_WARN("Cur action mode is not signal mode.");
@@ -430,9 +385,7 @@ void RecordAction::OpenNewDb(uint64_t start_timestamp) {
 
   // open db
   int ret = sqlite3_open(cur_db_file_path_.c_str(), &db_);
-  AIMRT_CHECK_ERROR_THROW(ret == SQLITE_OK,
-                          "Sqlite3 open db file failed, path: {}, ret: {}, error info: {}",
-                          cur_db_file_path_, ret, sqlite3_errmsg(db_));
+  AIMRT_CHECK_ERROR_THROW(ret == SQLITE_OK, "Sqlite3 open db file failed, path: {}, ret: {}, error info: {}", cur_db_file_path_, ret, sqlite3_errmsg(db_));
 
   AIMRT_TRACE("Open new db, path: {}", cur_db_file_path_);
 
@@ -448,23 +401,16 @@ data        BLOB NOT NULL);
 )str";
 
   ret = sqlite3_exec(db_, sql.c_str(), nullptr, nullptr, nullptr);
-  AIMRT_CHECK_ERROR_THROW(ret == SQLITE_OK,
-                          "Sqlite3 create table failed, sql: {}, ret: {}, error info: {}",
-                          sql, ret, sqlite3_errmsg(db_));
+  AIMRT_CHECK_ERROR_THROW(ret == SQLITE_OK, "Sqlite3 create table failed, sql: {}, ret: {}, error info: {}", sql, ret, sqlite3_errmsg(db_));
 
   // create stmt
   sql = "INSERT INTO messages(topic_id, timestamp, data) VALUES(?, ?, ?)";
 
   ret = sqlite3_prepare_v3(db_, sql.c_str(), sql.size(), 0, &insert_msg_stmt_, nullptr);
-  AIMRT_CHECK_ERROR_THROW(ret == SQLITE_OK,
-                          "Sqlite3 prepare failed, sql: {}, ret: {}, error info: {}",
-                          sql, ret, sqlite3_errmsg(db_));
+  AIMRT_CHECK_ERROR_THROW(ret == SQLITE_OK, "Sqlite3 prepare failed, sql: {}, ret: {}, error info: {}", sql, ret, sqlite3_errmsg(db_));
 
   // update metadatat.yaml
-  metadata_.files.emplace_back(
-      MetaData::FileMeta{
-          .path = cur_db_file_name,
-          .start_timestamp = start_timestamp});
+  metadata_.files.emplace_back(MetaData::FileMeta{.path = cur_db_file_name, .start_timestamp = start_timestamp});
 
   // check and del db file
   if (options_.max_bag_num > 0 && metadata_.files.size() > options_.max_bag_num) {

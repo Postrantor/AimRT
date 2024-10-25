@@ -25,12 +25,9 @@ struct convert<aimrt::runtime::core::parameter::ParameterManager::Options> {
 namespace aimrt::runtime::core::parameter {
 
 void ParameterManager::Initialize(YAML::Node options_node) {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-      "ParameterManager manager can only be initialized once.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "ParameterManager manager can only be initialized once.");
 
-  if (options_node && !options_node.IsNull())
-    options_ = options_node.as<Options>();
+  if (options_node && !options_node.IsNull()) options_ = options_node.as<Options>();
 
   options_node = options_;
 
@@ -38,27 +35,21 @@ void ParameterManager::Initialize(YAML::Node options_node) {
 }
 
 void ParameterManager::Start() {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kStart) == State::kInit,
-      "Method can only be called when state is 'Init'.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'.");
 
   AIMRT_INFO("Parameter manager start completed.");
 }
 
 void ParameterManager::Shutdown() {
-  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-    return;
+  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 
   AIMRT_INFO("Parameter manager shutdown.");
 
   parameter_handle_proxy_wrap_map_.clear();
 }
 
-const ParameterHandleProxy& ParameterManager::GetParameterHandleProxy(
-    const util::ModuleDetailInfo& module_info) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kInit,
-      "Method can only be called when state is 'Init'.");
+const ParameterHandleProxy& ParameterManager::GetParameterHandleProxy(const util::ModuleDetailInfo& module_info) {
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kInit, "Method can only be called when state is 'Init'.");
 
   auto itr = parameter_handle_proxy_wrap_map_.find(module_info.name);
   if (itr != parameter_handle_proxy_wrap_map_.end()) return itr->second->parameter_handle_proxy;
@@ -66,17 +57,13 @@ const ParameterHandleProxy& ParameterManager::GetParameterHandleProxy(
   auto ptr = std::make_unique<ParameterHandleProxyWrap>();
   ptr->parameter_handle.SetLogger(logger_ptr_);
 
-  auto emplace_ret = parameter_handle_proxy_wrap_map_.emplace(
-      module_info.name,
-      std::move(ptr));
+  auto emplace_ret = parameter_handle_proxy_wrap_map_.emplace(module_info.name, std::move(ptr));
 
   return emplace_ret.first->second->parameter_handle_proxy;
 }
 
 ParameterHandle* ParameterManager::GetParameterHandle(std::string_view module_name) const {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kStart,
-      "Method can only be called when state is 'Start'.");
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kStart, "Method can only be called when state is 'Start'.");
 
   auto itr = parameter_handle_proxy_wrap_map_.find(module_name);
   if (itr != parameter_handle_proxy_wrap_map_.end()) return &(itr->second->parameter_handle);
@@ -85,9 +72,7 @@ ParameterHandle* ParameterManager::GetParameterHandle(std::string_view module_na
 }
 
 std::list<std::pair<std::string, std::string>> ParameterManager::GenInitializationReport() const {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kInit,
-      "Method can only be called when state is 'Init'.");
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kInit, "Method can only be called when state is 'Init'.");
 
   return {};
 }

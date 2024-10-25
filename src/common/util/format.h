@@ -4,14 +4,14 @@
 #pragma once
 
 #ifdef AIMRT_USE_FMT_LIB
-  #include "fmt/chrono.h"
-  #include "fmt/core.h"
-  #include "fmt/format.h"
+#include "fmt/chrono.h"
+#include "fmt/core.h"
+#include "fmt/format.h"
 
-  #define aimrt_fmt fmt
+#define aimrt_fmt fmt
 
 #else
-  #include <format>
+#include <format>
 
-  #define aimrt_fmt std
+#define aimrt_fmt std
 #endif

@@ -46,8 +46,7 @@ void RealTimeModule::Shutdown() {
 
 void RealTimeModule::StartWorkLoopByExecutor(std::string_view executor_name) {
   auto executor = core_.GetExecutorManager().GetExecutor(executor_name);
-  AIMRT_CHECK_ERROR_THROW(executor && executor.SupportTimerSchedule(),
-                          "Get executor '{}' failed.", executor_name);
+  AIMRT_CHECK_ERROR_THROW(executor && executor.SupportTimerSchedule(), "Get executor '{}' failed.", executor_name);
   scope_.spawn(co::On(co::AimRTScheduler(executor), WorkLoop(executor)));
 }
 
@@ -65,8 +64,7 @@ co::Task<void> RealTimeModule::WorkLoop(aimrt::executor::ExecutorRef executor) {
     struct sched_param param;
     pthread_getschedparam(pthread_self(), &policy, &param);
 
-    AIMRT_INFO("Executor name: {}, thread_name: {}, policy: {}, priority: {}",
-               executor.Name(), thread_name, policy, param.sched_priority);
+    AIMRT_INFO("Executor name: {}, thread_name: {}, policy: {}, priority: {}", executor.Name(), thread_name, policy, param.sched_priority);
 #endif
 
     uint32_t count = 0;
@@ -75,19 +73,15 @@ co::Task<void> RealTimeModule::WorkLoop(aimrt::executor::ExecutorRef executor) {
 
       // Sleep for some time
       auto start_tp = std::chrono::steady_clock::now();
-      co_await co::ScheduleAfter(
-          co::AimRTScheduler(executor), std::chrono::milliseconds(1000));
+      co_await co::ScheduleAfter(co::AimRTScheduler(executor), std::chrono::milliseconds(1000));
       auto end_tp = std::chrono::steady_clock::now();
 
 #ifdef __linux__
       // Get cpuset used by the current thread
       cpu_set_t cur_cpuset;
       CPU_ZERO(&cur_cpuset);
-      auto pthread_getaffinity_np_ret =
-          pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &cur_cpuset);
-      AIMRT_CHECK_ERROR_THROW(pthread_getaffinity_np_ret == 0,
-                              "Call 'pthread_getaffinity_np' get error: {}",
-                              pthread_getaffinity_np_ret);
+      auto pthread_getaffinity_np_ret = pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &cur_cpuset);
+      AIMRT_CHECK_ERROR_THROW(pthread_getaffinity_np_ret == 0, "Call 'pthread_getaffinity_np' get error: {}", pthread_getaffinity_np_ret);
 
       uint32_t cpu_size = std::thread::hardware_concurrency();
       std::string cur_cpuset_str;
@@ -105,13 +99,11 @@ co::Task<void> RealTimeModule::WorkLoop(aimrt::executor::ExecutorRef executor) {
 
       // Log
       AIMRT_INFO(
-          "Loop count: {}, executor name: {}, sleep for {}, cpu: {}, node: {}, use cpu: '{}'",
-          count, executor.Name(), end_tp - start_tp, current_cpu, current_node, cur_cpuset_str);
+          "Loop count: {}, executor name: {}, sleep for {}, cpu: {}, node: {}, use cpu: '{}'", count, executor.Name(), end_tp - start_tp, current_cpu, current_node,
+          cur_cpuset_str);
 #else
       // Log
-      AIMRT_INFO(
-          "Loop count: {}, executor name: {}, sleep for {}",
-          count, executor.Name(), end_tp - start_tp);
+      AIMRT_INFO("Loop count: {}, executor name: {}, sleep for {}", count, executor.Name(), end_tp - start_tp);
 #endif
     }
 

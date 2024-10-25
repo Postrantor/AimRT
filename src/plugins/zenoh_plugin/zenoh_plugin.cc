@@ -20,11 +20,9 @@ struct convert<aimrt::plugins::zenoh_plugin::ZenohPlugin::Options> {
   static bool decode(const Node &node, Options &rhs) {
     if (!node.IsMap()) return false;
 
-    if (node["native_cfg_path"])
-      rhs.native_cfg_path = node["native_cfg_path"].as<std::string>();
+    if (node["native_cfg_path"]) rhs.native_cfg_path = node["native_cfg_path"].as<std::string>();
 
-    if (node["limit_domain"])
-      rhs.limit_domain = '/' + node["limit_domain"].as<std::string>();
+    if (node["limit_domain"]) rhs.limit_domain = '/' + node["limit_domain"].as<std::string>();
 
     return true;
   }
@@ -48,14 +46,11 @@ bool ZenohPlugin::Initialize(runtime::core::AimRTCore *core_ptr) noexcept {
     // todo remove role
     zenoh_manager_ptr_->Initialize(options_.native_cfg_path);
 
-    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPostInitLog,
-                                [this] { SetPluginLogger(); });
+    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPostInitLog, [this] { SetPluginLogger(); });
 
-    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPreInitChannel,
-                                [this] { RegisterZenohChannelBackend(); });
+    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPreInitChannel, [this] { RegisterZenohChannelBackend(); });
 
-    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPreInitRpc,
-                                [this] { RegisterZenohRpcBackend(); });
+    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPreInitRpc, [this] { RegisterZenohRpcBackend(); });
 
     plugin_options_node = options_;
     core_ptr_->GetPluginManager().UpdatePluginOptionsNode(Name(), plugin_options_node);
@@ -81,27 +76,20 @@ void ZenohPlugin::Shutdown() noexcept {
   }
 }
 
-void ZenohPlugin::SetPluginLogger() {
-  SetLogger(aimrt::logger::LoggerRef(
-      core_ptr_->GetLoggerManager().GetLoggerProxy().NativeHandle()));
-}
+void ZenohPlugin::SetPluginLogger() { SetLogger(aimrt::logger::LoggerRef(core_ptr_->GetLoggerManager().GetLoggerProxy().NativeHandle())); }
 
 void ZenohPlugin::RegisterZenohChannelBackend() {
-  std::unique_ptr<runtime::core::channel::ChannelBackendBase> zenoh_channel_backend_ptr =
-      std::make_unique<ZenohChannelBackend>(zenoh_manager_ptr_, options_.limit_domain);
+  std::unique_ptr<runtime::core::channel::ChannelBackendBase> zenoh_channel_backend_ptr = std::make_unique<ZenohChannelBackend>(zenoh_manager_ptr_, options_.limit_domain);
 
   core_ptr_->GetChannelManager().RegisterChannelBackend(std::move(zenoh_channel_backend_ptr));
 }
 
 void ZenohPlugin::RegisterZenohRpcBackend() {
-  std::unique_ptr<runtime::core::rpc::RpcBackendBase> zenoh_rpc_backend_ptr =
-      std::make_unique<ZenohRpcBackend>(zenoh_manager_ptr_, options_.limit_domain);
+  std::unique_ptr<runtime::core::rpc::RpcBackendBase> zenoh_rpc_backend_ptr = std::make_unique<ZenohRpcBackend>(zenoh_manager_ptr_, options_.limit_domain);
 
-  static_cast<ZenohRpcBackend *>(zenoh_rpc_backend_ptr.get())
-      ->RegisterGetExecutorFunc(
-          [this](std::string_view executor_name) -> aimrt::executor::ExecutorRef {
-            return core_ptr_->GetExecutorManager().GetExecutor(executor_name);
-          });
+  static_cast<ZenohRpcBackend *>(zenoh_rpc_backend_ptr.get())->RegisterGetExecutorFunc([this](std::string_view executor_name) -> aimrt::executor::ExecutorRef {
+    return core_ptr_->GetExecutorManager().GetExecutor(executor_name);
+  });
 
   core_ptr_->GetRpcManager().RegisterRpcBackend(std::move(zenoh_rpc_backend_ptr));
 }

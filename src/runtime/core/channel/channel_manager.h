@@ -17,7 +17,7 @@
 namespace aimrt::runtime::core::channel {
 
 class ChannelManager {
- public:
+public:
   struct Options {
     struct BackendOptions {
       std::string type;
@@ -47,9 +47,8 @@ class ChannelManager {
     kShutdown,
   };
 
- public:
-  ChannelManager()
-      : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
+public:
+  ChannelManager() : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
   ~ChannelManager() = default;
 
   ChannelManager(const ChannelManager&) = delete;
@@ -69,8 +68,7 @@ class ChannelManager {
 
   void RegisterChannelBackend(std::unique_ptr<ChannelBackendBase>&& channel_backend_ptr);
 
-  void RegisterGetExecutorFunc(
-      const std::function<aimrt::executor::ExecutorRef(std::string_view)>& get_executor_func);
+  void RegisterGetExecutorFunc(const std::function<aimrt::executor::ExecutorRef(std::string_view)>& get_executor_func);
 
   const ChannelHandleProxy& GetChannelHandleProxy(const util::ModuleDetailInfo& module_info);
   const ChannelHandleProxy& GetChannelHandleProxy(std::string_view module_name = "core") {
@@ -82,24 +80,18 @@ class ChannelManager {
 
   void AddPassedContextMetaKeys(const std::unordered_set<std::string>& keys);
 
-  bool Subscribe(SubscribeWrapper&& wrapper) {
-    return channel_backend_manager_.Subscribe(std::move(wrapper));
-  }
-  bool RegisterPublishType(PublishTypeWrapper&& wrapper) {
-    return channel_backend_manager_.RegisterPublishType(std::move(wrapper));
-  }
-  void Publish(MsgWrapper&& wrapper) {
-    channel_backend_manager_.Publish(std::move(wrapper));
-  }
+  bool Subscribe(SubscribeWrapper&& wrapper) { return channel_backend_manager_.Subscribe(std::move(wrapper)); }
+  bool RegisterPublishType(PublishTypeWrapper&& wrapper) { return channel_backend_manager_.RegisterPublishType(std::move(wrapper)); }
+  void Publish(MsgWrapper&& wrapper) { channel_backend_manager_.Publish(std::move(wrapper)); }
 
   const ChannelRegistry* GetChannelRegistry() const;
   const std::vector<ChannelBackendBase*>& GetUsedChannelBackend() const;
 
- private:
+private:
   void RegisterLocalChannelBackend();
   void RegisterDebugLogFilter();
 
- private:
+private:
   Options options_;
   std::atomic<State> state_ = State::kPreInit;
   std::shared_ptr<aimrt::common::util::LoggerWrapper> logger_ptr_;
@@ -119,7 +111,7 @@ class ChannelManager {
   ChannelBackendManager channel_backend_manager_;
 
   class ChannelHandleProxyWrap {
-   public:
+  public:
     ChannelHandleProxyWrap(
         std::string_view input_pkg_path,
         std::string_view input_module_name,

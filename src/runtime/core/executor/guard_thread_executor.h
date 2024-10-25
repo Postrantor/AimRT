@@ -16,7 +16,7 @@
 namespace aimrt::runtime::core::executor {
 
 class GuardThreadExecutor {
- public:
+public:
   struct Options {
     std::string name = "aimrt_guard";
     std::string thread_sched_policy;
@@ -31,10 +31,8 @@ class GuardThreadExecutor {
     kShutdown,
   };
 
- public:
-  GuardThreadExecutor()
-      : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()),
-        base_(GenBase(this)) {}
+public:
+  GuardThreadExecutor() : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()), base_(GenBase(this)) {}
   ~GuardThreadExecutor() = default;
 
   void Initialize(YAML::Node options_node);
@@ -45,9 +43,7 @@ class GuardThreadExecutor {
   std::string_view Name() const { return name_; }
 
   bool ThreadSafe() const { return true; }
-  bool IsInCurrentExecutor() const {
-    return std::this_thread::get_id() == thread_id_;
-  }
+  bool IsInCurrentExecutor() const { return std::this_thread::get_id() == thread_id_; }
   bool SupportTimerSchedule() const { return false; }
 
   void Execute(aimrt::executor::Task&& task);
@@ -61,35 +57,24 @@ class GuardThreadExecutor {
 
   const aimrt_executor_base_t* NativeHandle() const { return &base_; }
 
- private:
+private:
   static aimrt_executor_base_t GenBase(void* impl) {
     return aimrt_executor_base_t{
-        .type = [](void* impl) -> aimrt_string_view_t {
-          return aimrt::util::ToAimRTStringView(
-              static_cast<GuardThreadExecutor*>(impl)->Type());
-        },
-        .name = [](void* impl) -> aimrt_string_view_t {
-          return aimrt::util::ToAimRTStringView(
-              static_cast<GuardThreadExecutor*>(impl)->Name());
-        },
-        .is_thread_safe = [](void* impl) -> bool {
-          return static_cast<GuardThreadExecutor*>(impl)->ThreadSafe();
-        },
-        .is_in_current_executor = [](void* impl) -> bool {
-          return static_cast<GuardThreadExecutor*>(impl)->IsInCurrentExecutor();
-        },
-        .is_support_timer_schedule = [](void* impl) -> bool {
-          return static_cast<GuardThreadExecutor*>(impl)->SupportTimerSchedule();
-        },
-        .execute = [](void* impl, aimrt_function_base_t* task) {
-          static_cast<GuardThreadExecutor*>(impl)->Execute(aimrt::executor::Task(task));  //
-        },
+        .type = [](void* impl) -> aimrt_string_view_t { return aimrt::util::ToAimRTStringView(static_cast<GuardThreadExecutor*>(impl)->Type()); },
+        .name = [](void* impl) -> aimrt_string_view_t { return aimrt::util::ToAimRTStringView(static_cast<GuardThreadExecutor*>(impl)->Name()); },
+        .is_thread_safe = [](void* impl) -> bool { return static_cast<GuardThreadExecutor*>(impl)->ThreadSafe(); },
+        .is_in_current_executor = [](void* impl) -> bool { return static_cast<GuardThreadExecutor*>(impl)->IsInCurrentExecutor(); },
+        .is_support_timer_schedule = [](void* impl) -> bool { return static_cast<GuardThreadExecutor*>(impl)->SupportTimerSchedule(); },
+        .execute =
+            [](void* impl, aimrt_function_base_t* task) {
+              static_cast<GuardThreadExecutor*>(impl)->Execute(aimrt::executor::Task(task));  //
+            },
         .now = nullptr,            // TODO, support time schedule
         .execute_at_ns = nullptr,  // TODO, support time schedule
         .impl = impl};
   }
 
- private:
+private:
   Options options_;
   std::atomic<State> state_ = State::kPreInit;
   std::shared_ptr<aimrt::common::util::LoggerWrapper> logger_ptr_;

@@ -14,8 +14,7 @@ struct convert<aimrt::runtime::core::executor::TimeWheelExecutor::Options> {
     Node node;
 
     node["bind_executor"] = rhs.bind_executor;
-    node["dt_us"] = static_cast<uint64_t>(
-        std::chrono::duration_cast<std::chrono::microseconds>(rhs.dt).count());
+    node["dt_us"] = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(rhs.dt).count());
     node["wheel_size"] = rhs.wheel_size;
     node["thread_sched_policy"] = rhs.thread_sched_policy;
     node["thread_bind_cpu"] = rhs.thread_bind_cpu;
@@ -26,16 +25,11 @@ struct convert<aimrt::runtime::core::executor::TimeWheelExecutor::Options> {
   static bool decode(const Node& node, Options& rhs) {
     if (!node.IsMap()) return false;
 
-    if (node["bind_executor"])
-      rhs.bind_executor = node["bind_executor"].as<std::string>();
-    if (node["dt_us"])
-      rhs.dt = std::chrono::microseconds(node["dt_us"].as<uint64_t>());
-    if (node["wheel_size"])
-      rhs.wheel_size = node["wheel_size"].as<std::vector<size_t>>();
-    if (node["thread_sched_policy"])
-      rhs.thread_sched_policy = node["thread_sched_policy"].as<std::string>();
-    if (node["thread_bind_cpu"])
-      rhs.thread_bind_cpu = node["thread_bind_cpu"].as<std::vector<uint32_t>>();
+    if (node["bind_executor"]) rhs.bind_executor = node["bind_executor"].as<std::string>();
+    if (node["dt_us"]) rhs.dt = std::chrono::microseconds(node["dt_us"].as<uint64_t>());
+    if (node["wheel_size"]) rhs.wheel_size = node["wheel_size"].as<std::vector<size_t>>();
+    if (node["thread_sched_policy"]) rhs.thread_sched_policy = node["thread_sched_policy"].as<std::string>();
+    if (node["thread_bind_cpu"]) rhs.thread_bind_cpu = node["thread_bind_cpu"].as<std::vector<uint32_t>>();
 
     return true;
   }
@@ -44,37 +38,26 @@ struct convert<aimrt::runtime::core::executor::TimeWheelExecutor::Options> {
 
 namespace aimrt::runtime::core::executor {
 
-void TimeWheelExecutor::Initialize(std::string_view name,
-                                   YAML::Node options_node) {
-  AIMRT_CHECK_ERROR_THROW(
-      get_executor_func_,
-      "Get executor function is not set before initialize.");
+void TimeWheelExecutor::Initialize(std::string_view name, YAML::Node options_node) {
+  AIMRT_CHECK_ERROR_THROW(get_executor_func_, "Get executor function is not set before initialize.");
 
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-      "TimeWheelExecutor can only be initialized once.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "TimeWheelExecutor can only be initialized once.");
 
   name_ = std::string(name);
 
-  if (options_node && !options_node.IsNull())
-    options_ = options_node.as<Options>();
+  if (options_node && !options_node.IsNull()) options_ = options_node.as<Options>();
 
   if (!options_.bind_executor.empty()) {
     bind_executor_ref_ = get_executor_func_(options_.bind_executor);
 
-    AIMRT_CHECK_ERROR_THROW(
-        bind_executor_ref_,
-        "Can not get executor {}.", options_.bind_executor);
+    AIMRT_CHECK_ERROR_THROW(bind_executor_ref_, "Can not get executor {}.", options_.bind_executor);
 
-    AIMRT_CHECK_ERROR_THROW(
-        bind_executor_ref_.Name() != Name(),
-        "Bind executor '{}' is self!", options_.bind_executor);
+    AIMRT_CHECK_ERROR_THROW(bind_executor_ref_.Name() != Name(), "Bind executor '{}' is self!", options_.bind_executor);
 
     thread_safe_ = bind_executor_ref_.ThreadSafe();
   }
 
-  dt_count_ = static_cast<uint64_t>(
-      std::chrono::duration_cast<std::chrono::nanoseconds>(options_.dt).count());
+  dt_count_ = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(options_.dt).count());
 
   uint64_t cur_scale = 1;
   for (size_t ii = 0; ii < options_.wheel_size.size(); ++ii) {
@@ -110,9 +93,7 @@ void TimeWheelExecutor::Initialize(std::string_view name,
 }
 
 void TimeWheelExecutor::Start() {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kStart) == State::kInit,
-      "Method can only be called when state is 'Init'.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'.");
 
   timer_thread_ptr_ = std::make_unique<std::thread>(std::bind(&TimeWheelExecutor::TimerLoop, this));
 
@@ -120,11 +101,9 @@ void TimeWheelExecutor::Start() {
 }
 
 void TimeWheelExecutor::Shutdown() {
-  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-    return;
+  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 
-  if (timer_thread_ptr_ && timer_thread_ptr_->joinable())
-    timer_thread_ptr_->join();
+  if (timer_thread_ptr_ && timer_thread_ptr_->joinable()) timer_thread_ptr_->join();
 
   timer_thread_ptr_.reset();
   timing_task_map_.clear();
@@ -134,9 +113,7 @@ void TimeWheelExecutor::Shutdown() {
 
 bool TimeWheelExecutor::IsInCurrentExecutor() const noexcept {
   try {
-    return bind_executor_ref_
-               ? bind_executor_ref_.IsInCurrentExecutor()
-               : (tid_ == std::this_thread::get_id());
+    return bind_executor_ref_ ? bind_executor_ref_.IsInCurrentExecutor() : (tid_ == std::this_thread::get_id());
   } catch (const std::exception& e) {
     AIMRT_ERROR("{}", e.what());
   }
@@ -160,12 +137,10 @@ void TimeWheelExecutor::Execute(aimrt::executor::Task&& task) noexcept {
 std::chrono::system_clock::time_point TimeWheelExecutor::Now() const noexcept {
   std::shared_lock<std::shared_mutex> lck(tick_mutex_);
 
-  return aimrt::common::util::GetTimePointFromTimestampNs(
-      current_tick_count_ * dt_count_ + start_time_point_);
+  return aimrt::common::util::GetTimePointFromTimestampNs(current_tick_count_ * dt_count_ + start_time_point_);
 }
 
-void TimeWheelExecutor::ExecuteAt(
-    std::chrono::system_clock::time_point tp, aimrt::executor::Task&& task) noexcept {
+void TimeWheelExecutor::ExecuteAt(std::chrono::system_clock::time_point tp, aimrt::executor::Task&& task) noexcept {
   try {
     uint64_t virtual_tp = aimrt::common::util::GetTimestampNs(tp) - start_time_point_;
 
@@ -187,26 +162,21 @@ void TimeWheelExecutor::ExecuteAt(
         auto pos = (diff_tick_count + temp_current_tick_count) % options_.wheel_size[ii];
 
         // TODO：基于时间将任务排序后插进去
-        timing_wheel_vec_[ii].wheel[pos].emplace_back(
-            TaskWithTimestamp{virtual_tp / dt_count_, std::move(task)});
+        timing_wheel_vec_[ii].wheel[pos].emplace_back(TaskWithTimestamp{virtual_tp / dt_count_, std::move(task)});
         return;
       }
       diff_tick_count /= options_.wheel_size[ii];
       temp_current_tick_count /= options_.wheel_size[ii];
     }
 
-    timing_task_map_[diff_tick_count + temp_current_tick_count].emplace_back(
-        TaskWithTimestamp{virtual_tp / dt_count_, std::move(task)});
+    timing_task_map_[diff_tick_count + temp_current_tick_count].emplace_back(TaskWithTimestamp{virtual_tp / dt_count_, std::move(task)});
   } catch (const std::exception& e) {
     AIMRT_ERROR("{}", e.what());
   }
 }
 
-void TimeWheelExecutor::RegisterGetExecutorFunc(
-    const std::function<aimrt::executor::ExecutorRef(std::string_view)>& get_executor_func) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kPreInit,
-      "Method can only be called when state is 'PreInit'.");
+void TimeWheelExecutor::RegisterGetExecutorFunc(const std::function<aimrt::executor::ExecutorRef(std::string_view)>& get_executor_func) {
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
   get_executor_func_ = get_executor_func;
 }
 
@@ -220,8 +190,7 @@ void TimeWheelExecutor::TimerLoop() {
     aimrt::runtime::core::util::BindCpuForCurrentThread(options_.thread_bind_cpu);
     aimrt::runtime::core::util::SetCpuSchedForCurrentThread(options_.thread_sched_policy);
   } catch (const std::exception& e) {
-    AIMRT_WARN("Set thread policy for time manipulator executor '{}' get exception, {}",
-               Name(), e.what());
+    AIMRT_WARN("Set thread policy for time manipulator executor '{}' get exception, {}", Name(), e.what());
   }
 
   auto last_loop_time_point = std::chrono::system_clock::now();
@@ -249,9 +218,7 @@ void TimeWheelExecutor::TimerLoop() {
           real_dt -= real_dt;
         }
 
-        std::this_thread::sleep_until(
-            last_loop_time_point +=
-            std::chrono::duration_cast<std::chrono::system_clock::time_point::duration>(sleep_time));
+        std::this_thread::sleep_until(last_loop_time_point += std::chrono::duration_cast<std::chrono::system_clock::time_point::duration>(sleep_time));
 
       } while (state_.load() != State::kShutdown && real_dt.count());
 
@@ -306,8 +273,7 @@ void TimeWheelExecutor::TimerLoop() {
 
       tick_mutex_.unlock();
     } catch (const std::exception& e) {
-      AIMRT_FATAL("Time manipulator executor '{}' run loop get exception, {}",
-                  Name(), e.what());
+      AIMRT_FATAL("Time manipulator executor '{}' run loop get exception, {}", Name(), e.what());
     }
   }
 }

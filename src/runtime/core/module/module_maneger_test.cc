@@ -12,7 +12,7 @@ namespace aimrt::runtime::core::module {
 TEST(ModuleManagerTest, ModuleManagerTest) {
   // 模拟一个模块继承模块基
   class MockModule : public aimrt::ModuleBase {
-   public:
+  public:
     ModuleInfo Info() const override {
       ModuleInfo info;
       info.name = TESTMODULE;
@@ -29,9 +29,7 @@ TEST(ModuleManagerTest, ModuleManagerTest) {
       return true;
     }
 
-    void Shutdown() override {
-      is_shutdown_ = true;
-    }
+    void Shutdown() override { is_shutdown_ = true; }
 
     bool is_initialized_ = false;
     bool is_start_ = false;

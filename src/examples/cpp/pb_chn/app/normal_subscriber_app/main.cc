@@ -42,8 +42,7 @@ int32_t main(int32_t argc, char** argv) {
     core.Initialize(options);
 
     // Create Module
-    aimrt::CoreRef module_handle(
-        core.GetModuleManager().CreateModule("NormalSubscriberModule"));
+    aimrt::CoreRef module_handle(core.GetModuleManager().CreateModule("NormalSubscriberModule"));
 
     std::string topic_name = "test_topic";
 
@@ -56,14 +55,11 @@ int32_t main(int32_t argc, char** argv) {
 
     // Subscribe event
     auto subscriber = module_handle.GetChannelHandle().GetSubscriber(topic_name);
-    AIMRT_HL_CHECK_ERROR_THROW(module_handle.GetLogger(),
-                               subscriber, "Get subscriber for topic '{}' failed.", topic_name);
+    AIMRT_HL_CHECK_ERROR_THROW(module_handle.GetLogger(), subscriber, "Get subscriber for topic '{}' failed.", topic_name);
 
     bool ret = aimrt::channel::Subscribe<aimrt::protocols::example::ExampleEventMsg>(
-        subscriber,
-        [module_handle](const std::shared_ptr<const aimrt::protocols::example::ExampleEventMsg>& data) {
-          AIMRT_HL_INFO(module_handle.GetLogger(),
-                        "Receive new pb event, data: {}", aimrt::Pb2CompactJson(*data));
+        subscriber, [module_handle](const std::shared_ptr<const aimrt::protocols::example::ExampleEventMsg>& data) {
+          AIMRT_HL_INFO(module_handle.GetLogger(), "Receive new pb event, data: {}", aimrt::Pb2CompactJson(*data));
         });
     AIMRT_HL_CHECK_ERROR_THROW(module_handle.GetLogger(), ret, "Subscribe failed.");
 
@@ -75,8 +71,7 @@ int32_t main(int32_t argc, char** argv) {
 
     global_core_ptr = nullptr;
   } catch (const std::exception& e) {
-    std::cout << "AimRT run with exception and exit. " << e.what()
-              << std::endl;
+    std::cout << "AimRT run with exception and exit. " << e.what() << std::endl;
     return -1;
   }
 

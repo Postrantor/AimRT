@@ -20,8 +20,7 @@ bool NormalRpcAsyncClientModule::Initialize(aimrt::CoreRef core) {
 
     // Get executor handle
     executor_ = core_.GetExecutorManager().GetExecutor("work_thread_pool");
-    AIMRT_CHECK_ERROR_THROW(executor_ && executor_.SupportTimerSchedule(),
-                            "Get executor 'work_thread_pool' failed.");
+    AIMRT_CHECK_ERROR_THROW(executor_ && executor_.SupportTimerSchedule(), "Get executor 'work_thread_pool' failed.");
 
     // Get rpc handle
     auto rpc_handle = core_.GetRpcHandle();
@@ -90,20 +89,15 @@ void NormalRpcAsyncClientModule::MainLoopFunc() {
 
   AIMRT_INFO("start new rpc call. req:\n{}", example_ros2::srv::to_yaml(*req_ptr));
 
-  proxy.RosTestRpc(
-      ctx_ptr, *req_ptr, *rsp_ptr,
-      [this, ctx_ptr, req_ptr, rsp_ptr](aimrt::rpc::Status status) {
-        if (status.OK()) {
-          AIMRT_INFO("Client get rpc ret, status: {}, rsp: {}", status.ToString(),
-                     example_ros2::srv::to_yaml(*rsp_ptr));
-        } else {
-          AIMRT_WARN("Client get rpc error ret, status: {}", status.ToString());
-        }
-      });
+  proxy.RosTestRpc(ctx_ptr, *req_ptr, *rsp_ptr, [this, ctx_ptr, req_ptr, rsp_ptr](aimrt::rpc::Status status) {
+    if (status.OK()) {
+      AIMRT_INFO("Client get rpc ret, status: {}, rsp: {}", status.ToString(), example_ros2::srv::to_yaml(*rsp_ptr));
+    } else {
+      AIMRT_WARN("Client get rpc error ret, status: {}", status.ToString());
+    }
+  });
 
-  executor_.ExecuteAfter(
-      std::chrono::milliseconds(static_cast<uint32_t>(1000 / rpc_frq_)),
-      std::bind(&NormalRpcAsyncClientModule::MainLoopFunc, this));
+  executor_.ExecuteAfter(std::chrono::milliseconds(static_cast<uint32_t>(1000 / rpc_frq_)), std::bind(&NormalRpcAsyncClientModule::MainLoopFunc, this));
 }
 
 }  // namespace aimrt::examples::cpp::ros2_rpc::normal_rpc_async_client_module

@@ -18,7 +18,7 @@
 namespace aimrt::runtime::core::configurator {
 
 class ConfiguratorManager {
- public:
+public:
   struct Options {
     std::filesystem::path temp_cfg_path = "./cfg/tmp";
   };
@@ -30,9 +30,8 @@ class ConfiguratorManager {
     kShutdown,
   };
 
- public:
-  ConfiguratorManager()
-      : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
+public:
+  ConfiguratorManager() : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
   ~ConfiguratorManager() = default;
 
   ConfiguratorManager(const ConfiguratorManager&) = delete;
@@ -59,7 +58,7 @@ class ConfiguratorManager {
   void SetLogger(const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr) { logger_ptr_ = logger_ptr; }
   const aimrt::common::util::LoggerWrapper& GetLogger() const { return *logger_ptr_; }
 
- private:
+private:
   std::filesystem::path cfg_file_path_;
   Options options_;
   std::atomic<State> state_ = State::kPreInit;

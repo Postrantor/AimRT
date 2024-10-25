@@ -12,10 +12,7 @@ struct convert<aimrt::runtime::core::executor::AsioStrandExecutor::Options> {
     Node node;
 
     node["bind_asio_thread_executor_name"] = rhs.bind_asio_thread_executor_name;
-    node["timeout_alarm_threshold_us"] = static_cast<uint64_t>(
-        std::chrono::duration_cast<std::chrono::microseconds>(
-            rhs.timeout_alarm_threshold_us)
-            .count());
+    node["timeout_alarm_threshold_us"] = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(rhs.timeout_alarm_threshold_us).count());
 
     return node;
   }
@@ -23,12 +20,8 @@ struct convert<aimrt::runtime::core::executor::AsioStrandExecutor::Options> {
   static bool decode(const Node& node, Options& rhs) {
     if (!node.IsMap()) return false;
 
-    if (node["bind_asio_thread_executor_name"])
-      rhs.bind_asio_thread_executor_name =
-          node["bind_asio_thread_executor_name"].as<std::string>();
-    if (node["timeout_alarm_threshold_us"])
-      rhs.timeout_alarm_threshold_us = std::chrono::microseconds(
-          node["timeout_alarm_threshold_us"].as<uint64_t>());
+    if (node["bind_asio_thread_executor_name"]) rhs.bind_asio_thread_executor_name = node["bind_asio_thread_executor_name"].as<std::string>();
+    if (node["timeout_alarm_threshold_us"]) rhs.timeout_alarm_threshold_us = std::chrono::microseconds(node["timeout_alarm_threshold_us"].as<uint64_t>());
 
     return true;
   }
@@ -37,44 +30,30 @@ struct convert<aimrt::runtime::core::executor::AsioStrandExecutor::Options> {
 
 namespace aimrt::runtime::core::executor {
 
-void AsioStrandExecutor::Initialize(std::string_view name,
-                                    YAML::Node options_node) {
-  AIMRT_CHECK_ERROR_THROW(get_asio_handle_,
-                          "Get asio handle is not set before initialize.");
+void AsioStrandExecutor::Initialize(std::string_view name, YAML::Node options_node) {
+  AIMRT_CHECK_ERROR_THROW(get_asio_handle_, "Get asio handle is not set before initialize.");
 
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-      "AsioStrandExecutor can only be initialized once.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "AsioStrandExecutor can only be initialized once.");
 
   name_ = std::string(name);
 
-  if (options_node && !options_node.IsNull())
-    options_ = options_node.as<Options>();
+  if (options_node && !options_node.IsNull()) options_ = options_node.as<Options>();
 
-  AIMRT_CHECK_ERROR_THROW(
-      !options_.bind_asio_thread_executor_name.empty(),
-      "Invalide bind asio thread executor name, name is empty.");
+  AIMRT_CHECK_ERROR_THROW(!options_.bind_asio_thread_executor_name.empty(), "Invalide bind asio thread executor name, name is empty.");
 
   auto* io_ptr = get_asio_handle_(options_.bind_asio_thread_executor_name);
 
-  AIMRT_CHECK_ERROR_THROW(
-      io_ptr,
-      "Invalide bind asio thread executor name, can not get asio io context.");
+  AIMRT_CHECK_ERROR_THROW(io_ptr, "Invalide bind asio thread executor name, can not get asio io context.");
 
   strand_ptr_ = std::make_unique<Strand>(asio::make_strand(*io_ptr));
 
   options_node = options_;
 }
 
-void AsioStrandExecutor::Start() {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kStart) == State::kInit,
-      "Method can only be called when state is 'Init'.");
-}
+void AsioStrandExecutor::Start() { AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'."); }
 
 void AsioStrandExecutor::Shutdown() {
-  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-    return;
+  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 }
 
 void AsioStrandExecutor::Execute(aimrt::executor::Task&& task) noexcept {
@@ -85,16 +64,13 @@ void AsioStrandExecutor::Execute(aimrt::executor::Task&& task) noexcept {
   }
 }
 
-void AsioStrandExecutor::ExecuteAt(
-    std::chrono::system_clock::time_point tp, aimrt::executor::Task&& task) noexcept {
+void AsioStrandExecutor::ExecuteAt(std::chrono::system_clock::time_point tp, aimrt::executor::Task&& task) noexcept {
   try {
     auto timer_ptr = std::make_shared<asio::system_timer>(*strand_ptr_);
     timer_ptr->expires_at(tp);
-    timer_ptr->async_wait([this, timer_ptr,
-                           task{std::move(task)}](asio::error_code ec) {
+    timer_ptr->async_wait([this, timer_ptr, task{std::move(task)}](asio::error_code ec) {
       if (ec) [[unlikely]] {
-        AIMRT_ERROR("Asio strand executor '{}' timer get err, code '{}', msg: {}",
-                    Name(), ec.value(), ec.message());
+        AIMRT_ERROR("Asio strand executor '{}' timer get err, code '{}', msg: {}", Name(), ec.value(), ec.message());
         return;
       }
 
@@ -106,8 +82,7 @@ void AsioStrandExecutor::ExecuteAt(
           dif_time <= options_.timeout_alarm_threshold_us,
           "Asio strand executor '{}' timer delay too much, error time value '{}', require '{}'. "
           "Perhaps the CPU load is too high",
-          Name(), std::chrono::duration_cast<std::chrono::microseconds>(dif_time),
-          options_.timeout_alarm_threshold_us);
+          Name(), std::chrono::duration_cast<std::chrono::microseconds>(dif_time), options_.timeout_alarm_threshold_us);
     });
   } catch (const std::exception& e) {
     AIMRT_ERROR("{}", e.what());
@@ -115,9 +90,7 @@ void AsioStrandExecutor::ExecuteAt(
 }
 
 void AsioStrandExecutor::RegisterGetAsioHandle(GetAsioHandle&& handle) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kPreInit,
-      "Method can only be called when state is 'PreInit'.");
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
   get_asio_handle_ = std::move(handle);
 }

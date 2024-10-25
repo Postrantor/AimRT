@@ -19,7 +19,7 @@
 namespace aimrt::runtime::core::rpc {
 
 class RpcManager {
- public:
+public:
   struct Options {
     struct BackendOptions {
       std::string type;
@@ -49,9 +49,8 @@ class RpcManager {
     kShutdown,
   };
 
- public:
-  RpcManager()
-      : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
+public:
+  RpcManager() : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
   ~RpcManager() = default;
 
   RpcManager(const RpcManager&) = delete;
@@ -71,8 +70,7 @@ class RpcManager {
 
   void RegisterRpcBackend(std::unique_ptr<RpcBackendBase>&& rpc_backend_ptr);
 
-  void RegisterGetExecutorFunc(
-      const std::function<aimrt::executor::ExecutorRef(std::string_view)>& get_executor_func);
+  void RegisterGetExecutorFunc(const std::function<aimrt::executor::ExecutorRef(std::string_view)>& get_executor_func);
 
   const RpcHandleProxy& GetRpcHandleProxy(const util::ModuleDetailInfo& module_info);
   const RpcHandleProxy& GetRpcHandleProxy(std::string_view module_name = "core") {
@@ -87,11 +85,11 @@ class RpcManager {
   const RpcRegistry* GetRpcRegistry() const;
   const std::vector<RpcBackendBase*>& GetUsedRpcBackend() const;
 
- private:
+private:
   void RegisterLocalRpcBackend();
   void RegisterDebugLogFilter();
 
- private:
+private:
   Options options_;
   std::atomic<State> state_ = State::kPreInit;
   std::shared_ptr<aimrt::common::util::LoggerWrapper> logger_ptr_;

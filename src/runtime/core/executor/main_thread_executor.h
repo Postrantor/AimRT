@@ -10,7 +10,7 @@
 namespace aimrt::runtime::core::executor {
 
 class MainThreadExecutor {
- public:
+public:
   struct Options {
     std::string name = "aimrt_main";
     std::string thread_sched_policy;
@@ -24,9 +24,8 @@ class MainThreadExecutor {
     kShutdown,
   };
 
- public:
-  MainThreadExecutor()
-      : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
+public:
+  MainThreadExecutor() : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
   ~MainThreadExecutor() = default;
 
   void Initialize(YAML::Node options_node);
@@ -40,7 +39,7 @@ class MainThreadExecutor {
   void SetLogger(const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr) { logger_ptr_ = logger_ptr; }
   const aimrt::common::util::LoggerWrapper& GetLogger() const { return *logger_ptr_; }
 
- private:
+private:
   Options options_;
   std::atomic<State> state_ = State::kPreInit;
   std::shared_ptr<aimrt::common::util::LoggerWrapper> logger_ptr_;

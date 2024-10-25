@@ -14,7 +14,7 @@
 namespace aimrt::plugins::ros2_plugin {
 
 class Ros2RpcBackend : public runtime::core::rpc::RpcBackendBase {
- public:
+public:
   struct Options {
     struct QosOptions {
       /**
@@ -90,7 +90,7 @@ class Ros2RpcBackend : public runtime::core::rpc::RpcBackendBase {
     std::vector<ServerOptions> servers_options;
   };
 
- public:
+public:
   Ros2RpcBackend() = default;
   ~Ros2RpcBackend() override = default;
 
@@ -102,29 +102,20 @@ class Ros2RpcBackend : public runtime::core::rpc::RpcBackendBase {
 
   std::list<std::pair<std::string, std::string>> GenInitializationReport() const noexcept override;
 
-  void SetRpcRegistry(const runtime::core::rpc::RpcRegistry* rpc_registry_ptr) noexcept override {
-    rpc_registry_ptr_ = rpc_registry_ptr;
-  }
+  void SetRpcRegistry(const runtime::core::rpc::RpcRegistry* rpc_registry_ptr) noexcept override { rpc_registry_ptr_ = rpc_registry_ptr; }
 
-  bool RegisterServiceFunc(
-      const runtime::core::rpc::ServiceFuncWrapper& service_func_wrapper) noexcept override;
-  bool RegisterClientFunc(
-      const runtime::core::rpc::ClientFuncWrapper& client_func_wrapper) noexcept override;
-  void Invoke(
-      const std::shared_ptr<runtime::core::rpc::InvokeWrapper>& client_invoke_wrapper_ptr) noexcept override;
+  bool RegisterServiceFunc(const runtime::core::rpc::ServiceFuncWrapper& service_func_wrapper) noexcept override;
+  bool RegisterClientFunc(const runtime::core::rpc::ClientFuncWrapper& client_func_wrapper) noexcept override;
+  void Invoke(const std::shared_ptr<runtime::core::rpc::InvokeWrapper>& client_invoke_wrapper_ptr) noexcept override;
 
   void RegisterGetExecutorFunc(const std::function<executor::ExecutorRef(std::string_view)>& get_executor_func);
 
-  void SetNodePtr(const std::shared_ptr<rclcpp::Node>& ros2_node_ptr) {
-    ros2_node_ptr_ = ros2_node_ptr;
-  }
+  void SetNodePtr(const std::shared_ptr<rclcpp::Node>& ros2_node_ptr) { ros2_node_ptr_ = ros2_node_ptr; }
 
   static std::string GetRemappedFuncName(const std::string& input_string, const std::string& matching_rule, const std::string& remapping_rule);
 
- private:
-  static bool CheckRosFunc(std::string_view func_name) {
-    return (func_name.substr(0, 5) == "ros2:");
-  }
+private:
+  static bool CheckRosFunc(std::string_view func_name) { return (func_name.substr(0, 5) == "ros2:"); }
 
   std::string GetRealRosFuncName(std::string_view func_name) {
     auto find_itr = func_name.find(':');
@@ -133,10 +124,10 @@ class Ros2RpcBackend : public runtime::core::rpc::RpcBackendBase {
     return rclcpp::extend_name_with_sub_namespace(ros_func_name, ros2_node_ptr_->get_sub_namespace());
   }
 
- private:
+private:
   rclcpp::QoS GetQos(const Options::QosOptions& qos_option);
 
- private:
+private:
   enum class State : uint32_t {
     kPreInit,
     kInit,

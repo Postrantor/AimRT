@@ -30,18 +30,14 @@ enum TimeConstant {
  * @param t 时间点
  * @return uint64_t 纳秒时间戳
  */
-inline uint64_t GetTimestampNs(std::chrono::system_clock::time_point t) {
-  return std::chrono::duration_cast<std::chrono::nanoseconds>(t.time_since_epoch()).count();
-}
+inline uint64_t GetTimestampNs(std::chrono::system_clock::time_point t) { return std::chrono::duration_cast<std::chrono::nanoseconds>(t.time_since_epoch()).count(); }
 
 /**
  * @brief 获取当前时间纳秒时间戳
  *
  * @return uint64_t 当前时间纳秒时间戳
  */
-inline uint64_t GetCurTimestampNs() {
-  return GetTimestampNs(std::chrono::system_clock::now());
-}
+inline uint64_t GetCurTimestampNs() { return GetTimestampNs(std::chrono::system_clock::now()); }
 
 /**
  * @brief 从纳秒时间戳转换为system_clock::time_point
@@ -50,9 +46,7 @@ inline uint64_t GetCurTimestampNs() {
  * @return const std::chrono::system_clock::time_point
  */
 inline const std::chrono::system_clock::time_point GetTimePointFromTimestampNs(uint64_t ns) {
-  return std::chrono::system_clock::time_point(
-      std::chrono::duration_cast<std::chrono::system_clock::time_point::duration>(
-          std::chrono::nanoseconds(ns)));
+  return std::chrono::system_clock::time_point(std::chrono::duration_cast<std::chrono::system_clock::time_point::duration>(std::chrono::nanoseconds(ns)));
 }
 
 /**
@@ -61,18 +55,14 @@ inline const std::chrono::system_clock::time_point GetTimePointFromTimestampNs(u
  * @param t 时间点
  * @return uint64_t 微秒时间戳
  */
-inline uint64_t GetTimestampUs(std::chrono::system_clock::time_point t) {
-  return std::chrono::duration_cast<std::chrono::microseconds>(t.time_since_epoch()).count();
-}
+inline uint64_t GetTimestampUs(std::chrono::system_clock::time_point t) { return std::chrono::duration_cast<std::chrono::microseconds>(t.time_since_epoch()).count(); }
 
 /**
  * @brief 获取当前时间微秒时间戳
  *
  * @return uint64_t 当前时间微秒时间戳
  */
-inline uint64_t GetCurTimestampUs() {
-  return GetTimestampUs(std::chrono::system_clock::now());
-}
+inline uint64_t GetCurTimestampUs() { return GetTimestampUs(std::chrono::system_clock::now()); }
 
 /**
  * @brief 从微秒时间戳转换为system_clock::time_point
@@ -81,9 +71,7 @@ inline uint64_t GetCurTimestampUs() {
  * @return const std::chrono::system_clock::time_point
  */
 inline const std::chrono::system_clock::time_point GetTimePointFromTimestampUs(uint64_t us) {
-  return std::chrono::system_clock::time_point(
-      std::chrono::duration_cast<std::chrono::system_clock::time_point::duration>(
-          std::chrono::microseconds(us)));
+  return std::chrono::system_clock::time_point(std::chrono::duration_cast<std::chrono::system_clock::time_point::duration>(std::chrono::microseconds(us)));
 }
 
 /**
@@ -92,18 +80,14 @@ inline const std::chrono::system_clock::time_point GetTimePointFromTimestampUs(u
  * @param t 时间点
  * @return uint64_t 毫秒时间戳
  */
-inline uint64_t GetTimestampMs(std::chrono::system_clock::time_point t) {
-  return std::chrono::duration_cast<std::chrono::milliseconds>(t.time_since_epoch()).count();
-}
+inline uint64_t GetTimestampMs(std::chrono::system_clock::time_point t) { return std::chrono::duration_cast<std::chrono::milliseconds>(t.time_since_epoch()).count(); }
 
 /**
  * @brief 获取当前时间毫秒时间戳
  *
  * @return uint64_t 当前时间毫秒时间戳
  */
-inline uint64_t GetCurTimestampMs() {
-  return GetTimestampMs(std::chrono::system_clock::now());
-}
+inline uint64_t GetCurTimestampMs() { return GetTimestampMs(std::chrono::system_clock::now()); }
 
 /**
  * @brief 从毫秒时间戳转换为system_clock::time_point
@@ -112,9 +96,7 @@ inline uint64_t GetCurTimestampMs() {
  * @return const std::chrono::system_clock::time_point
  */
 inline const std::chrono::system_clock::time_point GetTimePointFromTimestampMs(uint64_t ms) {
-  return std::chrono::system_clock::time_point(
-      std::chrono::duration_cast<std::chrono::system_clock::time_point::duration>(
-          std::chrono::milliseconds(ms)));
+  return std::chrono::system_clock::time_point(std::chrono::duration_cast<std::chrono::system_clock::time_point::duration>(std::chrono::milliseconds(ms)));
 }
 
 /**
@@ -123,18 +105,14 @@ inline const std::chrono::system_clock::time_point GetTimePointFromTimestampMs(u
  * @param t 时间点
  * @return uint64_t 秒时间戳
  */
-inline uint64_t GetTimestampSec(std::chrono::system_clock::time_point t) {
-  return std::chrono::duration_cast<std::chrono::seconds>(t.time_since_epoch()).count();
-}
+inline uint64_t GetTimestampSec(std::chrono::system_clock::time_point t) { return std::chrono::duration_cast<std::chrono::seconds>(t.time_since_epoch()).count(); }
 
 /**
  * @brief 获取当前时间秒时间戳
  *
  * @return uint64_t 当前时间秒时间戳
  */
-inline uint64_t GetCurTimestampSec() {
-  return GetTimestampSec(std::chrono::system_clock::now());
-}
+inline uint64_t GetCurTimestampSec() { return GetTimestampSec(std::chrono::system_clock::now()); }
 
 /**
  * @brief 从秒时间戳转换为system_clock::time_point
@@ -143,9 +121,7 @@ inline uint64_t GetCurTimestampSec() {
  * @return const std::chrono::system_clock::time_point
  */
 inline const std::chrono::system_clock::time_point GetTimePointFromTimestampSec(uint64_t sec) {
-  return std::chrono::system_clock::time_point(
-      std::chrono::duration_cast<std::chrono::system_clock::time_point::duration>(
-          std::chrono::seconds(sec)));
+  return std::chrono::system_clock::time_point(std::chrono::duration_cast<std::chrono::system_clock::time_point::duration>(std::chrono::seconds(sec)));
 }
 
 /**
@@ -153,9 +129,7 @@ inline const std::chrono::system_clock::time_point GetTimePointFromTimestampSec(
  *
  * @return time_t
  */
-inline time_t GetCurTimeT() {
-  return std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-}
+inline time_t GetCurTimeT() { return std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()); }
 
 /**
  * @brief localtime
@@ -197,15 +171,9 @@ inline struct tm TimeT2TmGm(time_t t) {
  */
 inline std::string_view GetTimeStr(tm t) {
   thread_local char buf[20];  // 4+2+2+1+2+2+2+1
-  snprintf(buf,
-           sizeof(buf),
-           "%04d-%02d-%02d %02d:%02d:%02d",
-           (t.tm_year + 1900) % 10000u,
-           (t.tm_mon + 1) % 100u,
-           (t.tm_mday) % 100u,
-           (t.tm_hour) % 100u,
-           (t.tm_min) % 100u,
-           (t.tm_sec) % 100u);
+  snprintf(
+      buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d", (t.tm_year + 1900) % 10000u, (t.tm_mon + 1) % 100u, (t.tm_mday) % 100u, (t.tm_hour) % 100u, (t.tm_min) % 100u,
+      (t.tm_sec) % 100u);
   return std::string_view(buf);
 }
 
@@ -215,27 +183,21 @@ inline std::string_view GetTimeStr(tm t) {
  * @param t
  * @return std::string_view
  */
-inline std::string_view GetTimeStr(time_t t) {
-  return GetTimeStr(TimeT2TmLocal(t));
-}
+inline std::string_view GetTimeStr(time_t t) { return GetTimeStr(TimeT2TmLocal(t)); }
 
 /**
  * @brief 获取当前时间
  *
  * @return struct tm
  */
-inline struct tm GetCurTm() {
-  return TimeT2TmLocal(GetCurTimeT());
-}
+inline struct tm GetCurTm() { return TimeT2TmLocal(GetCurTimeT()); }
 
 /**
  * @brief 获取当前时间字符串
  *
  * @return std::string_view
  */
-inline std::string_view GetCurTimeStr() {
-  return GetTimeStr(GetCurTimeT());
-}
+inline std::string_view GetCurTimeStr() { return GetTimeStr(GetCurTimeT()); }
 
 /**
  * @brief 判断是否为闰年
@@ -244,9 +206,7 @@ inline std::string_view GetCurTimeStr() {
  * @return true
  * @return false
  */
-inline bool IsLeapYear(uint32_t year) {
-  return (year % 100) ? (year % 4 == 0) : (year % 400 == 0);
-}
+inline bool IsLeapYear(uint32_t year) { return (year % 100) ? (year % 4 == 0) : (year % 400 == 0); }
 
 /**
  * @brief 获取当月天数
@@ -344,9 +304,7 @@ inline uint32_t GetWeekDay(time_t t) {
  * @param t
  * @return uint32_t
  */
-inline uint32_t GetWeekStartTime(time_t t) {
-  return GetDayStartTime(t - (GetWeekDay(t) - 1) * kSecondPerDay);
-}
+inline uint32_t GetWeekStartTime(time_t t) { return GetDayStartTime(t - (GetWeekDay(t) - 1) * kSecondPerDay); }
 
 /**
  * @brief 计算两个时间之间日期差
@@ -356,8 +314,6 @@ inline uint32_t GetWeekStartTime(time_t t) {
  * @param time_zone
  * @return int32_t
  */
-inline int32_t GetDayCount(time_t l_time, time_t r_time, int32_t time_zone) {
-  return (l_time + time_zone - r_time) / kSecondPerDay;
-}
+inline int32_t GetDayCount(time_t l_time, time_t r_time, int32_t time_zone) { return (l_time + time_zone - r_time) / kSecondPerDay; }
 
 }  // namespace aimrt::common::util

@@ -63,8 +63,7 @@ void ZenohManager::RegisterSubscriber(const std::string &keyexpr, MsgHandleFunc 
   z_owned_closure_sample_t z_callback;
   auto function_ptr = std::make_shared<MsgHandleFunc>(std::move(handle));
   z_closure(
-      &z_callback,
-      [](z_loaned_sample_t *sample, void *arg) { (*reinterpret_cast<MsgHandleFunc *>(arg))(sample); },
+      &z_callback, [](z_loaned_sample_t *sample, void *arg) { (*reinterpret_cast<MsgHandleFunc *>(arg))(sample); },
 
       nullptr,
 

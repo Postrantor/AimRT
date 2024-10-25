@@ -11,7 +11,7 @@
 using RosRpcWrapper = ros2_plugin_proto::srv::RosRpcWrapper;
 
 class RosTestRpcWrapperServer : public rclcpp::Node {
- public:
+public:
   RosTestRpcWrapperServer(const std::string& name) : Node(name) {
     RCLCPP_INFO(this->get_logger(), "Start node '%s'", name.c_str());
 
@@ -23,16 +23,14 @@ class RosTestRpcWrapperServer : public rclcpp::Node {
 
     // create service
     service_ = this->create_service<RosRpcWrapper>(
-        "/aimrt_2Eprotocols_2Eexample_2EExampleService/GetFooData",
-        std::bind(&RosTestRpcWrapperServer::CoRpcHandle, this, std::placeholders::_1, std::placeholders::_2),
+        "/aimrt_2Eprotocols_2Eexample_2EExampleService/GetFooData", std::bind(&RosTestRpcWrapperServer::CoRpcHandle, this, std::placeholders::_1, std::placeholders::_2),
         qos.get_rmw_qos_profile());
   }
 
- private:
+private:
   rclcpp::Service<RosRpcWrapper>::SharedPtr service_;
 
-  void CoRpcHandle(const std::shared_ptr<RosRpcWrapper::Request>& wrapper_req,
-                   const std::shared_ptr<RosRpcWrapper::Response>& wrapper_rsp) {
+  void CoRpcHandle(const std::shared_ptr<RosRpcWrapper::Request>& wrapper_req, const std::shared_ptr<RosRpcWrapper::Response>& wrapper_rsp) {
     // deserialize protobuf req from RosRpcWrapper Request
     aimrt::protocols::example::GetFooDataReq req;
 

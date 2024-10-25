@@ -33,9 +33,7 @@ std::string GenerateRandomString(int min_length, int max_length) {
   return result;
 }
 
-std::string GenerateRandomString(int length) {
-  return GenerateRandomString(length, length);
-}
+std::string GenerateRandomString(int length) { return GenerateRandomString(length, length); }
 
 bool BenchmarkRpcClientModule::Initialize(aimrt::CoreRef core) {
   core_ = core;
@@ -68,10 +66,7 @@ bool BenchmarkRpcClientModule::Initialize(aimrt::CoreRef core) {
           bench_plan.parallel = bench_plan_node["parallel"].as<uint32_t>();
           bench_plan.msg_count = bench_plan_node["msg_count"].as<uint32_t>();
 
-          AIMRT_CHECK_ERROR_THROW(
-              bench_plan.parallel <= max_parallel_,
-              "Bench plan parallel({}) is greater than max parallel({})",
-              bench_plan.parallel, max_parallel_);
+          AIMRT_CHECK_ERROR_THROW(bench_plan.parallel <= max_parallel_, "Bench plan parallel({}) is greater than max parallel({})", bench_plan.parallel, max_parallel_);
 
           bench_plans_.emplace_back(bench_plan);
         }
@@ -91,16 +86,12 @@ bool BenchmarkRpcClientModule::Initialize(aimrt::CoreRef core) {
 
     // Check executor
     client_statistics_executor_ = core_.GetExecutorManager().GetExecutor("client_statistics_executor");
-    AIMRT_CHECK_ERROR_THROW(
-        client_statistics_executor_ && client_statistics_executor_.SupportTimerSchedule(),
-        "Get executor 'client_statistics_executor' failed.");
+    AIMRT_CHECK_ERROR_THROW(client_statistics_executor_ && client_statistics_executor_.SupportTimerSchedule(), "Get executor 'client_statistics_executor' failed.");
 
     for (uint32_t ii = 0; ii < max_parallel_; ++ii) {
       auto executor_name = "client_executor_" + std::to_string(ii);
       auto executor = core_.GetExecutorManager().GetExecutor(executor_name);
-      AIMRT_CHECK_ERROR_THROW(
-          executor && executor.SupportTimerSchedule(),
-          "Get executor '{}' failed.", executor_name);
+      AIMRT_CHECK_ERROR_THROW(executor && executor.SupportTimerSchedule(), "Get executor '{}' failed.", executor_name);
 
       executor_vec_.emplace_back(executor);
     }
@@ -244,8 +235,7 @@ co::Task<void> BenchmarkRpcClientModule::StartSinglePlan(uint32_t plan_id, Bench
   uint32_t p99_latency = gather_vec[static_cast<size_t>(correct_count * 0.99)];
   uint32_t p999_latency = gather_vec[static_cast<size_t>(correct_count * 0.999)];
 
-  uint64_t sum_latency =
-      std::accumulate<std::vector<uint32_t>::iterator, uint64_t>(gather_vec.begin(), gather_vec.end(), 0);
+  uint64_t sum_latency = std::accumulate<std::vector<uint32_t>::iterator, uint64_t>(gather_vec.begin(), gather_vec.end(), 0);
   uint32_t avg_latency = sum_latency / correct_count;
 
   if (plan.mode == BenchPlan::PerfMod::kFixedFreq) {
@@ -267,21 +257,8 @@ p90 latency: {} us
 p99 latency: {} us
 p999 latency: {} us
 )str",
-        plan_id,
-        plan.freq,
-        plan.msg_size,
-        plan.parallel,
-        plan.msg_count,
-        total_count,
-        total_time_ms,
-        correct_count,
-        error_rate,
-        min_latency / 1000.0,
-        max_latency / 1000.0,
-        avg_latency / 1000.0,
-        p90_latency / 1000.0,
-        p99_latency / 1000.0,
-        p999_latency / 1000.0);
+        plan_id, plan.freq, plan.msg_size, plan.parallel, plan.msg_count, total_count, total_time_ms, correct_count, error_rate, min_latency / 1000.0, max_latency / 1000.0,
+        avg_latency / 1000.0, p90_latency / 1000.0, p99_latency / 1000.0, p999_latency / 1000.0);
   } else {
     AIMRT_INFO(
         R"str(Benchmark plan {} completed, report:
@@ -301,28 +278,14 @@ p90 latency: {} us
 p99 latency: {} us
 p999 latency: {} us
 )str",
-        plan_id,
-        plan.msg_size,
-        plan.parallel,
-        plan.msg_count,
-        total_count,
-        total_time_ms,
-        correct_count,
-        error_rate,
-        qps,
-        min_latency / 1000.0,
-        max_latency / 1000.0,
-        avg_latency / 1000.0,
-        p90_latency / 1000.0,
-        p99_latency / 1000.0,
-        p999_latency / 1000.0);
+        plan_id, plan.msg_size, plan.parallel, plan.msg_count, total_count, total_time_ms, correct_count, error_rate, qps, min_latency / 1000.0, max_latency / 1000.0,
+        avg_latency / 1000.0, p90_latency / 1000.0, p99_latency / 1000.0, p999_latency / 1000.0);
   }
 
   co_return;
 }
 
-co::Task<void> BenchmarkRpcClientModule::StartFixedFreqPlan(
-    uint32_t parallel_id, BenchPlan plan, std::vector<uint32_t>& perf_data) {
+co::Task<void> BenchmarkRpcClientModule::StartFixedFreqPlan(uint32_t parallel_id, BenchPlan plan, std::vector<uint32_t>& perf_data) {
   auto executor = executor_vec_[parallel_id];
   auto executor_scheduler = co::AimRTScheduler(executor);
 
@@ -350,8 +313,7 @@ co::Task<void> BenchmarkRpcClientModule::StartFixedFreqPlan(
 
     if (status.OK()) {
       if (task_end_time > task_start_time) {
-        perf_data.emplace_back(
-            std::chrono::duration_cast<std::chrono::nanoseconds>(task_end_time - task_start_time).count());
+        perf_data.emplace_back(std::chrono::duration_cast<std::chrono::nanoseconds>(task_end_time - task_start_time).count());
       } else {
         perf_data.emplace_back(0);
       }
@@ -364,8 +326,7 @@ co::Task<void> BenchmarkRpcClientModule::StartFixedFreqPlan(
   co_return;
 }
 
-co::Task<void> BenchmarkRpcClientModule::StartBenchPlan(
-    uint32_t parallel_id, BenchPlan plan, std::vector<uint32_t>& perf_data) {
+co::Task<void> BenchmarkRpcClientModule::StartBenchPlan(uint32_t parallel_id, BenchPlan plan, std::vector<uint32_t>& perf_data) {
   auto executor = executor_vec_[parallel_id];
   auto executor_scheduler = co::AimRTScheduler(executor);
 
@@ -390,8 +351,7 @@ co::Task<void> BenchmarkRpcClientModule::StartBenchPlan(
 
     if (status.OK()) {
       if (task_end_time > task_start_time) {
-        perf_data.emplace_back(
-            std::chrono::duration_cast<std::chrono::nanoseconds>(task_end_time - task_start_time).count());
+        perf_data.emplace_back(std::chrono::duration_cast<std::chrono::nanoseconds>(task_end_time - task_start_time).count());
       } else {
         perf_data.emplace_back(0);
       }

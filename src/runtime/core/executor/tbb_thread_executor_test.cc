@@ -59,8 +59,7 @@ TEST(TBB_THREAD_EXECUTOR_TEST, execute) {
   EXPECT_FALSE(executor.IsInCurrentExecutor());
 
   bool ret = false;
-  executor.Execute(
-      [&]() { ret = executor.IsInCurrentExecutor(); });
+  executor.Execute([&]() { ret = executor.IsInCurrentExecutor(); });
 
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
   EXPECT_TRUE(ret);

@@ -16,7 +16,7 @@
 namespace aimrt::plugins::time_manipulator_plugin {
 
 class TimeManipulatorExecutor : public aimrt::runtime::core::executor::ExecutorBase {
- public:
+public:
   struct Options {
     std::string bind_executor;
     std::chrono::nanoseconds dt = std::chrono::microseconds(1000);
@@ -33,7 +33,7 @@ class TimeManipulatorExecutor : public aimrt::runtime::core::executor::ExecutorB
     kShutdown,
   };
 
- public:
+public:
   TimeManipulatorExecutor() = default;
   ~TimeManipulatorExecutor() override = default;
 
@@ -55,13 +55,12 @@ class TimeManipulatorExecutor : public aimrt::runtime::core::executor::ExecutorB
 
   State GetState() const { return state_.load(); }
 
-  void RegisterGetExecutorFunc(
-      const std::function<aimrt::executor::ExecutorRef(std::string_view)>& get_executor_func);
+  void RegisterGetExecutorFunc(const std::function<aimrt::executor::ExecutorRef(std::string_view)>& get_executor_func);
 
   void SetTimeRatio(double ratio);
   double GetTimeRatio() const;
 
- private:
+private:
   void TimerLoop();
 
   struct TaskWithTimestamp {
@@ -91,7 +90,7 @@ class TimeManipulatorExecutor : public aimrt::runtime::core::executor::ExecutorB
     }
   };
 
- private:
+private:
   std::string name_;
   Options options_;
   std::atomic<State> state_ = State::kPreInit;

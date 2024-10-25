@@ -43,92 +43,57 @@ inline void Publish(PublisherRef publisher, const MsgType& msg) {
 }
 
 template <std::derived_from<google::protobuf::Message> MsgType>
-inline bool Subscribe(
-    SubscriberRef subscriber,
-    std::function<void(ContextRef, const std::shared_ptr<const MsgType>&)>&& callback) {
+inline bool Subscribe(SubscriberRef subscriber, std::function<void(ContextRef, const std::shared_ptr<const MsgType>&)>&& callback) {
   return subscriber.Subscribe(
       GetProtobufMessageTypeSupport<MsgType>(),
-      [callback{std::move(callback)}](
-          const aimrt_channel_context_base_t* ctx_ptr,
-          const void* msg_ptr,
-          aimrt_function_base_t* release_callback_base) {
+      [callback{std::move(callback)}](const aimrt_channel_context_base_t* ctx_ptr, const void* msg_ptr, aimrt_function_base_t* release_callback_base) {
         SubscriberReleaseCallback release_callback(release_callback_base);
-        callback(ContextRef(ctx_ptr),
-                 std::shared_ptr<const MsgType>(
-                     static_cast<const MsgType*>(msg_ptr),
-                     [release_callback{std::move(release_callback)}](const MsgType*) { release_callback(); }));
+        callback(ContextRef(ctx_ptr), std::shared_ptr<const MsgType>(static_cast<const MsgType*>(msg_ptr), [release_callback{std::move(release_callback)}](const MsgType*) {
+                   release_callback();
+                 }));
       });
 }
 
 template <std::derived_from<google::protobuf::Message> MsgType>
-inline bool Subscribe(
-    SubscriberRef subscriber,
-    std::function<void(const std::shared_ptr<const MsgType>&)>&& callback) {
+inline bool Subscribe(SubscriberRef subscriber, std::function<void(const std::shared_ptr<const MsgType>&)>&& callback) {
   return subscriber.Subscribe(
       GetProtobufMessageTypeSupport<MsgType>(),
-      [callback{std::move(callback)}](
-          const aimrt_channel_context_base_t* ctx_ptr,
-          const void* msg_ptr,
-          aimrt_function_base_t* release_callback_base) {
+      [callback{std::move(callback)}](const aimrt_channel_context_base_t* ctx_ptr, const void* msg_ptr, aimrt_function_base_t* release_callback_base) {
         SubscriberReleaseCallback release_callback(release_callback_base);
-        callback(std::shared_ptr<const MsgType>(
-            static_cast<const MsgType*>(msg_ptr),
-            [release_callback{std::move(release_callback)}](const MsgType*) { release_callback(); }));
+        callback(std::shared_ptr<const MsgType>(static_cast<const MsgType*>(msg_ptr), [release_callback{std::move(release_callback)}](const MsgType*) { release_callback(); }));
       });
 }
 
 template <std::derived_from<google::protobuf::Message> MsgType>
-inline bool SubscribeCo(
-    SubscriberRef subscriber,
-    std::function<co::Task<void>(ContextRef, const MsgType&)>&& callback) {
+inline bool SubscribeCo(SubscriberRef subscriber, std::function<co::Task<void>(ContextRef, const MsgType&)>&& callback) {
   return subscriber.Subscribe(
       GetProtobufMessageTypeSupport<MsgType>(),
-      [callback{std::move(callback)}](
-          const aimrt_channel_context_base_t* ctx_ptr,
-          const void* msg_ptr,
-          aimrt_function_base_t* release_callback_base) {
+      [callback{std::move(callback)}](const aimrt_channel_context_base_t* ctx_ptr, const void* msg_ptr, aimrt_function_base_t* release_callback_base) {
         aimrt::co::StartDetached(
-            aimrt::co::On(
-                aimrt::co::InlineScheduler(),
-                callback(ContextRef(ctx_ptr), *(static_cast<const MsgType*>(msg_ptr)))) |
-            aimrt::co::Then(
-                SubscriberReleaseCallback(release_callback_base)));
+            aimrt::co::On(aimrt::co::InlineScheduler(), callback(ContextRef(ctx_ptr), *(static_cast<const MsgType*>(msg_ptr)))) |
+            aimrt::co::Then(SubscriberReleaseCallback(release_callback_base)));
       });
 }
 
 template <std::derived_from<google::protobuf::Message> MsgType>
-inline bool SubscribeCo(
-    SubscriberRef subscriber,
-    std::function<co::Task<void>(const MsgType&)>&& callback) {
+inline bool SubscribeCo(SubscriberRef subscriber, std::function<co::Task<void>(const MsgType&)>&& callback) {
   return subscriber.Subscribe(
       GetProtobufMessageTypeSupport<MsgType>(),
-      [callback{std::move(callback)}](
-          const aimrt_channel_context_base_t* ctx_ptr,
-          const void* msg_ptr,
-          aimrt_function_base_t* release_callback_base) {
+      [callback{std::move(callback)}](const aimrt_channel_context_base_t* ctx_ptr, const void* msg_ptr, aimrt_function_base_t* release_callback_base) {
         aimrt::co::StartDetached(
-            aimrt::co::On(
-                aimrt::co::InlineScheduler(),
-                callback(*(static_cast<const MsgType*>(msg_ptr)))) |
-            aimrt::co::Then(
-                SubscriberReleaseCallback(release_callback_base)));
+            aimrt::co::On(aimrt::co::InlineScheduler(), callback(*(static_cast<const MsgType*>(msg_ptr)))) | aimrt::co::Then(SubscriberReleaseCallback(release_callback_base)));
       });
 }
 
 template <std::derived_from<google::protobuf::Message> MsgType>
 class PublisherProxy<MsgType> : public PublisherProxyBase {
- public:
-  explicit PublisherProxy(PublisherRef publisher)
-      : PublisherProxyBase(publisher, "pb:" + MsgType().GetTypeName()) {}
+public:
+  explicit PublisherProxy(PublisherRef publisher) : PublisherProxyBase(publisher, "pb:" + MsgType().GetTypeName()) {}
   ~PublisherProxy() = default;
 
-  static bool RegisterPublishType(PublisherRef publisher) {
-    return publisher.RegisterPublishType(GetProtobufMessageTypeSupport<MsgType>());
-  }
+  static bool RegisterPublishType(PublisherRef publisher) { return publisher.RegisterPublishType(GetProtobufMessageTypeSupport<MsgType>()); }
 
-  bool RegisterPublishType() {
-    return publisher_.RegisterPublishType(GetProtobufMessageTypeSupport<MsgType>());
-  }
+  bool RegisterPublishType() { return publisher_.RegisterPublishType(GetProtobufMessageTypeSupport<MsgType>()); }
 
   void Publish(ContextRef ctx_ref, const MsgType& msg) {
     if (ctx_ref) {
@@ -142,87 +107,59 @@ class PublisherProxy<MsgType> : public PublisherProxyBase {
     PublishImpl(ctx_ptr, static_cast<const void*>(&msg));
   }
 
-  void Publish(const MsgType& msg) {
-    Publish(ContextRef(), msg);
-  }
+  void Publish(const MsgType& msg) { Publish(ContextRef(), msg); }
 };
 
 template <std::derived_from<google::protobuf::Message> MsgType>
 class SubscriberProxy<MsgType> : public SubscriberProxyBase {
- public:
-  explicit SubscriberProxy(SubscriberRef subscriber)
-      : SubscriberProxyBase(subscriber, "pb:" + MsgType().GetTypeName()) {}
+public:
+  explicit SubscriberProxy(SubscriberRef subscriber) : SubscriberProxyBase(subscriber, "pb:" + MsgType().GetTypeName()) {}
   ~SubscriberProxy() = default;
 
-  bool Subscribe(
-      std::function<void(ContextRef, const std::shared_ptr<const MsgType>&)>&& callback) {
+  bool Subscribe(std::function<void(ContextRef, const std::shared_ptr<const MsgType>&)>&& callback) {
     return subscriber_.Subscribe(
         GetProtobufMessageTypeSupport<MsgType>(),
-        [callback{std::move(callback)}](
-            const aimrt_channel_context_base_t* ctx_ptr,
-            const void* msg_ptr,
-            aimrt_function_base_t* release_callback_base) {
+        [callback{std::move(callback)}](const aimrt_channel_context_base_t* ctx_ptr, const void* msg_ptr, aimrt_function_base_t* release_callback_base) {
           ContextRef ctx_ref(ctx_ptr);
 
           SubscriberReleaseCallback release_callback(release_callback_base);
-          callback(ctx_ref,
-                   std::shared_ptr<const MsgType>(
-                       static_cast<const MsgType*>(msg_ptr),
-                       [release_callback{std::move(release_callback)}](const MsgType*) { release_callback(); }));
+          callback(ctx_ref, std::shared_ptr<const MsgType>(static_cast<const MsgType*>(msg_ptr), [release_callback{std::move(release_callback)}](const MsgType*) {
+                     release_callback();
+                   }));
         });
   }
 
-  bool Subscribe(
-      std::function<void(const std::shared_ptr<const MsgType>&)>&& callback) {
+  bool Subscribe(std::function<void(const std::shared_ptr<const MsgType>&)>&& callback) {
     return subscriber_.Subscribe(
         GetProtobufMessageTypeSupport<MsgType>(),
-        [callback{std::move(callback)}](
-            const aimrt_channel_context_base_t* ctx_ptr,
-            const void* msg_ptr,
-            aimrt_function_base_t* release_callback_base) {
+        [callback{std::move(callback)}](const aimrt_channel_context_base_t* ctx_ptr, const void* msg_ptr, aimrt_function_base_t* release_callback_base) {
           ContextRef ctx_ref(ctx_ptr);
 
           SubscriberReleaseCallback release_callback(release_callback_base);
-          callback(std::shared_ptr<const MsgType>(
-              static_cast<const MsgType*>(msg_ptr),
-              [release_callback{std::move(release_callback)}](const MsgType*) { release_callback(); }));
+          callback(std::shared_ptr<const MsgType>(static_cast<const MsgType*>(msg_ptr), [release_callback{std::move(release_callback)}](const MsgType*) { release_callback(); }));
         });
   }
 
-  bool SubscribeCo(
-      std::function<co::Task<void>(ContextRef, const MsgType&)>&& callback) {
+  bool SubscribeCo(std::function<co::Task<void>(ContextRef, const MsgType&)>&& callback) {
     return subscriber_.Subscribe(
         GetProtobufMessageTypeSupport<MsgType>(),
-        [callback{std::move(callback)}](
-            const aimrt_channel_context_base_t* ctx_ptr,
-            const void* msg_ptr,
-            aimrt_function_base_t* release_callback_base) {
+        [callback{std::move(callback)}](const aimrt_channel_context_base_t* ctx_ptr, const void* msg_ptr, aimrt_function_base_t* release_callback_base) {
           ContextRef ctx_ref(ctx_ptr);
 
           aimrt::co::StartDetached(
-              aimrt::co::On(
-                  aimrt::co::InlineScheduler(),
-                  callback(ctx_ref, *(static_cast<const MsgType*>(msg_ptr)))) |
-              aimrt::co::Then(
-                  SubscriberReleaseCallback(release_callback_base)));
+              aimrt::co::On(aimrt::co::InlineScheduler(), callback(ctx_ref, *(static_cast<const MsgType*>(msg_ptr)))) |
+              aimrt::co::Then(SubscriberReleaseCallback(release_callback_base)));
         });
   }
 
   bool SubscribeCo(std::function<co::Task<void>(const MsgType&)>&& callback) {
     return subscriber_.Subscribe(
         GetProtobufMessageTypeSupport<MsgType>(),
-        [callback{std::move(callback)}](
-            const aimrt_channel_context_base_t* ctx_ptr,
-            const void* msg_ptr,
-            aimrt_function_base_t* release_callback_base) {
+        [callback{std::move(callback)}](const aimrt_channel_context_base_t* ctx_ptr, const void* msg_ptr, aimrt_function_base_t* release_callback_base) {
           ContextRef ctx_ref(ctx_ptr);
 
           aimrt::co::StartDetached(
-              aimrt::co::On(
-                  aimrt::co::InlineScheduler(),
-                  callback(*(static_cast<const MsgType*>(msg_ptr)))) |
-              aimrt::co::Then(
-                  SubscriberReleaseCallback(release_callback_base)));
+              aimrt::co::On(aimrt::co::InlineScheduler(), callback(*(static_cast<const MsgType*>(msg_ptr)))) | aimrt::co::Then(SubscriberReleaseCallback(release_callback_base)));
         });
   }
 };

@@ -52,7 +52,7 @@
 namespace aimrt::plugins::opentelemetry_plugin {
 
 class OpenTelemetryPlugin : public AimRTCorePluginBase {
- public:
+public:
   struct Options {
     std::string node_name;
 
@@ -70,7 +70,7 @@ class OpenTelemetryPlugin : public AimRTCorePluginBase {
     std::vector<Attribute> attributes;
   };
 
- public:
+public:
   OpenTelemetryPlugin() = default;
   ~OpenTelemetryPlugin() override = default;
 
@@ -79,20 +79,14 @@ class OpenTelemetryPlugin : public AimRTCorePluginBase {
   bool Initialize(runtime::core::AimRTCore* core_ptr) noexcept override;
   void Shutdown() noexcept override;
 
- private:
+private:
   void SetPluginLogger();
   void RegisterChannelFilter();
   void RegisterRpcFilter();
 
-  enum class ChannelFilterType {
-    kPublisher,
-    kSubscriber
-  };
+  enum class ChannelFilterType { kPublisher, kSubscriber };
 
-  enum class RpcFilterType {
-    kClient,
-    kServer
-  };
+  enum class RpcFilterType { kClient, kServer };
 
   void ChannelTraceFilter(
       ChannelFilterType type,
@@ -106,17 +100,11 @@ class OpenTelemetryPlugin : public AimRTCorePluginBase {
       const std::shared_ptr<aimrt::runtime::core::rpc::InvokeWrapper>& wrapper_ptr,
       aimrt::runtime::core::rpc::FrameworkAsyncRpcHandle&& h);
 
-  void ChannelMetricsFilter(
-      ChannelFilterType type,
-      aimrt::runtime::core::channel::MsgWrapper& msg_wrapper,
-      aimrt::runtime::core::channel::FrameworkAsyncChannelHandle&& h);
+  void ChannelMetricsFilter(ChannelFilterType type, aimrt::runtime::core::channel::MsgWrapper& msg_wrapper, aimrt::runtime::core::channel::FrameworkAsyncChannelHandle&& h);
 
-  void RpcMetricsFilter(
-      RpcFilterType type,
-      const std::shared_ptr<aimrt::runtime::core::rpc::InvokeWrapper>& wrapper_ptr,
-      aimrt::runtime::core::rpc::FrameworkAsyncRpcHandle&& h);
+  void RpcMetricsFilter(RpcFilterType type, const std::shared_ptr<aimrt::runtime::core::rpc::InvokeWrapper>& wrapper_ptr, aimrt::runtime::core::rpc::FrameworkAsyncRpcHandle&& h);
 
- private:
+private:
   runtime::core::AimRTCore* core_ptr_ = nullptr;
 
   Options options_;

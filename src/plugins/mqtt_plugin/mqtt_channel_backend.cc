@@ -44,12 +44,9 @@ struct convert<aimrt::plugins::mqtt_plugin::MqttChannelBackend::Options> {
         int qos = 2;
 
         if (pub_topic_options_node["qos"]) qos = pub_topic_options_node["qos"].as<int>();
-        if (qos < 0 || qos > 2)
-          throw aimrt::common::util::AimRTException("Invalid Mqtt qos: " + std::to_string(qos));
+        if (qos < 0 || qos > 2) throw aimrt::common::util::AimRTException("Invalid Mqtt qos: " + std::to_string(qos));
 
-        auto pub_topic_options = Options::PubTopicOptions{
-            .topic_name = pub_topic_options_node["topic_name"].as<std::string>(),
-            .qos = qos};
+        auto pub_topic_options = Options::PubTopicOptions{.topic_name = pub_topic_options_node["topic_name"].as<std::string>(), .qos = qos};
 
         rhs.pub_topics_options.emplace_back(std::move(pub_topic_options));
       }
@@ -60,12 +57,9 @@ struct convert<aimrt::plugins::mqtt_plugin::MqttChannelBackend::Options> {
         int qos = 2;
 
         if (sub_topic_options_node["qos"]) qos = sub_topic_options_node["qos"].as<int>();
-        if (qos < 0 || qos > 2)
-          throw aimrt::common::util::AimRTException("Invalid Mqtt qos: " + std::to_string(qos));
+        if (qos < 0 || qos > 2) throw aimrt::common::util::AimRTException("Invalid Mqtt qos: " + std::to_string(qos));
 
-        auto sub_topic_options = Options::SubTopicOptions{
-            .topic_name = sub_topic_options_node["topic_name"].as<std::string>(),
-            .qos = qos};
+        auto sub_topic_options = Options::SubTopicOptions{.topic_name = sub_topic_options_node["topic_name"].as<std::string>(), .qos = qos};
 
         rhs.sub_topics_options.emplace_back(std::move(sub_topic_options));
       }
@@ -79,38 +73,30 @@ struct convert<aimrt::plugins::mqtt_plugin::MqttChannelBackend::Options> {
 namespace aimrt::plugins::mqtt_plugin {
 
 void MqttChannelBackend::Initialize(YAML::Node options_node) {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-      "Mqtt channel backend can only be initialized once.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "Mqtt channel backend can only be initialized once.");
 
-  if (options_node && !options_node.IsNull())
-    options_ = options_node.as<Options>();
+  if (options_node && !options_node.IsNull()) options_ = options_node.as<Options>();
 
   options_node = options_;
 }
 
 void MqttChannelBackend::Start() {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kStart) == State::kInit,
-      "Method can only be called when state is 'Init'.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'.");
 
   SubscribeMqttTopic();
 }
 
 void MqttChannelBackend::Shutdown() {
-  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-    return;
+  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 
   UnSubscribeMqttTopic();
 
   msg_handle_registry_ptr_->Shutdown();
 }
 
-bool MqttChannelBackend::RegisterPublishType(
-    const runtime::core::channel::PublishTypeWrapper& publish_type_wrapper) noexcept {
+bool MqttChannelBackend::RegisterPublishType(const runtime::core::channel::PublishTypeWrapper& publish_type_wrapper) noexcept {
   try {
-    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kInit,
-                            "Method can only be called when state is 'Init'.");
+    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kInit, "Method can only be called when state is 'Init'.");
 
     namespace util = aimrt::common::util;
 
@@ -118,14 +104,12 @@ bool MqttChannelBackend::RegisterPublishType(
 
     int qos = 2;
 
-    auto find_option_itr = std::find_if(
-        options_.pub_topics_options.begin(), options_.pub_topics_options.end(),
-        [topic_name = info.topic_name](const Options::PubTopicOptions& pub_option) {
+    auto find_option_itr =
+        std::find_if(options_.pub_topics_options.begin(), options_.pub_topics_options.end(), [topic_name = info.topic_name](const Options::PubTopicOptions& pub_option) {
           try {
             return std::regex_match(topic_name.begin(), topic_name.end(), std::regex(pub_option.topic_name, std::regex::ECMAScript));
           } catch (const std::exception& e) {
-            AIMRT_WARN("Regex get exception, expr: {}, string: {}, exception info: {}",
-                       pub_option.topic_name, topic_name, e.what());
+            AIMRT_WARN("Regex get exception, expr: {}, string: {}, exception info: {}", pub_option.topic_name, topic_name, e.what());
             return false;
           }
         });
@@ -134,15 +118,10 @@ bool MqttChannelBackend::RegisterPublishType(
       qos = find_option_itr->qos;
     }
 
-    pub_cfg_info_map_.emplace(
-        info.topic_name,
-        PubCfgInfo{
-            .qos = qos});
+    pub_cfg_info_map_.emplace(info.topic_name, PubCfgInfo{.qos = qos});
 
     // 检查path
-    std::string pattern = std::string("/channel/") +
-                          util::UrlEncode(info.topic_name) + "/" +
-                          util::UrlEncode(info.msg_type);
+    std::string pattern = std::string("/channel/") + util::UrlEncode(info.topic_name) + "/" + util::UrlEncode(info.msg_type);
 
     AIMRT_CHECK_ERROR_THROW(pattern.size() <= 255, "Too long uri: {}", pattern);
 
@@ -155,11 +134,9 @@ bool MqttChannelBackend::RegisterPublishType(
   }
 }
 
-bool MqttChannelBackend::Subscribe(
-    const runtime::core::channel::SubscribeWrapper& subscribe_wrapper) noexcept {
+bool MqttChannelBackend::Subscribe(const runtime::core::channel::SubscribeWrapper& subscribe_wrapper) noexcept {
   try {
-    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kInit,
-                            "Method can only be called when state is 'Init'.");
+    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kInit, "Method can only be called when state is 'Init'.");
 
     namespace util = aimrt::common::util;
 
@@ -167,14 +144,12 @@ bool MqttChannelBackend::Subscribe(
 
     int qos = 2;
 
-    auto find_option_itr = std::find_if(
-        options_.sub_topics_options.begin(), options_.sub_topics_options.end(),
-        [topic_name = info.topic_name](const Options::SubTopicOptions& sub_option) {
+    auto find_option_itr =
+        std::find_if(options_.sub_topics_options.begin(), options_.sub_topics_options.end(), [topic_name = info.topic_name](const Options::SubTopicOptions& sub_option) {
           try {
             return std::regex_match(topic_name.begin(), topic_name.end(), std::regex(sub_option.topic_name, std::regex::ECMAScript));
           } catch (const std::exception& e) {
-            AIMRT_WARN("Regex get exception, expr: {}, string: {}, exception info: {}",
-                       sub_option.topic_name, topic_name, e.what());
+            AIMRT_WARN("Regex get exception, expr: {}, string: {}, exception info: {}", sub_option.topic_name, topic_name, e.what());
             return false;
           }
         });
@@ -183,9 +158,7 @@ bool MqttChannelBackend::Subscribe(
       qos = find_option_itr->qos;
     }
 
-    std::string pattern = std::string("/channel/") +
-                          util::UrlEncode(info.topic_name) + "/" +
-                          util::UrlEncode(info.msg_type);
+    std::string pattern = std::string("/channel/") + util::UrlEncode(info.topic_name) + "/" + util::UrlEncode(info.msg_type);
 
     auto find_itr = subscribe_wrapper_map_.find(pattern);
     if (find_itr != subscribe_wrapper_map_.end()) {
@@ -200,32 +173,30 @@ bool MqttChannelBackend::Subscribe(
 
     subscribe_wrapper_map_.emplace(pattern, std::move(sub_tool_unique_ptr));
 
-    auto handle =
-        [this, topic_name = info.topic_name, sub_tool_ptr](MQTTAsync_message* message) {
-          auto ctx_ptr = std::make_shared<aimrt::channel::Context>(aimrt_channel_context_type_t::AIMRT_CHANNEL_SUBSCRIBER_CONTEXT);
+    auto handle = [this, topic_name = info.topic_name, sub_tool_ptr](MQTTAsync_message* message) {
+      auto ctx_ptr = std::make_shared<aimrt::channel::Context>(aimrt_channel_context_type_t::AIMRT_CHANNEL_SUBSCRIBER_CONTEXT);
 
-          // 解析mqtt包
-          util::ConstBufferOperator buf_oper(static_cast<const char*>(message->payload), message->payloadlen);
+      // 解析mqtt包
+      util::ConstBufferOperator buf_oper(static_cast<const char*>(message->payload), message->payloadlen);
 
-          std::string serialization_type(buf_oper.GetString(util::BufferLenType::kUInt8));
-          ctx_ptr->SetSerializationType(serialization_type);
+      std::string serialization_type(buf_oper.GetString(util::BufferLenType::kUInt8));
+      ctx_ptr->SetSerializationType(serialization_type);
 
-          // 获取context
-          size_t ctx_num = buf_oper.GetUint8();
-          for (size_t ii = 0; ii < ctx_num; ++ii) {
-            auto key = buf_oper.GetString(util::BufferLenType::kUInt16);
-            auto val = buf_oper.GetString(util::BufferLenType::kUInt16);
-            ctx_ptr->SetMetaValue(key, val);
-          }
+      // 获取context
+      size_t ctx_num = buf_oper.GetUint8();
+      for (size_t ii = 0; ii < ctx_num; ++ii) {
+        auto key = buf_oper.GetString(util::BufferLenType::kUInt16);
+        auto val = buf_oper.GetString(util::BufferLenType::kUInt16);
+        ctx_ptr->SetMetaValue(key, val);
+      }
 
-          ctx_ptr->SetMetaValue(AIMRT_CHANNEL_CONTEXT_KEY_BACKEND, Name());
+      ctx_ptr->SetMetaValue(AIMRT_CHANNEL_CONTEXT_KEY_BACKEND, Name());
 
-          // 获取消息buf
-          auto remaining_buf = buf_oper.GetRemainingBuffer();
+      // 获取消息buf
+      auto remaining_buf = buf_oper.GetRemainingBuffer();
 
-          sub_tool_ptr->DoSubscribeCallback(
-              ctx_ptr, serialization_type, static_cast<const void*>(remaining_buf.data()), remaining_buf.size());
-        };
+      sub_tool_ptr->DoSubscribeCallback(ctx_ptr, serialization_type, static_cast<const void*>(remaining_buf.data()), remaining_buf.size());
+    };
 
     msg_handle_registry_ptr_->RegisterMsgHandle(pattern, std::move(handle));
 
@@ -242,8 +213,7 @@ bool MqttChannelBackend::Subscribe(
 
 void MqttChannelBackend::Publish(runtime::core::channel::MsgWrapper& msg_wrapper) noexcept {
   try {
-    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kStart,
-                            "Method can only be called when state is 'Start'.");
+    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kStart, "Method can only be called when state is 'Start'.");
 
     namespace util = aimrt::common::util;
 
@@ -267,9 +237,8 @@ void MqttChannelBackend::Publish(runtime::core::channel::MsgWrapper& msg_wrapper
     // msg序列化
     auto buffer_array_view_ptr = aimrt::runtime::core::channel::SerializeMsgWithCache(msg_wrapper, serialization_type);
     AIMRT_CHECK_ERROR_THROW(
-        buffer_array_view_ptr,
-        "Msg serialization failed, serialization_type {}, pkg_path: {}, module_name: {}, topic_name: {}, msg_type: {}",
-        serialization_type, info.pkg_path, info.module_name, info.topic_name, info.msg_type);
+        buffer_array_view_ptr, "Msg serialization failed, serialization_type {}, pkg_path: {}, module_name: {}, topic_name: {}, msg_type: {}", serialization_type, info.pkg_path,
+        info.module_name, info.topic_name, info.msg_type);
 
     // 填内容
     const auto* buffer_array_data = buffer_array_view_ptr->Data();
@@ -278,8 +247,7 @@ void MqttChannelBackend::Publish(runtime::core::channel::MsgWrapper& msg_wrapper
 
     // context
     const auto& keys = msg_wrapper.ctx_ref.GetMetaKeys();
-    AIMRT_CHECK_ERROR_THROW(keys.size() <= 255,
-                            "Too much context meta, require less than 255, but actually {}.", keys.size());
+    AIMRT_CHECK_ERROR_THROW(keys.size() <= 255, "Too much context meta, require less than 255, but actually {}.", keys.size());
 
     std::vector<std::string_view> context_meta_kv;
     size_t context_meta_kv_size = 1;
@@ -294,9 +262,7 @@ void MqttChannelBackend::Publish(runtime::core::channel::MsgWrapper& msg_wrapper
 
     size_t mqtt_pkg_size = 1 + serialization_type.size() + context_meta_kv_size + msg_size;
 
-    AIMRT_CHECK_ERROR_THROW(mqtt_pkg_size <= max_pkg_size_,
-                            "Mqtt publish failed, pkg is too large, limit {} bytes, actual {} bytes",
-                            max_pkg_size_, mqtt_pkg_size);
+    AIMRT_CHECK_ERROR_THROW(mqtt_pkg_size <= max_pkg_size_, "Mqtt publish failed, pkg is too large, limit {} bytes, actual {} bytes", max_pkg_size_, mqtt_pkg_size);
 
     std::vector<char> msg_buf_vec(mqtt_pkg_size);
 
@@ -311,9 +277,7 @@ void MqttChannelBackend::Publish(runtime::core::channel::MsgWrapper& msg_wrapper
 
     // data
     for (size_t ii = 0; ii < buffer_array_len; ++ii) {
-      buf_oper.SetBuffer(
-          static_cast<const char*>(buffer_array_data[ii].data),
-          buffer_array_data[ii].len);
+      buf_oper.SetBuffer(static_cast<const char*>(buffer_array_data[ii].data), buffer_array_data[ii].len);
     }
 
     MQTTAsync_message pubmsg = MQTTAsync_message_initializer;
@@ -323,15 +287,11 @@ void MqttChannelBackend::Publish(runtime::core::channel::MsgWrapper& msg_wrapper
     pubmsg.retained = 0;
 
     // 确定path
-    std::string mqtt_pub_topic = std::string("/channel/") +
-                                 util::UrlEncode(info.topic_name) + "/" +
-                                 util::UrlEncode(info.msg_type);
+    std::string mqtt_pub_topic = std::string("/channel/") + util::UrlEncode(info.topic_name) + "/" + util::UrlEncode(info.msg_type);
 
     AIMRT_TRACE("Mqtt publish to '{}'", mqtt_pub_topic);
     int rc = MQTTAsync_sendMessage(client_, mqtt_pub_topic.data(), &pubmsg, NULL);
-    AIMRT_CHECK_WARN(rc == MQTTASYNC_SUCCESS,
-                     "publish mqtt msg failed, topic: {}, code: {}",
-                     mqtt_pub_topic, rc);
+    AIMRT_CHECK_WARN(rc == MQTTASYNC_SUCCESS, "publish mqtt msg failed, topic: {}, code: {}", mqtt_pub_topic, rc);
     return;
   } catch (const std::exception& e) {
     AIMRT_ERROR("{}", e.what());

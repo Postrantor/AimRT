@@ -30,12 +30,9 @@ struct convert<aimrt::runtime::core::module::ModuleManager::Options> {
       Node module_options_node;
       module_options_node["name"] = module_options.name;
       module_options_node["enable"] = module_options.enable;
-      if (!module_options.use_default_log_lvl)
-        module_options_node["log_lvl"] =
-            aimrt::runtime::core::logger::LogLevelTool::GetLogLevelName(module_options.log_lvl);
+      if (!module_options.use_default_log_lvl) module_options_node["log_lvl"] = aimrt::runtime::core::logger::LogLevelTool::GetLogLevelName(module_options.log_lvl);
 
-      if (!module_options.cfg_file_path.empty())
-        module_options_node["cfg_file_path"] = module_options.cfg_file_path;
+      if (!module_options.cfg_file_path.empty()) module_options_node["cfg_file_path"] = module_options.cfg_file_path;
 
       node["modules"].push_back(module_options_node);
     }
@@ -48,16 +45,11 @@ struct convert<aimrt::runtime::core::module::ModuleManager::Options> {
 
     if (node["pkgs"] && node["pkgs"].IsSequence()) {
       for (const auto& pkg_options_node : node["pkgs"]) {
-        Options::PkgLoaderOptions pkg_options{
-            .path = pkg_options_node["path"].as<std::string>()};
+        Options::PkgLoaderOptions pkg_options{.path = pkg_options_node["path"].as<std::string>()};
 
-        if (pkg_options_node["disable_modules"])
-          pkg_options.disable_modules =
-              pkg_options_node["disable_modules"].as<std::vector<std::string>>();
+        if (pkg_options_node["disable_modules"]) pkg_options.disable_modules = pkg_options_node["disable_modules"].as<std::vector<std::string>>();
 
-        if (pkg_options_node["enable_modules"])
-          pkg_options.enable_modules =
-              pkg_options_node["enable_modules"].as<std::vector<std::string>>();
+        if (pkg_options_node["enable_modules"]) pkg_options.enable_modules = pkg_options_node["enable_modules"].as<std::vector<std::string>>();
 
         rhs.pkgs_options.emplace_back(std::move(pkg_options));
       }
@@ -65,16 +57,13 @@ struct convert<aimrt::runtime::core::module::ModuleManager::Options> {
 
     if (node["modules"] && node["modules"].IsSequence()) {
       for (const auto& module_options_node : node["modules"]) {
-        Options::ModuleOptions module_options{
-            .name = module_options_node["name"].as<std::string>()};
+        Options::ModuleOptions module_options{.name = module_options_node["name"].as<std::string>()};
 
-        if (module_options_node["enable"])
-          module_options.enable = module_options_node["enable"].as<bool>();
+        if (module_options_node["enable"]) module_options.enable = module_options_node["enable"].as<bool>();
 
         if (module_options_node["log_lvl"]) {
           module_options.use_default_log_lvl = false;
-          module_options.log_lvl = aimrt::runtime::core::logger::LogLevelTool::GetLogLevelFromName(
-              module_options_node["log_lvl"].as<std::string>());
+          module_options.log_lvl = aimrt::runtime::core::logger::LogLevelTool::GetLogLevelFromName(module_options_node["log_lvl"].as<std::string>());
         }
 
         if (module_options_node["cfg_file_path"]) {
@@ -93,16 +82,11 @@ struct convert<aimrt::runtime::core::module::ModuleManager::Options> {
 namespace aimrt::runtime::core::module {
 
 void ModuleManager::Initialize(YAML::Node options_node) {
-  AIMRT_CHECK_ERROR_THROW(
-      module_proxy_configurator_,
-      "Module proxy configurator is not set before initialize.");
+  AIMRT_CHECK_ERROR_THROW(module_proxy_configurator_, "Module proxy configurator is not set before initialize.");
 
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-      "Module manager can only be initialized once.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "Module manager can only be initialized once.");
 
-  if (options_node && !options_node.IsNull())
-    options_ = options_node.as<Options>();
+  if (options_node && !options_node.IsNull()) options_ = options_node.as<Options>();
 
   // 加载所有动态库
   for (auto& pkg_options : options_.pkgs_options) {
@@ -110,10 +94,9 @@ void ModuleManager::Initialize(YAML::Node options_node) {
     module_loader_ptr->SetLogger(logger_ptr_);
     module_loader_ptr->LoadPkg(pkg_options.path, pkg_options.disable_modules, pkg_options.enable_modules);
 
-    AIMRT_TRACE("Load pkg succeeded.\ncfg path: {}\nfull path: {}\nload modules: [{}]",
-                pkg_options.path,
-                module_loader_ptr->GetDynamicLib().GetLibFullPath(),
-                aimrt::common::util::JoinVec(module_loader_ptr->GetLoadedModuleNameList(), ","));
+    AIMRT_TRACE(
+        "Load pkg succeeded.\ncfg path: {}\nfull path: {}\nload modules: [{}]", pkg_options.path, module_loader_ptr->GetDynamicLib().GetLibFullPath(),
+        aimrt::common::util::JoinVec(module_loader_ptr->GetLoadedModuleNameList(), ","));
 
     pkg_options.path = module_loader_ptr->GetDynamicLib().GetLibFullPath();
 
@@ -136,14 +119,12 @@ void ModuleManager::Initialize(YAML::Node options_node) {
 
     // 检查重复模块
     auto finditr = module_wrapper_map_.find(module_name);
-    AIMRT_CHECK_ERROR_THROW(finditr == module_wrapper_map_.end(),
-                            "Duplicate module '{}' in core and lib {}.",
-                            module_name, finditr->second->info.pkg_path);
+    AIMRT_CHECK_ERROR_THROW(finditr == module_wrapper_map_.end(), "Duplicate module '{}' in core and lib {}.", module_name, finditr->second->info.pkg_path);
 
     // 初始化module wrapper
-    auto module_wrapper_ptr = std::make_unique<ModuleWrapper>(
-        ModuleWrapper{
-            .info = util::ModuleDetailInfo{
+    auto module_wrapper_ptr = std::make_unique<ModuleWrapper>(ModuleWrapper{
+        .info =
+            util::ModuleDetailInfo{
                 .name = module_name,
                 .pkg_path = item.first,
                 .major_version = info.major_version,
@@ -152,9 +133,9 @@ void ModuleManager::Initialize(YAML::Node options_node) {
                 .build_version = info.build_version,
                 .author = aimrt::util::ToStdString(info.author),
                 .description = aimrt::util::ToStdString(info.description)},
-            .loader_ptr = nullptr,
-            .module_ptr = module_ptr,
-            .core_proxy_ptr = std::make_unique<CoreProxy>(info)});
+        .loader_ptr = nullptr,
+        .module_ptr = module_ptr,
+        .core_proxy_ptr = std::make_unique<CoreProxy>(info)});
 
     InitModule(module_wrapper_ptr.get());
 
@@ -177,10 +158,8 @@ void ModuleManager::Initialize(YAML::Node options_node) {
 
       // 检查重复模块
       AIMRT_CHECK_ERROR_THROW(
-          module_wrapper_map_.find(module_name) == module_wrapper_map_.end(),
-          "Duplicate module '{}' in lib {} and {}.", module_name,
-          module_wrapper_map_.find(module_name)->second->info.pkg_path,
-          pkg_path);
+          module_wrapper_map_.find(module_name) == module_wrapper_map_.end(), "Duplicate module '{}' in lib {} and {}.", module_name,
+          module_wrapper_map_.find(module_name)->second->info.pkg_path, pkg_path);
 
       // 初始化module wrapper
       const auto* module_ptr = module_loader.GetModule(module_name);
@@ -189,9 +168,9 @@ void ModuleManager::Initialize(YAML::Node options_node) {
 
       auto info = module_ptr->info(module_ptr->impl);
 
-      auto module_wrapper_ptr = std::make_unique<ModuleWrapper>(
-          ModuleWrapper{
-              .info = util::ModuleDetailInfo{
+      auto module_wrapper_ptr = std::make_unique<ModuleWrapper>(ModuleWrapper{
+          .info =
+              util::ModuleDetailInfo{
                   .name = module_name,
                   .pkg_path = pkg_path,
                   .major_version = info.major_version,
@@ -200,9 +179,9 @@ void ModuleManager::Initialize(YAML::Node options_node) {
                   .build_version = info.build_version,
                   .author = aimrt::util::ToStdString(info.author),
                   .description = aimrt::util::ToStdString(info.description)},
-              .loader_ptr = &module_loader,
-              .module_ptr = module_ptr,
-              .core_proxy_ptr = std::make_unique<CoreProxy>(info)});
+          .loader_ptr = &module_loader,
+          .module_ptr = module_ptr,
+          .core_proxy_ptr = std::make_unique<CoreProxy>(info)});
 
       InitModule(module_wrapper_ptr.get());
 
@@ -218,15 +197,12 @@ void ModuleManager::Initialize(YAML::Node options_node) {
 }
 
 void ModuleManager::Start() {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kStart) == State::kInit,
-      "Method can only be called when state is 'Init'.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'.");
 
   for (const auto& module_name : module_init_order_) {
     auto module_wrapper_map_itr = module_wrapper_map_.find(module_name);
 
-    AIMRT_CHECK_ERROR_THROW(module_wrapper_map_itr != module_wrapper_map_.end(),
-                            "Can not find module '{}'.", module_name);
+    AIMRT_CHECK_ERROR_THROW(module_wrapper_map_itr != module_wrapper_map_.end(), "Can not find module '{}'.", module_name);
 
     const auto* module_ptr = module_wrapper_map_itr->second->module_ptr;
 
@@ -240,8 +216,7 @@ void ModuleManager::Start() {
 }
 
 void ModuleManager::Shutdown() {
-  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-    return;
+  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 
   AIMRT_INFO("Module manager shutdown.");
 
@@ -271,22 +246,16 @@ void ModuleManager::Shutdown() {
   module_proxy_configurator_ = CoreProxyConfigurator();
 }
 
-void ModuleManager::RegisterModule(
-    std::string_view pkg, const aimrt_module_base_t* module) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kPreInit,
-      "Method can only be called when state is 'PreInit'.");
+void ModuleManager::RegisterModule(std::string_view pkg, const aimrt_module_base_t* module) {
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
   AIMRT_CHECK_ERROR_THROW(module != nullptr, "Register invalid module");
 
   registered_module_vec_.emplace_back(pkg, module);
 }
 
-const aimrt_core_base_t* ModuleManager::CreateModule(
-    std::string_view pkg, aimrt_module_info_t module_info) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kInit,
-      "Method can only be called when state is 'Init'.");
+const aimrt_core_base_t* ModuleManager::CreateModule(std::string_view pkg, aimrt_module_info_t module_info) {
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kInit, "Method can only be called when state is 'Init'.");
 
   const std::string& module_name = aimrt::util::ToStdString(module_info.name);
 
@@ -294,14 +263,12 @@ const aimrt_core_base_t* ModuleManager::CreateModule(
 
   // 检查重复模块
   auto finditr = module_wrapper_map_.find(module_name);
-  AIMRT_CHECK_ERROR_THROW(finditr == module_wrapper_map_.end(),
-                          "Duplicate module '{}' in core and lib {}.",
-                          module_name, finditr->second->info.pkg_path);
+  AIMRT_CHECK_ERROR_THROW(finditr == module_wrapper_map_.end(), "Duplicate module '{}' in core and lib {}.", module_name, finditr->second->info.pkg_path);
 
   // 初始化module wrapper
-  auto module_wrapper_ptr = std::make_unique<ModuleWrapper>(
-      ModuleWrapper{
-          .info = util::ModuleDetailInfo{
+  auto module_wrapper_ptr = std::make_unique<ModuleWrapper>(ModuleWrapper{
+      .info =
+          util::ModuleDetailInfo{
               .name = module_name,
               .pkg_path = std::string(pkg),
               .major_version = module_info.major_version,
@@ -310,9 +277,9 @@ const aimrt_core_base_t* ModuleManager::CreateModule(
               .build_version = module_info.build_version,
               .author = aimrt::util::ToStdString(module_info.author),
               .description = aimrt::util::ToStdString(module_info.description)},
-          .loader_ptr = nullptr,
-          .module_ptr = nullptr,
-          .core_proxy_ptr = std::make_unique<CoreProxy>(module_info)});
+      .loader_ptr = nullptr,
+      .module_ptr = nullptr,
+      .core_proxy_ptr = std::make_unique<CoreProxy>(module_info)});
 
   const auto* core_base_ptr = module_wrapper_ptr->core_proxy_ptr->NativeHandle();
 
@@ -324,40 +291,29 @@ const aimrt_core_base_t* ModuleManager::CreateModule(
   return core_base_ptr;
 }
 
-void ModuleManager::RegisterCoreProxyConfigurator(
-    CoreProxyConfigurator&& module_proxy_configurator) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kPreInit,
-      "Method can only be called when state is 'PreInit'.");
+void ModuleManager::RegisterCoreProxyConfigurator(CoreProxyConfigurator&& module_proxy_configurator) {
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
   module_proxy_configurator_ = std::move(module_proxy_configurator);
 }
 
 const std::vector<std::string>& ModuleManager::GetModuleNameList() const {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kInit,
-      "Method can only be called when state is 'Init'.");
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kInit, "Method can only be called when state is 'Init'.");
 
   return module_init_order_;
 }
 
 const std::vector<const util::ModuleDetailInfo*>& ModuleManager::GetModuleDetailInfoList() const {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kInit,
-      "Method can only be called when state is 'Init'.");
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kInit, "Method can only be called when state is 'Init'.");
 
   return module_detail_info_vec_;
 }
 
 std::optional<ModuleManager::Options::ModuleOptions> ModuleManager::GetModuleOptions(std::string_view module_name) {
-  auto find_module_options_itr = std::find_if(
-      options_.modules_options.begin(), options_.modules_options.end(),
-      [&module_name](const auto& module_options) {
-        return module_options.name == module_name;
-      });
+  auto find_module_options_itr =
+      std::find_if(options_.modules_options.begin(), options_.modules_options.end(), [&module_name](const auto& module_options) { return module_options.name == module_name; });
 
-  if (find_module_options_itr != options_.modules_options.end())
-    return std::make_optional(*find_module_options_itr);
+  if (find_module_options_itr != options_.modules_options.end()) return std::make_optional(*find_module_options_itr);
 
   return {};
 }
@@ -384,8 +340,7 @@ void ModuleManager::InitModule(ModuleWrapper* module_wrapper_ptr) {
 
   // 初始化模块
   if (module_ptr != nullptr) {
-    bool ret = module_ptr->initialize(
-        module_ptr->impl, module_wrapper_ptr->core_proxy_ptr->NativeHandle());
+    bool ret = module_ptr->initialize(module_ptr->impl, module_wrapper_ptr->core_proxy_ptr->NativeHandle());
 
     AIMRT_CHECK_ERROR_THROW(ret, "Init module '{}' failed.", module_name);
   }
@@ -394,22 +349,16 @@ void ModuleManager::InitModule(ModuleWrapper* module_wrapper_ptr) {
 }
 
 std::list<std::pair<std::string, std::string>> ModuleManager::GenInitializationReport() const {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kInit,
-      "Method can only be called when state is 'Init'.");
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kInit, "Method can only be called when state is 'Init'.");
 
-  std::vector<std::vector<std::string>> module_info_table =
-      {{"name", "pkg", "version"}};
+  std::vector<std::vector<std::string>> module_info_table = {{"name", "pkg", "version"}};
 
   for (const auto& item : module_detail_info_vec_) {
     std::vector<std::string> cur_module_info(3);
     cur_module_info[0] = item->name;
     cur_module_info[1] = item->pkg_path;
     cur_module_info[2] =
-        std::to_string(item->major_version) + "." +
-        std::to_string(item->minor_version) + "." +
-        std::to_string(item->patch_version) + "." +
-        std::to_string(item->build_version);
+        std::to_string(item->major_version) + "." + std::to_string(item->minor_version) + "." + std::to_string(item->patch_version) + "." + std::to_string(item->build_version);
     module_info_table.emplace_back(std::move(cur_module_info));
   }
 

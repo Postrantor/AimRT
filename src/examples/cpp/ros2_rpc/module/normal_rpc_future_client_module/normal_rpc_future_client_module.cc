@@ -20,8 +20,7 @@ bool NormalRpcFutureClientModule::Initialize(aimrt::CoreRef core) {
 
     // Get executor handle
     executor_ = core_.GetExecutorManager().GetExecutor("work_thread_pool");
-    AIMRT_CHECK_ERROR_THROW(executor_ && executor_.SupportTimerSchedule(),
-                            "Get executor 'work_thread_pool' failed.");
+    AIMRT_CHECK_ERROR_THROW(executor_ && executor_.SupportTimerSchedule(), "Get executor 'work_thread_pool' failed.");
 
     // Get rpc handle
     auto rpc_handle = core_.GetRpcHandle();
@@ -93,8 +92,7 @@ void NormalRpcFutureClientModule::MainLoop() {
       auto status = status_future.get();
 
       if (status.OK()) {
-        AIMRT_INFO("Client get rpc ret, status: {}, rsp: {}", status.ToString(),
-                   example_ros2::srv::to_yaml(rsp));
+        AIMRT_INFO("Client get rpc ret, status: {}, rsp: {}", status.ToString(), example_ros2::srv::to_yaml(rsp));
       } else {
         AIMRT_WARN("Client get rpc error ret, status: {}", status.ToString());
       }

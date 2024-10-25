@@ -13,13 +13,11 @@
 namespace aimrt::examples::cpp::executor::executor_co_loop_module {
 
 class ExecutorCoLoopModule : public aimrt::ModuleBase {
- public:
+public:
   ExecutorCoLoopModule() = default;
   ~ExecutorCoLoopModule() override = default;
 
-  ModuleInfo Info() const override {
-    return ModuleInfo{.name = "ExecutorCoLoopModule"};
-  }
+  ModuleInfo Info() const override { return ModuleInfo{.name = "ExecutorCoLoopModule"}; }
 
   bool Initialize(aimrt::CoreRef aimrt_ptr) override;
 
@@ -27,12 +25,12 @@ class ExecutorCoLoopModule : public aimrt::ModuleBase {
 
   void Shutdown() override;
 
- private:
+private:
   auto GetLogger() { return core_.GetLogger(); }
 
   co::Task<void> MainLoop();
 
- private:
+private:
   aimrt::CoreRef core_;
   aimrt::executor::ExecutorRef time_schedule_executor_;
 

@@ -22,14 +22,11 @@ struct convert<aimrt::runtime::core::executor::MainThreadExecutor::Options> {
   static bool decode(const Node& node, Options& rhs) {
     if (!node.IsMap()) return false;
 
-    if (node["name"])
-      rhs.name = node["name"].as<std::string>();
+    if (node["name"]) rhs.name = node["name"].as<std::string>();
 
-    if (node["thread_sched_policy"])
-      rhs.thread_sched_policy = node["thread_sched_policy"].as<std::string>();
+    if (node["thread_sched_policy"]) rhs.thread_sched_policy = node["thread_sched_policy"].as<std::string>();
 
-    if (node["thread_bind_cpu"])
-      rhs.thread_bind_cpu = node["thread_bind_cpu"].as<std::vector<uint32_t>>();
+    if (node["thread_bind_cpu"]) rhs.thread_bind_cpu = node["thread_bind_cpu"].as<std::vector<uint32_t>>();
 
     return true;
   }
@@ -39,12 +36,9 @@ struct convert<aimrt::runtime::core::executor::MainThreadExecutor::Options> {
 namespace aimrt::runtime::core::executor {
 
 void MainThreadExecutor::Initialize(YAML::Node options_node) {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-      "Main thread executor can only be initialized once.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "Main thread executor can only be initialized once.");
 
-  if (options_node && !options_node.IsNull())
-    options_ = options_node.as<Options>();
+  if (options_node && !options_node.IsNull()) options_ = options_node.as<Options>();
 
   name_ = options_.name;
 
@@ -64,14 +58,11 @@ void MainThreadExecutor::Initialize(YAML::Node options_node) {
 }
 
 void MainThreadExecutor::Start() {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kStart) == State::kInit,
-      "Main thread executor can only run when state is 'Init'.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Main thread executor can only run when state is 'Init'.");
 }
 
 void MainThreadExecutor::Shutdown() {
-  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-    return;
+  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 
   AIMRT_INFO("Main thread executor shutdown.");
 }

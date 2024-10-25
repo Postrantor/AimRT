@@ -43,7 +43,7 @@ struct SubscribeProxyInfoWrapper {
 };
 
 class ChannelBackendManager {
- public:
+public:
   enum class State : uint32_t {
     kPreInit,
     kInit,
@@ -51,9 +51,8 @@ class ChannelBackendManager {
     kShutdown,
   };
 
- public:
-  ChannelBackendManager()
-      : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
+public:
+  ChannelBackendManager() : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
   ~ChannelBackendManager() = default;
 
   ChannelBackendManager(const ChannelBackendManager&) = delete;
@@ -70,18 +69,14 @@ class ChannelBackendManager {
 
   void SetChannelRegistry(ChannelRegistry* channel_registry_ptr);
 
-  void SetPublishFiltersRules(
-      const std::vector<std::pair<std::string, std::vector<std::string>>>& rules);
-  void SetSubscribeFiltersRules(
-      const std::vector<std::pair<std::string, std::vector<std::string>>>& rules);
+  void SetPublishFiltersRules(const std::vector<std::pair<std::string, std::vector<std::string>>>& rules);
+  void SetSubscribeFiltersRules(const std::vector<std::pair<std::string, std::vector<std::string>>>& rules);
 
   void SetPublishFrameworkAsyncChannelFilterManager(FrameworkAsyncChannelFilterManager* ptr);
   void SetSubscribeFrameworkAsyncChannelFilterManager(FrameworkAsyncChannelFilterManager* ptr);
 
-  void SetPubTopicsBackendsRules(
-      const std::vector<std::pair<std::string, std::vector<std::string>>>& rules);
-  void SetSubTopicsBackendsRules(
-      const std::vector<std::pair<std::string, std::vector<std::string>>>& rules);
+  void SetPubTopicsBackendsRules(const std::vector<std::pair<std::string, std::vector<std::string>>>& rules);
+  void SetSubTopicsBackendsRules(const std::vector<std::pair<std::string, std::vector<std::string>>>& rules);
 
   void RegisterChannelBackend(ChannelBackendBase* channel_backend_ptr);
 
@@ -99,16 +94,12 @@ class ChannelBackendManager {
   TopicBackendInfoMap GetPubTopicBackendInfo() const;
   TopicBackendInfoMap GetSubTopicBackendInfo() const;
 
- private:
-  std::vector<ChannelBackendBase*> GetBackendsByRules(
-      std::string_view topic_name,
-      const std::vector<std::pair<std::string, std::vector<std::string>>>& rules);
+private:
+  std::vector<ChannelBackendBase*> GetBackendsByRules(std::string_view topic_name, const std::vector<std::pair<std::string, std::vector<std::string>>>& rules);
 
-  std::vector<std::string> GetFilterRules(
-      std::string_view topic_name,
-      const std::vector<std::pair<std::string, std::vector<std::string>>>& rules);
+  std::vector<std::string> GetFilterRules(std::string_view topic_name, const std::vector<std::pair<std::string, std::vector<std::string>>>& rules);
 
- private:
+private:
   std::atomic<State> state_ = State::kPreInit;
   std::shared_ptr<aimrt::common::util::LoggerWrapper> logger_ptr_;
 
@@ -127,19 +118,9 @@ class ChannelBackendManager {
   std::vector<std::pair<std::string, std::vector<std::string>>> pub_topics_backends_rules_;
   std::vector<std::pair<std::string, std::vector<std::string>>> sub_topics_backends_rules_;
 
-  std::unordered_map<
-      std::string,
-      std::vector<ChannelBackendBase*>,
-      aimrt::common::util::StringHash,
-      std::equal_to<>>
-      pub_topics_backend_index_map_;
+  std::unordered_map<std::string, std::vector<ChannelBackendBase*>, aimrt::common::util::StringHash, std::equal_to<>> pub_topics_backend_index_map_;
 
-  std::unordered_map<
-      std::string,
-      std::vector<ChannelBackendBase*>,
-      aimrt::common::util::StringHash,
-      std::equal_to<>>
-      sub_topics_backend_index_map_;
+  std::unordered_map<std::string, std::vector<ChannelBackendBase*>, aimrt::common::util::StringHash, std::equal_to<>> sub_topics_backend_index_map_;
 };
 
 }  // namespace aimrt::runtime::core::channel

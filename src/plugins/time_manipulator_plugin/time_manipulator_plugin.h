@@ -11,12 +11,12 @@
 namespace aimrt::plugins::time_manipulator_plugin {
 
 class TimeManipulatorPlugin : public AimRTCorePluginBase {
- public:
+public:
   struct Options {
     std::string service_name;
   };
 
- public:
+public:
   TimeManipulatorPlugin() = default;
   ~TimeManipulatorPlugin() override = default;
 
@@ -25,12 +25,12 @@ class TimeManipulatorPlugin : public AimRTCorePluginBase {
   bool Initialize(runtime::core::AimRTCore* core_ptr) noexcept override;
   void Shutdown() noexcept override;
 
- private:
+private:
   void SetPluginLogger();
   void RegisterTimeManipulatorExecutor();
   void RegisterRpcService();
 
- private:
+private:
   runtime::core::AimRTCore* core_ptr_ = nullptr;
 
   Options options_;

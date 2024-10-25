@@ -16,7 +16,7 @@
 namespace aimrt::plugins::mqtt_plugin {
 
 class MqttPlugin : public AimRTCorePluginBase {
- public:
+public:
   struct Options {
     std::string broker_addr;
     std::string client_id;
@@ -24,7 +24,7 @@ class MqttPlugin : public AimRTCorePluginBase {
     std::string truststore;
   };
 
- public:
+public:
   MqttPlugin() = default;
   ~MqttPlugin() override = default;
 
@@ -33,7 +33,7 @@ class MqttPlugin : public AimRTCorePluginBase {
   bool Initialize(runtime::core::AimRTCore *core_ptr) noexcept override;
   void Shutdown() noexcept override;
 
- private:
+private:
   void SetPluginLogger();
   void RegisterMqttRpcBackend();
   void RegisterMqttChannelBackend();
@@ -41,7 +41,7 @@ class MqttPlugin : public AimRTCorePluginBase {
   void OnConnectLost(const char *cause);
   int OnMsgRecv(char *topic, int topic_len, MQTTAsync_message *message);
 
- private:
+private:
   runtime::core::AimRTCore *core_ptr_ = nullptr;
 
   Options options_;

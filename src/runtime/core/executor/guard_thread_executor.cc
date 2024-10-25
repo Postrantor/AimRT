@@ -23,17 +23,13 @@ struct convert<aimrt::runtime::core::executor::GuardThreadExecutor::Options> {
   static bool decode(const Node& node, Options& rhs) {
     if (!node.IsMap()) return false;
 
-    if (node["name"])
-      rhs.name = node["name"].as<std::string>();
+    if (node["name"]) rhs.name = node["name"].as<std::string>();
 
-    if (node["thread_sched_policy"])
-      rhs.thread_sched_policy = node["thread_sched_policy"].as<std::string>();
+    if (node["thread_sched_policy"]) rhs.thread_sched_policy = node["thread_sched_policy"].as<std::string>();
 
-    if (node["thread_bind_cpu"])
-      rhs.thread_bind_cpu = node["thread_bind_cpu"].as<std::vector<uint32_t>>();
+    if (node["thread_bind_cpu"]) rhs.thread_bind_cpu = node["thread_bind_cpu"].as<std::vector<uint32_t>>();
 
-    if (node["queue_threshold"])
-      rhs.queue_threshold = node["queue_threshold"].as<uint32_t>();
+    if (node["queue_threshold"]) rhs.queue_threshold = node["queue_threshold"].as<uint32_t>();
 
     return true;
   }
@@ -43,12 +39,9 @@ struct convert<aimrt::runtime::core::executor::GuardThreadExecutor::Options> {
 namespace aimrt::runtime::core::executor {
 
 void GuardThreadExecutor::Initialize(YAML::Node options_node) {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-      "GuardThreadExecutor can only be initialized once.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "GuardThreadExecutor can only be initialized once.");
 
-  if (options_node && !options_node.IsNull())
-    options_ = options_node.as<Options>();
+  if (options_node && !options_node.IsNull()) options_ = options_node.as<Options>();
 
   name_ = options_.name;
 
@@ -63,8 +56,7 @@ void GuardThreadExecutor::Initialize(YAML::Node options_node) {
       util::BindCpuForCurrentThread(options_.thread_bind_cpu);
       util::SetCpuSchedForCurrentThread(options_.thread_sched_policy);
     } catch (const std::exception& e) {
-      AIMRT_WARN("Set thread policy for guard thread executor '{}' get exception, {}",
-                 Name(), e.what());
+      AIMRT_WARN("Set thread policy for guard thread executor '{}' get exception, {}", Name(), e.what());
     }
 
     while (state_.load() != State::kShutdown) {
@@ -113,23 +105,17 @@ void GuardThreadExecutor::Initialize(YAML::Node options_node) {
   AIMRT_INFO("Guard thread executor init complete");
 }
 
-void GuardThreadExecutor::Start() {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kStart) == State::kInit,
-      "Method can only be called when state is 'Init'.");
-}
+void GuardThreadExecutor::Start() { AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'."); }
 
 void GuardThreadExecutor::Shutdown() {
-  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-    return;
+  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 
   {
     std::unique_lock<std::mutex> lck(mutex_);
     cond_.notify_one();
   }
 
-  if (thread_ptr_ && thread_ptr_->joinable())
-    thread_ptr_->join();
+  if (thread_ptr_ && thread_ptr_->joinable()) thread_ptr_->join();
 
   thread_ptr_.reset();
 
@@ -145,17 +131,13 @@ void GuardThreadExecutor::Execute(aimrt::executor::Task&& task) {
   uint32_t cur_queue_task_num = ++queue_task_num_;
 
   if (cur_queue_task_num > queue_threshold_) [[unlikely]] {
-    fprintf(stderr,
-            "The number of tasks in the guard thread executor has reached the threshold '%u', the task will not be delivered.\n",
-            queue_threshold_);
+    fprintf(stderr, "The number of tasks in the guard thread executor has reached the threshold '%u', the task will not be delivered.\n", queue_threshold_);
     --queue_task_num_;
     return;
   }
 
   if (cur_queue_task_num > queue_warn_threshold_) [[unlikely]] {
-    fprintf(stderr,
-            "The number of tasks in the guard thread executor is about to reach the threshold: '%u / %u'.\n",
-            cur_queue_task_num, queue_threshold_);
+    fprintf(stderr, "The number of tasks in the guard thread executor is about to reach the threshold: '%u / %u'.\n", cur_queue_task_num, queue_threshold_);
   }
 
   std::unique_lock<std::mutex> lck(mutex_);

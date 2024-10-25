@@ -20,9 +20,7 @@ wheel_size: [1000, 600]
   std::string_view name = "timeout_executor";
 
   executor::TimeWheelExecutor executor;
-  executor.RegisterGetExecutorFunc([](auto) {
-    return aimrt::executor::ExecutorRef();
-  });
+  executor.RegisterGetExecutorFunc([](auto) { return aimrt::executor::ExecutorRef(); });
   executor.Initialize(name, options_node);
   executor.Start();
 
@@ -31,9 +29,7 @@ wheel_size: [1000, 600]
   rpc_client_tool.RegisterTimeoutExecutor(executor_ref);
 
   std::string s;
-  rpc_client_tool.RegisterTimeoutHandle([&s](std::string&& msg) {
-    s = std::move(msg);
-  });
+  rpc_client_tool.RegisterTimeoutHandle([&s](std::string&& msg) { s = std::move(msg); });
 
   // 正常处理
   rpc_client_tool.Record(1, std::chrono::milliseconds(100), "msg 1");

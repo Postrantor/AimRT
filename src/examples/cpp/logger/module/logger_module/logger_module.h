@@ -11,13 +11,11 @@
 namespace aimrt::examples::cpp::logger::logger_module {
 
 class LoggerModule : public aimrt::ModuleBase {
- public:
+public:
   LoggerModule() = default;
   ~LoggerModule() override = default;
 
-  ModuleInfo Info() const override {
-    return ModuleInfo{.name = "LoggerModule"};
-  }
+  ModuleInfo Info() const override { return ModuleInfo{.name = "LoggerModule"}; }
 
   bool Initialize(aimrt::CoreRef aimrt_ptr) override;
 
@@ -25,7 +23,7 @@ class LoggerModule : public aimrt::ModuleBase {
 
   void Shutdown() override;
 
- private:
+private:
   aimrt::CoreRef core_;
   aimrt::executor::ExecutorRef executor_;
 

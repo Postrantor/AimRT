@@ -23,8 +23,7 @@ struct convert<aimrt::plugins::log_control_plugin::LogControlPlugin::Options> {
   static bool decode(const Node& node, Options& rhs) {
     if (!node.IsMap()) return false;
 
-    if (node["service_name"])
-      rhs.service_name = node["service_name"].as<std::string>();
+    if (node["service_name"]) rhs.service_name = node["service_name"].as<std::string>();
 
     return true;
   }
@@ -45,11 +44,9 @@ bool LogControlPlugin::Initialize(runtime::core::AimRTCore* core_ptr) noexcept {
 
     init_flag_ = true;
 
-    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPostInitLog,
-                                [this] { SetPluginLogger(); });
+    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPostInitLog, [this] { SetPluginLogger(); });
 
-    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPreInitModules,
-                                [this] { RegisterRpcService(); });
+    core_ptr_->RegisterHookFunc(runtime::core::AimRTCore::State::kPreInitModules, [this] { RegisterRpcService(); });
 
     plugin_options_node = options_;
     core_ptr_->GetPluginManager().UpdatePluginOptionsNode(Name(), plugin_options_node);
@@ -71,21 +68,16 @@ void LogControlPlugin::Shutdown() noexcept {
   }
 }
 
-void LogControlPlugin::SetPluginLogger() {
-  SetLogger(aimrt::logger::LoggerRef(
-      core_ptr_->GetLoggerManager().GetLoggerProxy().NativeHandle()));
-}
+void LogControlPlugin::SetPluginLogger() { SetLogger(aimrt::logger::LoggerRef(core_ptr_->GetLoggerManager().GetLoggerProxy().NativeHandle())); }
 
 void LogControlPlugin::RegisterRpcService() {
   service_ptr_ = std::make_unique<LogControlServiceImpl>();
 
-  if (!options_.service_name.empty())
-    service_ptr_->SetServiceName(options_.service_name);
+  if (!options_.service_name.empty()) service_ptr_->SetServiceName(options_.service_name);
 
   service_ptr_->SetLoggerManager(&(core_ptr_->GetLoggerManager()));
 
-  auto rpc_handle_ref = aimrt::rpc::RpcHandleRef(
-      core_ptr_->GetRpcManager().GetRpcHandleProxy().NativeHandle());
+  auto rpc_handle_ref = aimrt::rpc::RpcHandleRef(core_ptr_->GetRpcManager().GetRpcHandleProxy().NativeHandle());
 
   bool ret = rpc_handle_ref.RegisterService(service_ptr_.get());
   AIMRT_CHECK_ERROR(ret, "Register service failed.");

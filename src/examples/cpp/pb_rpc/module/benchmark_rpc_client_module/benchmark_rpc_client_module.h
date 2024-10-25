@@ -15,13 +15,11 @@
 namespace aimrt::examples::cpp::pb_rpc::benchmark_rpc_client_module {
 
 class BenchmarkRpcClientModule : public aimrt::ModuleBase {
- public:
+public:
   BenchmarkRpcClientModule() = default;
   ~BenchmarkRpcClientModule() override = default;
 
-  ModuleInfo Info() const override {
-    return ModuleInfo{.name = "BenchmarkRpcClientModule"};
-  }
+  ModuleInfo Info() const override { return ModuleInfo{.name = "BenchmarkRpcClientModule"}; }
 
   bool Initialize(aimrt::CoreRef core) override;
 
@@ -29,7 +27,7 @@ class BenchmarkRpcClientModule : public aimrt::ModuleBase {
 
   void Shutdown() override;
 
- private:
+private:
   auto GetLogger() { return core_.GetLogger(); }
 
   co::Task<void> MainLoop();
@@ -37,10 +35,7 @@ class BenchmarkRpcClientModule : public aimrt::ModuleBase {
   co::Task<void> WaitForServiceServer();
 
   struct BenchPlan {
-    enum class PerfMod : uint8_t {
-      kBench,
-      kFixedFreq
-    };
+    enum class PerfMod : uint8_t { kBench, kFixedFreq };
 
     PerfMod mode = PerfMod::kBench;
 
@@ -54,7 +49,7 @@ class BenchmarkRpcClientModule : public aimrt::ModuleBase {
   co::Task<void> StartFixedFreqPlan(uint32_t parallel_id, BenchPlan plan, std::vector<uint32_t>& perf_data);
   co::Task<void> StartBenchPlan(uint32_t parallel_id, BenchPlan plan, std::vector<uint32_t>& perf_data);
 
- private:
+private:
   aimrt::CoreRef core_;
 
   co::AsyncScope scope_;

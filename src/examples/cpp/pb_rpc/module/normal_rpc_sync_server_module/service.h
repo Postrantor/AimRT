@@ -8,19 +8,13 @@
 namespace aimrt::examples::cpp::pb_rpc::normal_rpc_sync_server_module {
 
 class ExampleServiceSyncServiceImpl : public aimrt::protocols::example::ExampleServiceSyncService {
- public:
+public:
   ExampleServiceSyncServiceImpl() = default;
   ~ExampleServiceSyncServiceImpl() override = default;
 
-  aimrt::rpc::Status GetFooData(
-      aimrt::rpc::ContextRef ctx,
-      const ::aimrt::protocols::example::GetFooDataReq& req,
-      ::aimrt::protocols::example::GetFooDataRsp& rsp) override;
+  aimrt::rpc::Status GetFooData(aimrt::rpc::ContextRef ctx, const ::aimrt::protocols::example::GetFooDataReq& req, ::aimrt::protocols::example::GetFooDataRsp& rsp) override;
 
-  aimrt::rpc::Status GetBarData(
-      aimrt::rpc::ContextRef ctx,
-      const ::aimrt::protocols::example::GetBarDataReq& req,
-      ::aimrt::protocols::example::GetBarDataRsp& rsp) override;
+  aimrt::rpc::Status GetBarData(aimrt::rpc::ContextRef ctx, const ::aimrt::protocols::example::GetBarDataReq& req, ::aimrt::protocols::example::GetBarDataRsp& rsp) override;
 };
 
 }  // namespace aimrt::examples::cpp::pb_rpc::normal_rpc_sync_server_module

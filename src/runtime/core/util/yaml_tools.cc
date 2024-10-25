@@ -42,8 +42,7 @@ std::string FindClosestMatch(const YAML::Node& node, const std::string& target) 
   return closest_match;
 }
 
-std::string CheckYamlNodes(
-    YAML::Node standard_node, YAML::Node checked_node, const std::string& path, int level) {
+std::string CheckYamlNodes(YAML::Node standard_node, YAML::Node checked_node, const std::string& path, int level) {
   std::stringstream msg;
 
   if (!checked_node) {

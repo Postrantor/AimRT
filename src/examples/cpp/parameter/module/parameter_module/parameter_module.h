@@ -11,13 +11,11 @@
 namespace aimrt::examples::cpp::parameter::parameter_module {
 
 class ParameterModule : public aimrt::ModuleBase {
- public:
+public:
   ParameterModule() = default;
   ~ParameterModule() override = default;
 
-  ModuleInfo Info() const override {
-    return ModuleInfo{.name = "ParameterModule"};
-  }
+  ModuleInfo Info() const override { return ModuleInfo{.name = "ParameterModule"}; }
 
   bool Initialize(aimrt::CoreRef core) override;
 
@@ -25,13 +23,13 @@ class ParameterModule : public aimrt::ModuleBase {
 
   void Shutdown() override;
 
- private:
+private:
   auto GetLogger() { return core_.GetLogger(); }
 
   void SetParameterLoop();
   void GetParameterLoop();
 
- private:
+private:
   aimrt::CoreRef core_;
   aimrt::executor::ExecutorRef work_executor_;
   aimrt::parameter::ParameterHandleRef parameter_handle_;

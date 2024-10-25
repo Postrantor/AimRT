@@ -5,7 +5,7 @@
 
 #ifdef AIMRT_EXECUTOR_USE_STDEXEC
 
-  #include <exec/task.hpp>
+#include <exec/task.hpp>
 
 namespace aimrt::co {
 
@@ -16,7 +16,7 @@ using Task = typename exec::task<T>;
 
 #else
 
-  #include <unifex/task.hpp>
+#include <unifex/task.hpp>
 
 namespace aimrt::co {
 

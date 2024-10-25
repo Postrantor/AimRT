@@ -36,11 +36,7 @@ typedef struct {
  * Input 3: Release callback, which ops type is 'aimrt_function_subscriber_release_callback_ops_t'
  */
 typedef struct {
-  void (*invoker)(
-      void* object,
-      const aimrt_channel_context_base_t* ctx_ptr,
-      const void* msg,
-      aimrt_function_base_t* release_callback);
+  void (*invoker)(void* object, const aimrt_channel_context_base_t* ctx_ptr, const void* msg, aimrt_function_base_t* release_callback);
   void (*relocator)(void* from, void* to);
   void (*destroyer)(void* object);
 } aimrt_function_subscriber_callback_ops_t;
@@ -57,8 +53,7 @@ typedef struct {
    * Input 2: Msg type support
    * Return: Register result
    */
-  bool (*register_publish_type)(
-      void* impl, const aimrt_type_support_base_t* msg_type_support);
+  bool (*register_publish_type)(void* impl, const aimrt_type_support_base_t* msg_type_support);
 
   /**
    * @brief Function to publish msg
@@ -68,11 +63,7 @@ typedef struct {
    * Input 3: Const pointer to channel publish context
    * Input 4: Const pointer to msg
    */
-  void (*publish)(
-      void* impl,
-      aimrt_string_view_t msg_type,
-      const aimrt_channel_context_base_t* ctx_ptr,
-      const void* msg);
+  void (*publish)(void* impl, aimrt_string_view_t msg_type, const aimrt_channel_context_base_t* ctx_ptr, const void* msg);
 
   /**
    * @brief Function to get topic for current publisher
@@ -90,10 +81,7 @@ typedef struct {
    * Input 2: Channel subscribe context
    * Input 3: Channel publish context, for output
    */
-  void (*merge_subscribe_context_to_publish_context)(
-      void* impl,
-      const aimrt_channel_context_base_t* subscribe_ctx_ptr,
-      const aimrt_channel_context_base_t* publish_ctx_ptr);
+  void (*merge_subscribe_context_to_publish_context)(void* impl, const aimrt_channel_context_base_t* subscribe_ctx_ptr, const aimrt_channel_context_base_t* publish_ctx_ptr);
 
   /// Implement pointer
   void* impl;
@@ -112,10 +100,7 @@ typedef struct {
    * Input 3: Msg callback, which ops type is 'aimrt_function_subscriber_callback_ops_t'
    * Return: Subscribe result
    */
-  bool (*subscribe)(
-      void* impl,
-      const aimrt_type_support_base_t* msg_type_support,
-      aimrt_function_base_t* callback);
+  bool (*subscribe)(void* impl, const aimrt_type_support_base_t* msg_type_support, aimrt_function_base_t* callback);
 
   /**
    * @brief Function to get topic for current subscriber
@@ -140,8 +125,7 @@ typedef struct {
    * Input 2: Topic name
    * Output: Publisher handle
    */
-  const aimrt_channel_publisher_base_t* (*get_publisher)(
-      void* impl, aimrt_string_view_t topic);
+  const aimrt_channel_publisher_base_t* (*get_publisher)(void* impl, aimrt_string_view_t topic);
 
   /**
    * @brief Function to get subscriber for a topic
@@ -149,8 +133,7 @@ typedef struct {
    * Input 2: Topic name
    * Output: Subscriber handle
    */
-  const aimrt_channel_subscriber_base_t* (*get_subscriber)(
-      void* impl, aimrt_string_view_t topic);
+  const aimrt_channel_subscriber_base_t* (*get_subscriber)(void* impl, aimrt_string_view_t topic);
 
   /**
    * @brief Function to merge subscribe context to publish context
@@ -159,10 +142,7 @@ typedef struct {
    * Input 2: Channel subscribe context
    * Input 3: Channel publish context, for output
    */
-  void (*merge_subscribe_context_to_publish_context)(
-      void* impl,
-      const aimrt_channel_context_base_t* subscribe_ctx_ptr,
-      const aimrt_channel_context_base_t* publish_ctx_ptr);
+  void (*merge_subscribe_context_to_publish_context)(void* impl, const aimrt_channel_context_base_t* subscribe_ctx_ptr, const aimrt_channel_context_base_t* publish_ctx_ptr);
 
   /// Implement pointer
   void* impl;

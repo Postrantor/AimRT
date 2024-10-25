@@ -21,9 +21,7 @@ namespace aimrt::common::ros2_util {
 
 namespace json_convert_impl {
 
-inline bool IsSequence(const rosidl_typesupport_introspection_cpp::MessageMember &member) {
-  return ((member.is_array_ && member.array_size_ == 0) || member.is_upper_bound_);
-}
+inline bool IsSequence(const rosidl_typesupport_introspection_cpp::MessageMember &member) { return ((member.is_array_ && member.array_size_ == 0) || member.is_upper_bound_); }
 
 template <int RosTypeId>
 inline void WriteSequenceMemberItem(const Json::Value &json, uint8_t *buffer) {
@@ -33,43 +31,31 @@ inline void WriteSequenceMemberItem(const Json::Value &json, uint8_t *buffer) {
 }
 
 template <>
-inline void WriteSequenceMemberItem<rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL>(
-    const Json::Value &json, uint8_t *buffer) {
-  if (!json.isBool())
-    throw std::runtime_error("WriteSequenceMemberItem<ROS_TYPE_BOOL>: json value is not bool");
+inline void WriteSequenceMemberItem<rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL>(const Json::Value &json, uint8_t *buffer) {
+  if (!json.isBool()) throw std::runtime_error("WriteSequenceMemberItem<ROS_TYPE_BOOL>: json value is not bool");
 
-  using SequenceType =
-      typename TypeMappingCpp<rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL>::SequenceType;
+  using SequenceType = typename TypeMappingCpp<rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL>::SequenceType;
   reinterpret_cast<SequenceType *>(buffer)->push_back(GetJsonValue<bool>(json));
 }
 
 template <>
-inline void WriteSequenceMemberItem<rosidl_typesupport_introspection_cpp::ROS_TYPE_OCTET>(
-    const Json::Value &json, uint8_t *buffer) {
-  if (!json.isUInt())
-    throw std::runtime_error("WriteSequenceMemberItem<ROS_TYPE_OCTET>(): json value is not uint");
+inline void WriteSequenceMemberItem<rosidl_typesupport_introspection_cpp::ROS_TYPE_OCTET>(const Json::Value &json, uint8_t *buffer) {
+  if (!json.isUInt()) throw std::runtime_error("WriteSequenceMemberItem<ROS_TYPE_OCTET>(): json value is not uint");
 
-  using SequenceType =
-      typename TypeMappingCpp<rosidl_typesupport_introspection_cpp::ROS_TYPE_OCTET>::SequenceType;
+  using SequenceType = typename TypeMappingCpp<rosidl_typesupport_introspection_cpp::ROS_TYPE_OCTET>::SequenceType;
   reinterpret_cast<SequenceType *>(buffer)->push_back(GetJsonValue<uint8_t>(json));
 }
 
 template <>
-inline void WriteSequenceMemberItem<rosidl_typesupport_introspection_cpp::ROS_TYPE_WSTRING>(
-    const Json::Value &json, uint8_t *buffer) {
-  if (!json.isString())
-    throw std::runtime_error("WriteSequenceMemberItem<ROS_TYPE_WSTRING>(): json value is not string");
+inline void WriteSequenceMemberItem<rosidl_typesupport_introspection_cpp::ROS_TYPE_WSTRING>(const Json::Value &json, uint8_t *buffer) {
+  if (!json.isString()) throw std::runtime_error("WriteSequenceMemberItem<ROS_TYPE_WSTRING>(): json value is not string");
 
   throw std::runtime_error("Not support json to wstring type");
 }
 
 template <int RosTypeId>
-inline void WriteSequence(
-    const Json::Value &json,
-    uint8_t *buffer,
-    const rosidl_typesupport_introspection_cpp::MessageMember &member) {
-  if (member.is_upper_bound_ && json.size() > member.array_size_)
-    throw std::runtime_error("WriteSequence: upper bound exceeded");
+inline void WriteSequence(const Json::Value &json, uint8_t *buffer, const rosidl_typesupport_introspection_cpp::MessageMember &member) {
+  if (member.is_upper_bound_ && json.size() > member.array_size_) throw std::runtime_error("WriteSequence: upper bound exceeded");
 
   for (unsigned int i = 0; i < json.size(); i++) {
     WriteSequenceMemberItem<RosTypeId>(json[i], buffer);
@@ -83,17 +69,13 @@ inline void WriteMemberItem(const Json::Value &json, uint8_t *buffer) {
 }
 
 template <>
-inline void WriteMemberItem<rosidl_typesupport_introspection_cpp::ROS_TYPE_WSTRING>(
-    const Json::Value &json, uint8_t *buffer) {
+inline void WriteMemberItem<rosidl_typesupport_introspection_cpp::ROS_TYPE_WSTRING>(const Json::Value &json, uint8_t *buffer) {
   throw std::runtime_error("Not support json to wstring type");
 }
 
 // Convert a Json Node to Message
 template <int RosTypeId>
-inline void WriteMember(
-    const Json::Value &json,
-    uint8_t *buffer,
-    const rosidl_typesupport_introspection_cpp::MessageMember &member) {
+inline void WriteMember(const Json::Value &json, uint8_t *buffer, const rosidl_typesupport_introspection_cpp::MessageMember &member) {
   using CppType = typename TypeMappingCpp<RosTypeId>::CppType;
   // Arrays and sequences have different struct representation.
   // An array is represented by a classic C array (pointer with data size == sizeof(type) * array_size).
@@ -102,8 +84,7 @@ inline void WriteMember(
   // Handle sequences(std::vector)
   if (IsSequence(member)) {
     if (json[member.name_].isArray()) {
-      WriteSequence<RosTypeId>(
-          json[member.name_], buffer + member.offset_, member);
+      WriteSequence<RosTypeId>(json[member.name_], buffer + member.offset_, member);
       return;
     }
     throw std::runtime_error("JsonToMessage: json member is not an array");
@@ -113,9 +94,7 @@ inline void WriteMember(
   if (member.is_array_) {
     if (json[member.name_].isArray() && member.array_size_ == json[member.name_].size()) {
       for (unsigned int i = 0; i < member.array_size_; i++) {
-        WriteMemberItem<RosTypeId>(
-            json[member.name_][i],
-            buffer + member.offset_ + sizeof(CppType) * i);
+        WriteMemberItem<RosTypeId>(json[member.name_][i], buffer + member.offset_ + sizeof(CppType) * i);
       }
       return;
     }
@@ -126,34 +105,20 @@ inline void WriteMember(
   WriteMemberItem<RosTypeId>(json[member.name_], buffer + member.offset_);
 }
 
-static void JsonToMessageImpl(
-    const Json::Value &root,
-    const rosidl_typesupport_introspection_cpp::MessageMembers *member_info,
-    uint8_t *buffer);
+static void JsonToMessageImpl(const Json::Value &root, const rosidl_typesupport_introspection_cpp::MessageMembers *member_info, uint8_t *buffer);
 
-inline void WriteMemberSequenceNested(
-    const Json::Value &json,
-    uint8_t *buffer,
-    const rosidl_typesupport_introspection_cpp::MessageMember &member) {
-  if (member.is_upper_bound_ && json.size() > member.array_size_)
-    throw std::runtime_error("Json sequence is more than capacity");
+inline void WriteMemberSequenceNested(const Json::Value &json, uint8_t *buffer, const rosidl_typesupport_introspection_cpp::MessageMember &member) {
+  if (member.is_upper_bound_ && json.size() > member.array_size_) throw std::runtime_error("Json sequence is more than capacity");
 
-  const auto *member_typeinfo =
-      reinterpret_cast<const rosidl_typesupport_introspection_cpp::MessageMembers *>(member.members_->data);
+  const auto *member_typeinfo = reinterpret_cast<const rosidl_typesupport_introspection_cpp::MessageMembers *>(member.members_->data);
   auto &seq = buffer;
   member.resize_function(seq, json.size());
   for (unsigned int i = 0; i < json.size(); i++) {
-    JsonToMessageImpl(
-        json[i],
-        member_typeinfo,
-        reinterpret_cast<uint8_t *>(member.get_function(seq, i)));
+    JsonToMessageImpl(json[i], member_typeinfo, reinterpret_cast<uint8_t *>(member.get_function(seq, i)));
   }
 }
 
-inline void WriteMemberNested(
-    const Json::Value &json,
-    uint8_t *buffer,
-    const rosidl_typesupport_introspection_cpp::MessageMember &member) {
+inline void WriteMemberNested(const Json::Value &json, uint8_t *buffer, const rosidl_typesupport_introspection_cpp::MessageMember &member) {
   if (IsSequence(member)) {
     if (json[member.name_].isArray()) {
       WriteMemberSequenceNested(json[member.name_], buffer + member.offset_, member);
@@ -162,29 +127,21 @@ inline void WriteMemberNested(
     throw std::runtime_error("WriteMemberNested but the json is not array!");
   }
 
-  const auto *member_typeinfo =
-      reinterpret_cast<const rosidl_typesupport_introspection_cpp::MessageMembers *>(member.members_->data);
+  const auto *member_typeinfo = reinterpret_cast<const rosidl_typesupport_introspection_cpp::MessageMembers *>(member.members_->data);
   if (member.is_array_) {
     for (unsigned int i = 0; i < json[member.name_].size(); i++) {
-      JsonToMessageImpl(
-          json[member.name_][i],
-          member_typeinfo,
-          buffer + member.offset_ + member_typeinfo->size_of_ * i);
+      JsonToMessageImpl(json[member.name_][i], member_typeinfo, buffer + member.offset_ + member_typeinfo->size_of_ * i);
     }
   } else {
     JsonToMessageImpl(json[member.name_], member_typeinfo, buffer + member.offset_);
   }
 }
 
-static void JsonToMessageImpl(
-    const Json::Value &root,
-    const rosidl_typesupport_introspection_cpp::MessageMembers *member_info,
-    uint8_t *buffer) {
+static void JsonToMessageImpl(const Json::Value &root, const rosidl_typesupport_introspection_cpp::MessageMembers *member_info, uint8_t *buffer) {
   for (uint32_t i = 0; i < member_info->member_count_; i++) {
     const auto &member = member_info->members_[i];
 
-    if (!root.isMember(member.name_))
-      continue;
+    if (!root.isMember(member.name_)) continue;
 
     switch (member.type_id_) {
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT:
@@ -261,22 +218,15 @@ union vector_union {
 
 inline size_t GetVectorSize(const uint8_t *vector, size_t element_size) {
   // Should not get an element size of 0, but we want to avoid errors
-  if (0ul == element_size)
-    return 0ul;
+  if (0ul == element_size) return 0ul;
 
   vector_union v = {reinterpret_cast<std::vector<int> *>(const_cast<uint8_t *>(vector))};
   return (reinterpret_cast<uint64_t>(v.fake->end) - reinterpret_cast<uint64_t>(v.fake->begin)) / element_size;
 }
 
-static void MessageToJsonImpl(
-    const rosidl_typesupport_introspection_cpp::MessageMembers *member_info,
-    const uint8_t *buffer,
-    Json::Value &node);
+static void MessageToJsonImpl(const rosidl_typesupport_introspection_cpp::MessageMembers *member_info, const uint8_t *buffer, Json::Value &node);
 
-inline void MemberToJsonArrayItem(
-    const rosidl_typesupport_introspection_cpp::MessageMember &member_info,
-    const uint8_t *member_data,
-    Json::Value &array_node) {
+inline void MemberToJsonArrayItem(const rosidl_typesupport_introspection_cpp::MessageMember &member_info, const uint8_t *member_data, Json::Value &array_node) {
   switch (member_info.type_id_) {
     case rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT:
       array_node.append(*reinterpret_cast<const float *>(member_data));
@@ -333,43 +283,28 @@ inline void MemberToJsonArrayItem(
       // For nested types, don't copy the data out of the buffer directly.
       // Recursively read the nested type into the YAML.
       Json::Value node;
-      MessageToJsonImpl(
-          reinterpret_cast<const rosidl_typesupport_introspection_cpp::MessageMembers *>(member_info.members_->data),
-          const_cast<uint8_t *>(member_data),
-          node);
+      MessageToJsonImpl(reinterpret_cast<const rosidl_typesupport_introspection_cpp::MessageMembers *>(member_info.members_->data), const_cast<uint8_t *>(member_data), node);
       array_node.append(node);
       break;
   }
 }
 
 template <typename T>
-inline void DynamicArrayToJsonImpl(
-    const rosidl_typesupport_introspection_cpp::MessageMember &member_info,
-    const std::vector<T> *v,
-    Json::Value &json_array) {
+inline void DynamicArrayToJsonImpl(const rosidl_typesupport_introspection_cpp::MessageMember &member_info, const std::vector<T> *v, Json::Value &json_array) {
   std::vector<T> *vn = const_cast<std::vector<T> *>(v);
   for (size_t ii = 0; ii < vn->size(); ++ii) {
-    MemberToJsonArrayItem(
-        member_info,
-        reinterpret_cast<const uint8_t *>(&(vn->data()[ii])),
-        json_array);
+    MemberToJsonArrayItem(member_info, reinterpret_cast<const uint8_t *>(&(vn->data()[ii])), json_array);
   }
 }
 
 template <>
-inline void DynamicArrayToJsonImpl(
-    const rosidl_typesupport_introspection_cpp::MessageMember &member_info,
-    const std::vector<bool> *v,
-    Json::Value &json_array) {
+inline void DynamicArrayToJsonImpl(const rosidl_typesupport_introspection_cpp::MessageMember &member_info, const std::vector<bool> *v, Json::Value &json_array) {
   for (size_t ii = 0; ii < v->size(); ++ii) {
     json_array.append(v->operator[](ii));
   }
 }
 
-inline void DynamicArrayToJson(
-    const rosidl_typesupport_introspection_cpp::MessageMember &member_info,
-    const uint8_t *member_data,
-    Json::Value &json_array) {
+inline void DynamicArrayToJson(const rosidl_typesupport_introspection_cpp::MessageMember &member_info, const uint8_t *member_data, Json::Value &json_array) {
   switch (member_info.type_id_) {
     case rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT:
       DynamicArrayToJsonImpl(member_info, reinterpret_cast<const std::vector<float> *>(member_data), json_array);
@@ -423,8 +358,7 @@ inline void DynamicArrayToJson(
       DynamicArrayToJsonImpl(member_info, reinterpret_cast<const std::vector<std::u16string> *>(member_data), json_array);
       break;
     case rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
-      const auto *cur_member_info =
-          reinterpret_cast<const rosidl_typesupport_introspection_cpp::MessageMembers *>(member_info.members_->data);
+      const auto *cur_member_info = reinterpret_cast<const rosidl_typesupport_introspection_cpp::MessageMembers *>(member_info.members_->data);
       uint8_t *element_data = nullptr;
       memcpy(&element_data, member_data, sizeof(void *));
       size_t element_size = cur_member_info->size_of_;
@@ -481,14 +415,10 @@ inline size_t SizeOfMemberType(uint8_t type_id) {
   }
 }
 
-inline void FixedArrayToJson(
-    const rosidl_typesupport_introspection_cpp::MessageMember &member_info,
-    const uint8_t *member_data,
-    Json::Value &json_array) {
+inline void FixedArrayToJson(const rosidl_typesupport_introspection_cpp::MessageMember &member_info, const uint8_t *member_data, Json::Value &json_array) {
   size_t element_size{0};
   if (member_info.type_id_ == rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE) {
-    element_size =
-        reinterpret_cast<const rosidl_typesupport_introspection_cpp::MessageMembers *>(member_info.members_->data)->size_of_;
+    element_size = reinterpret_cast<const rosidl_typesupport_introspection_cpp::MessageMembers *>(member_info.members_->data)->size_of_;
   } else {
     element_size = SizeOfMemberType(member_info.type_id_);
   }
@@ -498,10 +428,7 @@ inline void FixedArrayToJson(
 }
 
 // Convert an individual member's value from binary to json
-inline void BasicValueToJson(
-    const rosidl_typesupport_introspection_cpp::MessageMember &member_info,
-    const uint8_t *member_data,
-    Json::Value &member) {
+inline void BasicValueToJson(const rosidl_typesupport_introspection_cpp::MessageMember &member_info, const uint8_t *member_data, Json::Value &member) {
   switch (member_info.type_id_) {
     case rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT:
       member = *reinterpret_cast<const float *>(member_data);
@@ -557,10 +484,7 @@ inline void BasicValueToJson(
     case rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
       // For nested types, don't copy the data out of the buffer directly.
       // Recursively read the nested type into the YAML.
-      MessageToJsonImpl(
-          reinterpret_cast<const rosidl_typesupport_introspection_cpp::MessageMembers *>(member_info.members_->data),
-          const_cast<uint8_t *>(member_data),
-          member);
+      MessageToJsonImpl(reinterpret_cast<const rosidl_typesupport_introspection_cpp::MessageMembers *>(member_info.members_->data), const_cast<uint8_t *>(member_data), member);
       break;
     default:
       throw std::runtime_error("unknown type");
@@ -568,10 +492,7 @@ inline void BasicValueToJson(
   }
 }
 
-inline void MemberToJson(
-    const rosidl_typesupport_introspection_cpp::MessageMember &member_info,
-    const uint8_t *member_data,
-    Json::Value &node) {
+inline void MemberToJson(const rosidl_typesupport_introspection_cpp::MessageMember &member_info, const uint8_t *member_data, Json::Value &node) {
   if (member_info.is_array_) {
     node = Json::Value(Json::arrayValue);
     if (member_info.is_upper_bound_ || member_info.array_size_ == 0) {
@@ -586,10 +507,7 @@ inline void MemberToJson(
 
   // ros msg
   if (member_info.type_id_ == rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE) {
-    MessageToJsonImpl(
-        reinterpret_cast<const rosidl_typesupport_introspection_cpp::MessageMembers *>(member_info.members_->data),
-        const_cast<uint8_t *>(member_data),
-        node);
+    MessageToJsonImpl(reinterpret_cast<const rosidl_typesupport_introspection_cpp::MessageMembers *>(member_info.members_->data), const_cast<uint8_t *>(member_data), node);
     return;
   }
 
@@ -597,10 +515,7 @@ inline void MemberToJson(
   BasicValueToJson(member_info, member_data, node);
 }
 
-static void MessageToJsonImpl(
-    const rosidl_typesupport_introspection_cpp::MessageMembers *member_info,
-    const uint8_t *buffer,
-    Json::Value &node) {
+static void MessageToJsonImpl(const rosidl_typesupport_introspection_cpp::MessageMembers *member_info, const uint8_t *buffer, Json::Value &node) {
   for (uint32_t ii = 0; ii < member_info->member_count_; ++ii) {
     const auto &cur_member_info = member_info->members_[ii];
     const uint8_t *member_data = &buffer[cur_member_info.offset_];
@@ -619,10 +534,7 @@ static void MessageToJsonImpl(
  * @return true
  * @return false
  */
-inline bool JsonToMessage(
-    const std::string &json_str,
-    const rosidl_message_type_support_t *typesupport,
-    void *message) {
+inline bool JsonToMessage(const std::string &json_str, const rosidl_message_type_support_t *typesupport, void *message) {
   using namespace json_convert_impl;
 
   if (message == nullptr) [[unlikely]]
@@ -658,10 +570,7 @@ inline bool JsonToMessage(
  * @return true
  * @return false
  */
-inline bool MessageToJson(
-    const void *message,
-    const rosidl_message_type_support_t *typesupport,
-    std::string &json_str_res) {
+inline bool MessageToJson(const void *message, const rosidl_message_type_support_t *typesupport, std::string &json_str_res) {
   using namespace json_convert_impl;
 
   if (message == nullptr) [[unlikely]]

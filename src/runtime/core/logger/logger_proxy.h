@@ -10,18 +10,15 @@
 #include "core/logger/logger_backend_base.h"
 
 #if __GLIBC__ == 2 && __GLIBC_MINOR__ < 30
-  #include <sys/syscall.h>
-  #define gettid() syscall(SYS_gettid)
+#include <sys/syscall.h>
+#define gettid() syscall(SYS_gettid)
 #endif
 
 namespace aimrt::runtime::core::logger {
 
 class LoggerProxy {
- public:
-  LoggerProxy(
-      std::string_view module_name,
-      aimrt_log_level_t lvl,
-      const std::vector<std::unique_ptr<LoggerBackendBase>>& logger_backend_vec)
+public:
+  LoggerProxy(std::string_view module_name, aimrt_log_level_t lvl, const std::vector<std::unique_ptr<LoggerBackendBase>>& logger_backend_vec)
       : module_name_(module_name),
         lvl_(lvl),
         logger_backend_vec_(logger_backend_vec),
@@ -38,16 +35,10 @@ class LoggerProxy {
   aimrt_log_level_t LogLevel() const { return lvl_; }
   void SetLogLevel(aimrt_log_level_t lvl) { lvl_ = lvl; }
 
- private:
+private:
   aimrt_log_level_t GetLogLevel() const { return lvl_; }
 
-  void Log(aimrt_log_level_t lvl,
-           uint32_t line,
-           uint32_t column,
-           const char* file_name,
-           const char* function_name,
-           const char* log_data,
-           size_t log_data_size) const {
+  void Log(aimrt_log_level_t lvl, uint32_t line, uint32_t column, const char* file_name, const char* function_name, const char* log_data, size_t log_data_size) const {
     if (lvl >= lvl_) {
 #if defined(_WIN32)
       thread_local size_t tid(std::hash<std::thread::id>{}(std::this_thread::get_id()));
@@ -75,30 +66,16 @@ class LoggerProxy {
 
   static aimrt_logger_base_t GenBase(void* impl) {
     return aimrt_logger_base_t{
-        .get_log_level = [](void* impl) -> aimrt_log_level_t {
-          return static_cast<LoggerProxy*>(impl)->GetLogLevel();
-        },
-        .log = [](void* impl,
-                  aimrt_log_level_t lvl,
-                  uint32_t line,
-                  uint32_t column,
-                  const char* file_name,
-                  const char* function_name,
-                  const char* log_data,
-                  size_t log_data_size) {
-          static_cast<LoggerProxy*>(impl)->Log(
-              lvl,
-              line,
-              column,
-              file_name,
-              function_name,
-              log_data,
-              log_data_size);  //
-        },
+        .get_log_level = [](void* impl) -> aimrt_log_level_t { return static_cast<LoggerProxy*>(impl)->GetLogLevel(); },
+        .log =
+            [](void* impl, aimrt_log_level_t lvl, uint32_t line, uint32_t column, const char* file_name, const char* function_name, const char* log_data, size_t log_data_size) {
+              static_cast<LoggerProxy*>(impl)->Log(lvl, line, column, file_name, function_name, log_data,
+                                                   log_data_size);  //
+            },
         .impl = impl};
   }
 
- private:
+private:
   const std::string module_name_;
   aimrt_log_level_t lvl_;
   const std::vector<std::unique_ptr<LoggerBackendBase>>& logger_backend_vec_;

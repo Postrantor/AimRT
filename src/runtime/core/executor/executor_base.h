@@ -13,7 +13,7 @@
 namespace aimrt::runtime::core::executor {
 
 class ExecutorBase {
- public:
+public:
   ExecutorBase() = default;
   virtual ~ExecutorBase() = default;
 

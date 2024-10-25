@@ -8,7 +8,7 @@
 namespace aimrt::examples::cpp::ros2_rpc::normal_rpc_async_server_module {
 
 class RosTestRpcAsyncServiceImpl : public example_ros2::srv::RosTestRpcAsyncService {
- public:
+public:
   RosTestRpcAsyncServiceImpl() = default;
   ~RosTestRpcAsyncServiceImpl() override = default;
 

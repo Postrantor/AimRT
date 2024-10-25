@@ -32,9 +32,7 @@ StreamPtr Session::FindStream(int32_t stream_id) {
   return it->second;
 }
 
-void Session::AddStream(StreamPtr&& stream_ptr) {
-  streams_.emplace(stream_ptr->GetStreamId(), std::move(stream_ptr));
-}
+void Session::AddStream(StreamPtr&& stream_ptr) { streams_.emplace(stream_ptr->GetStreamId(), std::move(stream_ptr)); }
 
 void Session::RemoveStream(int32_t stream_id) {
   auto it = streams_.find(stream_id);
@@ -81,8 +79,8 @@ int Session::SubmitData(int32_t stream_id, SimpleBuffer&& buffer) {
 
   nghttp2_data_provider data_provider{};
   data_provider.source.ptr = &stream_data_queue_;
-  data_provider.read_callback = [](nghttp2_session* session, int32_t stream_id, uint8_t* buf, size_t len,
-                                   uint32_t* data_flags, nghttp2_data_source* source, void* user_data) -> ssize_t {
+  data_provider.read_callback = [](nghttp2_session* session, int32_t stream_id, uint8_t* buf, size_t len, uint32_t* data_flags, nghttp2_data_source* source,
+                                   void* user_data) -> ssize_t {
     auto* stream_data_queue = static_cast<std::queue<SimpleBuffer>*>(source->ptr);
     if (stream_data_queue->empty()) {
       *data_flags |= NGHTTP2_DATA_FLAG_EOF | NGHTTP2_DATA_FLAG_NO_END_STREAM;

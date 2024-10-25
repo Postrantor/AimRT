@@ -51,17 +51,11 @@ inline std::string_view& Trim(std::string_view& s) {
  * @return std::map<std::string, std::string> 解析后的map
  */
 template <class StringType = std::string_view>
-  requires(std::is_same_v<StringType, std::string_view> ||
-           std::is_same_v<StringType, std::string>)
-inline std::map<StringType, StringType> SplitToMap(std::string_view source,
-                                                   std::string_view vsep = "&",
-                                                   std::string_view msep = "=",
-                                                   bool trim = true,
-                                                   bool clear = true) {
+  requires(std::is_same_v<StringType, std::string_view> || std::is_same_v<StringType, std::string>)
+inline std::map<StringType, StringType> SplitToMap(std::string_view source, std::string_view vsep = "&", std::string_view msep = "=", bool trim = true, bool clear = true) {
   std::map<StringType, StringType> result;
 
-  if (source.empty() || vsep.empty() || msep.empty() || vsep == msep)
-    return result;
+  if (source.empty() || vsep.empty() || msep.empty() || vsep == msep) return result;
   size_t v_pos_end = 0, v_pos_start = 0;
   do {
     v_pos_end = source.find(vsep, v_pos_start);
@@ -99,11 +93,8 @@ inline std::map<StringType, StringType> SplitToMap(std::string_view source,
  * @return std::string 拼接后的字符串
  */
 template <class StringType = std::string_view>
-  requires(std::is_same_v<StringType, std::string_view> ||
-           std::is_same_v<StringType, std::string>)
-inline std::string JoinMap(const std::map<StringType, StringType>& kvmap,
-                           std::string_view vsep = "&",
-                           std::string_view msep = "=") {
+  requires(std::is_same_v<StringType, std::string_view> || std::is_same_v<StringType, std::string>)
+inline std::string JoinMap(const std::map<StringType, StringType>& kvmap, std::string_view vsep = "&", std::string_view msep = "=") {
   std::stringstream result;
   for (auto itr = kvmap.begin(); itr != kvmap.end(); ++itr) {
     if (itr != kvmap.begin()) result << vsep;
@@ -121,11 +112,8 @@ inline std::string JoinMap(const std::map<StringType, StringType>& kvmap,
  * @return std::string 结果
  */
 template <class StringType = std::string_view>
-  requires(std::is_same_v<StringType, std::string_view> ||
-           std::is_same_v<StringType, std::string>)
-inline const StringType& GetMapItemWithDef(const std::map<StringType, StringType>& m,
-                                           const StringType& key,
-                                           const StringType& defval = "") {
+  requires(std::is_same_v<StringType, std::string_view> || std::is_same_v<StringType, std::string>)
+inline const StringType& GetMapItemWithDef(const std::map<StringType, StringType>& m, const StringType& key, const StringType& defval = "") {
   auto finditr = m.find(key);
   return (finditr != m.end()) ? (finditr->second) : defval;
 }
@@ -140,11 +128,7 @@ inline const StringType& GetMapItemWithDef(const std::map<StringType, StringType
  * @param[in] msep 单个kv内部的分隔符
  * @return std::string& 拼接后的字符串s的引用
  */
-inline std::string& AddKV(std::string& s,
-                          std::string_view key,
-                          std::string_view val,
-                          std::string_view vsep = "&",
-                          std::string_view msep = "=") {
+inline std::string& AddKV(std::string& s, std::string_view key, std::string_view val, std::string_view vsep = "&", std::string_view msep = "=") {
   if (!s.empty()) s += vsep;
   s += key;
   s += msep;
@@ -163,14 +147,9 @@ inline std::string& AddKV(std::string& s,
  * @param[in] trim 是否不计空格
  * @return std::string key对应的val
  */
-inline std::string_view GetValueFromStrKV(std::string_view str,
-                                          std::string_view key,
-                                          std::string_view vsep = "&",
-                                          std::string_view msep = "=",
-                                          bool trim = true) {
+inline std::string_view GetValueFromStrKV(std::string_view str, std::string_view key, std::string_view vsep = "&", std::string_view msep = "=", bool trim = true) {
   if (key.empty() || vsep.empty() || msep.empty() || vsep == msep) return "";
-  if (key.find(vsep) != std::string_view::npos || key.find(msep) != std::string_view::npos)
-    return "";
+  if (key.find(vsep) != std::string_view::npos || key.find(msep) != std::string_view::npos) return "";
 
   size_t key_pos = str.find(key);
   while (key_pos != std::string_view::npos) {
@@ -189,8 +168,7 @@ inline std::string_view GetValueFromStrKV(std::string_view str,
       Trim(real_key);
       if (real_key == key) right_key_flag = true;
     } else {
-      if ((key_start_pos == key_pos) && (msep_pos == (key_pos + key.size())))
-        right_key_flag = true;
+      if ((key_start_pos == key_pos) && (msep_pos == (key_pos + key.size()))) right_key_flag = true;
     }
 
     if (right_key_flag) {
@@ -220,12 +198,8 @@ inline std::string_view GetValueFromStrKV(std::string_view str,
  * @return std::vector<std::string> 分割结果
  */
 template <class StringType = std::string_view>
-  requires(std::is_same_v<StringType, std::string_view> ||
-           std::is_same_v<StringType, std::string>)
-inline std::vector<StringType> SplitToVec(std::string_view source,
-                                          std::string_view sep,
-                                          bool trim = true,
-                                          bool clear = true) {
+  requires(std::is_same_v<StringType, std::string_view> || std::is_same_v<StringType, std::string>)
+inline std::vector<StringType> SplitToVec(std::string_view source, std::string_view sep, bool trim = true, bool clear = true) {
   std::vector<StringType> result;
   if (source.empty() || sep.empty()) return result;
 
@@ -254,8 +228,7 @@ inline std::vector<StringType> SplitToVec(std::string_view source,
  * @return std::string 拼接后的字符串
  */
 template <class StringType = std::string_view>
-  requires(std::is_same_v<StringType, std::string_view> ||
-           std::is_same_v<StringType, std::string>)
+  requires(std::is_same_v<StringType, std::string_view> || std::is_same_v<StringType, std::string>)
 inline std::string JoinVec(const std::vector<StringType>& vec, std::string_view sep) {
   std::string result;
   for (auto itr = vec.begin(); itr != vec.end(); ++itr) {
@@ -275,12 +248,8 @@ inline std::string JoinVec(const std::vector<StringType>& vec, std::string_view 
  * @return std::set<std::string> 分割结果
  */
 template <class StringType = std::string_view>
-  requires(std::is_same_v<StringType, std::string_view> ||
-           std::is_same_v<StringType, std::string>)
-inline std::set<StringType> SplitToSet(std::string_view source,
-                                       std::string_view sep,
-                                       bool trim = true,
-                                       bool clear = true) {
+  requires(std::is_same_v<StringType, std::string_view> || std::is_same_v<StringType, std::string>)
+inline std::set<StringType> SplitToSet(std::string_view source, std::string_view sep, bool trim = true, bool clear = true) {
   std::set<StringType> result;
   if (source.empty() || sep.empty()) return result;
 
@@ -309,8 +278,7 @@ inline std::set<StringType> SplitToSet(std::string_view source,
  * @return std::string 拼接后的字符串
  */
 template <class StringType = std::string_view>
-  requires(std::is_same_v<StringType, std::string_view> ||
-           std::is_same_v<StringType, std::string>)
+  requires(std::is_same_v<StringType, std::string_view> || std::is_same_v<StringType, std::string>)
 inline std::string JoinSet(const std::set<StringType>& st, std::string_view sep) {
   std::string result;
   for (auto itr = st.begin(); itr != st.end(); ++itr) {
@@ -331,10 +299,7 @@ inline std::string JoinSet(const std::set<StringType>& st, std::string_view sep)
  * @return true key在list中
  * @return false key不在list中
  */
-inline bool CheckIfInList(std::string_view str,
-                          std::string_view key,
-                          std::string_view sep = ",",
-                          bool trim = true) {
+inline bool CheckIfInList(std::string_view str, std::string_view key, std::string_view sep = ",", bool trim = true) {
   if (key.empty() || sep.empty()) return false;
   if (key.find(sep) != std::string_view::npos) return false;
 
@@ -354,8 +319,7 @@ inline bool CheckIfInList(std::string_view str,
       Trim(real_key);
       if (real_key == key) return true;
     } else {
-      if ((key_start_pos == key_pos) && (key_end_pos == (key_pos + key.size())))
-        return true;
+      if ((key_start_pos == key_pos) && (key_end_pos == (key_pos + key.size()))) return true;
     }
 
     key_pos = str.find(key, key_end_pos + sep.length());
@@ -372,29 +336,20 @@ inline bool CheckIfInList(std::string_view str,
  * @return int 返回1是大于，返回0是相等，返回-1是小于
  */
 inline int CmpVersion(std::string_view ver1, std::string_view ver2) {
-  const auto& version1_detail =
-      SplitToVec<std::string_view>(ver1, ".", true, true);
-  const auto& version2_detail =
-      SplitToVec<std::string_view>(ver2, ".", true, true);
+  const auto& version1_detail = SplitToVec<std::string_view>(ver1, ".", true, true);
+  const auto& version2_detail = SplitToVec<std::string_view>(ver2, ".", true, true);
 
   size_t idx = 0;
   for (idx = 0; idx < version1_detail.size() && idx < version2_detail.size(); ++idx) {
     int ver1_num = 0, ver2_num = 0;
-    auto [ptr1, ec1] = std::from_chars(version1_detail[idx].data(),
-                                       version1_detail[idx].data() + version1_detail[idx].size(),
-                                       ver1_num);
-    auto [ptr2, ec2] = std::from_chars(version2_detail[idx].data(),
-                                       version2_detail[idx].data() + version2_detail[idx].size(),
-                                       ver2_num);
-    if (ec1 != std::errc() || ec2 != std::errc() ||
-        ptr1 != version1_detail[idx].data() + version1_detail[idx].size() ||
+    auto [ptr1, ec1] = std::from_chars(version1_detail[idx].data(), version1_detail[idx].data() + version1_detail[idx].size(), ver1_num);
+    auto [ptr2, ec2] = std::from_chars(version2_detail[idx].data(), version2_detail[idx].data() + version2_detail[idx].size(), ver2_num);
+    if (ec1 != std::errc() || ec2 != std::errc() || ptr1 != version1_detail[idx].data() + version1_detail[idx].size() ||
         ptr2 != version2_detail[idx].data() + version2_detail[idx].size()) {
       throw std::runtime_error("Invalid version format");
     }
-    if (ver1_num < ver2_num)
-      return -1;
-    if (ver1_num > ver2_num)
-      return 1;
+    if (ver1_num < ver2_num) return -1;
+    if (ver1_num > ver2_num) return 1;
   }
   if (idx == version1_detail.size() && idx == version2_detail.size()) {
     return 0;
@@ -411,11 +366,8 @@ inline int CmpVersion(std::string_view ver1, std::string_view ver2) {
  * @return true 在传入的版本之间
  * @return false 不在传入的版本之间
  */
-inline bool CheckVersionInside(std::string_view ver,
-                               std::string_view start_ver,
-                               std::string_view end_ver) {
-  return (CmpVersion(ver, start_ver.empty() ? "0.0.0.0" : start_ver) >= 0 &&
-          CmpVersion(ver, end_ver.empty() ? "999.9.9.9" : end_ver) <= 0);
+inline bool CheckVersionInside(std::string_view ver, std::string_view start_ver, std::string_view end_ver) {
+  return (CmpVersion(ver, start_ver.empty() ? "0.0.0.0" : start_ver) >= 0 && CmpVersion(ver, end_ver.empty() ? "999.9.9.9" : end_ver) <= 0);
 }
 
 /**
@@ -426,9 +378,7 @@ inline bool CheckVersionInside(std::string_view ver,
  * @param[in] nv 要替换成的子字符串
  * @return std::string& 替换后的字符串str的引用
  */
-inline std::string& ReplaceString(std::string& str,
-                                  std::string_view ov,
-                                  std::string_view nv) {
+inline std::string& ReplaceString(std::string& str, std::string_view ov, std::string_view nv) {
   if (str.empty() || ov.empty()) return str;
   std::vector<size_t> vec_pos;
   size_t pos = 0, old_len = ov.size(), new_len = nv.size();
@@ -439,9 +389,7 @@ inline std::string& ReplaceString(std::string& str,
   size_t& vec_len = pos = vec_pos.size();
   if (vec_len) {
     if (old_len == new_len) {
-      for (size_t ii = 0; ii < vec_len; ++ii)
-        memcpy(const_cast<char*>(str.c_str() + vec_pos[ii]), nv.data(),
-               new_len);
+      for (size_t ii = 0; ii < vec_len; ++ii) memcpy(const_cast<char*>(str.c_str() + vec_pos[ii]), nv.data(), new_len);
     } else if (old_len > new_len) {
       char* p = const_cast<char*>(str.c_str()) + vec_pos[0];
       vec_pos.emplace_back(str.size());
@@ -523,25 +471,20 @@ inline std::set<KeyType> GetMapKeys(const std::map<KeyType, ValType>& m) {
  * @return std::string 结果字符串，可以直接打印
  */
 template <class StringType = std::string_view>
-  requires(std::is_same_v<StringType, std::string_view> ||
-           std::is_same_v<StringType, std::string>)
-inline std::string DrawTable(
-    const std::vector<std::vector<StringType>>& table, bool with_header = true) {
+  requires(std::is_same_v<StringType, std::string_view> || std::is_same_v<StringType, std::string>)
+inline std::string DrawTable(const std::vector<std::vector<StringType>>& table, bool with_header = true) {
   size_t row = table.size();
   if (row == 0) return "<empty table>";
 
   std::vector<size_t> column_width;
 
   for (auto& row_item : table) {
-    if (column_width.size() < row_item.size())
-      column_width.resize(row_item.size());
+    if (column_width.size() < row_item.size()) column_width.resize(row_item.size());
 
-    for (size_t ii = 0; ii < row_item.size(); ++ii)
-      column_width[ii] = std::max(column_width[ii], row_item[ii].size());
+    for (size_t ii = 0; ii < row_item.size(); ++ii) column_width[ii] = std::max(column_width[ii], row_item[ii].size());
   }
 
-  for (auto& item : column_width)
-    item += 2;
+  for (auto& item : column_width) item += 2;
 
   size_t column = column_width.size();
 
@@ -557,8 +500,7 @@ inline std::string DrawTable(
     for (size_t jj = 0; jj < column; ++jj) {
       std::string cur_data = " ";
 
-      if (table[ii].size() > jj)
-        cur_data += table[ii][jj];
+      if (table[ii].size() > jj) cur_data += table[ii][jj];
 
       result << "|" << std::left << std::setfill(' ') << std::setw(column_width[jj]) << cur_data;
     }
@@ -684,8 +626,7 @@ inline std::string StrToUpper(std::string_view str) {
 inline bool CheckIEqual(std::string_view str1, std::string_view str2) {
   if (str1.size() != str2.size()) return false;
 
-  return std::equal(str1.begin(), str1.end(), str2.begin(),
-                    [](char a, char b) { return std::tolower(a) == std::tolower(b); });
+  return std::equal(str1.begin(), str1.end(), str2.begin(), [](char a, char b) { return std::tolower(a) == std::tolower(b); });
 }
 
 /**
@@ -727,9 +668,7 @@ inline std::string& StandardisePath(std::string& path) {
  * @return true
  * @return false
  */
-inline bool StartsWith(std::string_view str,
-                       std::string_view pattern,
-                       bool ignore_case = false) {
+inline bool StartsWith(std::string_view str, std::string_view pattern, bool ignore_case = false) {
   const size_t str_len = str.length();
   const size_t pattern_len = pattern.length();
   if (str_len < pattern_len || pattern_len == 0) return false;
@@ -755,9 +694,7 @@ inline bool StartsWith(std::string_view str,
  * @return true
  * @return false
  */
-inline bool EndsWith(std::string_view str,
-                     std::string_view pattern,
-                     bool ignore_case = false) {
+inline bool EndsWith(std::string_view str, std::string_view pattern, bool ignore_case = false) {
   const size_t str_len = str.length();
   const size_t pattern_len = pattern.length();
   if (str_len < pattern_len || pattern_len == 0) return false;

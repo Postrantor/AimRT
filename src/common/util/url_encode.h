@@ -8,9 +8,7 @@
 
 namespace aimrt::common::util {
 
-inline unsigned char ToHex(unsigned char x, bool up) {
-  return x > 9 ? x + (up ? 'A' : 'a') - 10 : (x + '0');
-}
+inline unsigned char ToHex(unsigned char x, bool up) { return x > 9 ? x + (up ? 'A' : 'a') - 10 : (x + '0'); }
 
 inline unsigned char FromHex(unsigned char x) {
   if (x >= '0' && x <= '9') {

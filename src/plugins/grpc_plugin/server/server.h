@@ -27,7 +27,7 @@
 namespace aimrt::plugins::grpc_plugin::server {
 
 class AsioHttp2Server : public std::enable_shared_from_this<AsioHttp2Server> {
- public:
+public:
   explicit AsioHttp2Server(const std::shared_ptr<IOCtx>& io_ptr)
       : io_ptr_(io_ptr),
         mgr_strand_(boost::asio::make_strand(*io_ptr)),
@@ -45,34 +45,26 @@ class AsioHttp2Server : public std::enable_shared_from_this<AsioHttp2Server> {
   const aimrt::common::util::LoggerWrapper& GetLogger() const noexcept { return *logger_ptr_; }
 
   void SetLogger(const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr) {
-    AIMRT_CHECK_ERROR_THROW(
-        state_.load() == State::kPreInit,
-        "Method can only be called when state is 'PreInit'.");
+    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
     logger_ptr_ = logger_ptr;
   }
 
   void RegisterHttpHandleFunc(std::string_view pattern, HttpHandle handle) {
-    AIMRT_CHECK_ERROR_THROW(
-        state_.load() == State::kPreInit,
-        "Method can only be called when state is 'PreInit'.");
+    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
     dispatcher_ptr_->RegisterHttpHandle(pattern, std::move(handle));
   }
 
   void Initialize(const ServerOptions& options) {
-    AIMRT_CHECK_ERROR_THROW(
-        std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-        "Method can only be called when state is 'PreInit'.");
+    AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
     options_ = ServerOptions::Verify(options);
     connection_options_ptr_ = std::make_shared<ConnectionOptions>(options_);
   }
 
   void Start() {
-    AIMRT_CHECK_ERROR_THROW(
-        std::atomic_exchange(&state_, State::kStart) == State::kInit,
-        "Method can only be called when state is 'Init'.");
+    AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'.");
 
     auto self = this->shared_from_this();
     boost::asio::co_spawn(
@@ -91,13 +83,11 @@ class AsioHttp2Server : public std::enable_shared_from_this<AsioHttp2Server> {
                 continue;
               }
 
-              auto connection_ptr = std::make_shared<Connection>(
-                  io_ptr_, logger_ptr_, dispatcher_ptr_);
+              auto connection_ptr = std::make_shared<Connection>(io_ptr_, logger_ptr_, dispatcher_ptr_);
               connection_ptr->Initialize(connection_options_ptr_);
 
               co_await acceptor_.async_accept(connection_ptr->Socket(), boost::asio::use_awaitable);
-              AIMRT_TRACE("Http svr accept a new connection, remote addr is {}",
-                          aimrt::common::util::SSToString(connection_ptr->Socket().remote_endpoint()));
+              AIMRT_TRACE("Http svr accept a new connection, remote addr is {}", aimrt::common::util::SSToString(connection_ptr->Socket().remote_endpoint()));
               connection_ptr->Start();
 
               connection_ptr_list_.emplace_back(connection_ptr);
@@ -127,9 +117,7 @@ class AsioHttp2Server : public std::enable_shared_from_this<AsioHttp2Server> {
                   connection_ptr_list_.erase(itr++);
               }
             } catch (const std::exception& e) {
-              AIMRT_WARN(
-                  "Http svr timer get exception and exit, exception info: {}",
-                  e.what());
+              AIMRT_WARN("Http svr timer get exception and exit, exception info: {}", e.what());
             }
           }
 
@@ -173,7 +161,7 @@ class AsioHttp2Server : public std::enable_shared_from_this<AsioHttp2Server> {
     connection_ptr_list_.clear();
   }
 
- private:
+private:
   enum class State : uint32_t {
     kPreInit,
     kInit,

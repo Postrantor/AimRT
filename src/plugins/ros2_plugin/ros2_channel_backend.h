@@ -23,7 +23,7 @@
 namespace aimrt::plugins::ros2_plugin {
 
 class Ros2ChannelBackend : public runtime::core::channel::ChannelBackendBase {
- public:
+public:
   struct Options {
     struct QosOptions {
       /**
@@ -97,7 +97,7 @@ class Ros2ChannelBackend : public runtime::core::channel::ChannelBackendBase {
     std::vector<SubTopicOptions> sub_topics_options;
   };
 
- public:
+public:
   Ros2ChannelBackend() = default;
   ~Ros2ChannelBackend() override = default;
 
@@ -107,26 +107,19 @@ class Ros2ChannelBackend : public runtime::core::channel::ChannelBackendBase {
   void Start() override;
   void Shutdown() override;
 
-  void SetChannelRegistry(const runtime::core::channel::ChannelRegistry* channel_registry_ptr) noexcept override {
-    channel_registry_ptr_ = channel_registry_ptr;
-  }
+  void SetChannelRegistry(const runtime::core::channel::ChannelRegistry* channel_registry_ptr) noexcept override { channel_registry_ptr_ = channel_registry_ptr; }
 
-  bool RegisterPublishType(
-      const runtime::core::channel::PublishTypeWrapper& publish_type_wrapper) noexcept override;
+  bool RegisterPublishType(const runtime::core::channel::PublishTypeWrapper& publish_type_wrapper) noexcept override;
   bool Subscribe(const runtime::core::channel::SubscribeWrapper& subscribe_wrapper) noexcept override;
   void Publish(runtime::core::channel::MsgWrapper& msg_wrapper) noexcept override;
 
-  void SetNodePtr(const std::shared_ptr<rclcpp::Node>& ros2_node_ptr) {
-    ros2_node_ptr_ = ros2_node_ptr;
-  }
+  void SetNodePtr(const std::shared_ptr<rclcpp::Node>& ros2_node_ptr) { ros2_node_ptr_ = ros2_node_ptr; }
 
- private:
-  static bool CheckRosMsg(std::string_view msg_type) {
-    return (msg_type.substr(0, 5) == "ros2:");
-  }
+private:
+  static bool CheckRosMsg(std::string_view msg_type) { return (msg_type.substr(0, 5) == "ros2:"); }
   rclcpp::QoS GetQos(const Options::QosOptions& qos_option);
 
- private:
+private:
   enum class State : uint32_t {
     kPreInit,
     kInit,
@@ -145,43 +138,25 @@ class Ros2ChannelBackend : public runtime::core::channel::ChannelBackendBase {
     std::string topic_name;
     std::string msg_type;
 
-    bool operator==(const Key& rhs) const {
-      return topic_name == rhs.topic_name && msg_type == rhs.msg_type;
-    }
+    bool operator==(const Key& rhs) const { return topic_name == rhs.topic_name && msg_type == rhs.msg_type; }
 
     struct Hash {
-      std::size_t operator()(const Key& k) const {
-        return (std::hash<std::string>()(k.topic_name)) ^
-               (std::hash<std::string>()(k.msg_type));
-      }
+      std::size_t operator()(const Key& k) const { return (std::hash<std::string>()(k.topic_name)) ^ (std::hash<std::string>()(k.msg_type)); }
     };
   };
 
   // ros2 msg
-  std::unordered_map<
-      Key,
-      std::unique_ptr<rcl_publisher_t>,
-      Key::Hash,
-      std::equal_to<>>
-      ros2_publish_type_wrapper_map_;
+  std::unordered_map<Key, std::unique_ptr<rcl_publisher_t>, Key::Hash, std::equal_to<>> ros2_publish_type_wrapper_map_;
 
   struct RosSubWrapper {
     std::unique_ptr<aimrt::runtime::core::channel::SubscribeTool> sub_tool_ptr;
     std::shared_ptr<rclcpp::SubscriptionBase> ros_sub_handle_ptr;
   };
 
-  std::unordered_map<
-      Key,
-      RosSubWrapper,
-      Key::Hash,
-      std::equal_to<>>
-      ros2_subscribe_wrapper_map_;
+  std::unordered_map<Key, RosSubWrapper, Key::Hash, std::equal_to<>> ros2_subscribe_wrapper_map_;
 
   // other msg
-  std::unordered_map<
-      std::string,
-      rclcpp::Publisher<ros2_plugin_proto::msg::RosMsgWrapper>::SharedPtr>
-      publisher_map_;
+  std::unordered_map<std::string, rclcpp::Publisher<ros2_plugin_proto::msg::RosMsgWrapper>::SharedPtr> publisher_map_;
 
   struct SubWrapper {
     std::unique_ptr<aimrt::runtime::core::channel::SubscribeTool> sub_tool_ptr;

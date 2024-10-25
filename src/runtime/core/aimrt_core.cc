@@ -10,10 +10,7 @@
 
 namespace aimrt::runtime::core {
 
-AimRTCore::AimRTCore()
-    : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {
-  hook_task_vec_array_.resize(static_cast<uint32_t>(State::kMaxStateNum));
-}
+AimRTCore::AimRTCore() : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) { hook_task_vec_array_.resize(static_cast<uint32_t>(State::kMaxStateNum)); }
 
 AimRTCore::~AimRTCore() {
   try {
@@ -66,8 +63,7 @@ void AimRTCore::Initialize(const Options& options) {
   // Init log
   EnterState(State::kPreInitLog);
   logger_manager_.SetLogger(logger_ptr_);
-  logger_manager_.RegisterGetExecutorFunc(
-      std::bind(&AimRTCore::GetExecutor, this, std::placeholders::_1));
+  logger_manager_.RegisterGetExecutorFunc(std::bind(&AimRTCore::GetExecutor, this, std::placeholders::_1));
   logger_manager_.Initialize(configurator_manager_.GetAimRTOptionsNode("log"));
   SetCoreLogger();
   EnterState(State::kPostInitLog);
@@ -81,16 +77,14 @@ void AimRTCore::Initialize(const Options& options) {
   // Init rpc
   EnterState(State::kPreInitRpc);
   rpc_manager_.SetLogger(logger_ptr_);
-  rpc_manager_.RegisterGetExecutorFunc(
-      std::bind(&AimRTCore::GetExecutor, this, std::placeholders::_1));
+  rpc_manager_.RegisterGetExecutorFunc(std::bind(&AimRTCore::GetExecutor, this, std::placeholders::_1));
   rpc_manager_.Initialize(configurator_manager_.GetAimRTOptionsNode("rpc"));
   EnterState(State::kPostInitRpc);
 
   // Init channel
   EnterState(State::kPreInitChannel);
   channel_manager_.SetLogger(logger_ptr_);
-  channel_manager_.RegisterGetExecutorFunc(
-      std::bind(&AimRTCore::GetExecutor, this, std::placeholders::_1));
+  channel_manager_.RegisterGetExecutorFunc(std::bind(&AimRTCore::GetExecutor, this, std::placeholders::_1));
   channel_manager_.Initialize(configurator_manager_.GetAimRTOptionsNode("channel"));
   EnterState(State::kPostInitChannel);
 
@@ -103,8 +97,7 @@ void AimRTCore::Initialize(const Options& options) {
   // Init modules
   EnterState(State::kPreInitModules);
   module_manager_.SetLogger(logger_ptr_);
-  module_manager_.RegisterCoreProxyConfigurator(
-      std::bind(&AimRTCore::InitCoreProxy, this, std::placeholders::_1, std::placeholders::_2));
+  module_manager_.RegisterCoreProxyConfigurator(std::bind(&AimRTCore::InitCoreProxy, this, std::placeholders::_1, std::placeholders::_2));
   module_manager_.Initialize(configurator_manager_.GetAimRTOptionsNode("module"));
   EnterState(State::kPostInitModules);
 
@@ -254,32 +247,18 @@ void AimRTCore::Shutdown() {
 
 void AimRTCore::EnterState(State state) {
   state_ = state;
-  for (const auto& func : hook_task_vec_array_[static_cast<uint32_t>(state)])
-    func();
+  for (const auto& func : hook_task_vec_array_[static_cast<uint32_t>(state)]) func();
 }
 
 void AimRTCore::SetCoreLogger() {
   const auto* core_logger_ptr = logger_manager_.GetLoggerProxy("core").NativeHandle();
 
-  logger_ptr_->get_log_level_func = [core_logger_ptr]() -> uint32_t {
-    return core_logger_ptr->get_log_level(core_logger_ptr->impl);
-  };
+  logger_ptr_->get_log_level_func = [core_logger_ptr]() -> uint32_t { return core_logger_ptr->get_log_level(core_logger_ptr->impl); };
 
-  logger_ptr_->log_func =
-      [core_logger_ptr](
-          uint32_t lvl,
-          uint32_t line,
-          uint32_t column,
-          const char* file_name,
-          const char* function_name,
-          const char* log_data,
-          size_t log_data_size) {
-        core_logger_ptr->log(
-            core_logger_ptr->impl,
-            static_cast<aimrt_log_level_t>(lvl),
-            line, column, file_name, function_name,
-            log_data, log_data_size);  //
-      };
+  logger_ptr_->log_func = [core_logger_ptr](
+                              uint32_t lvl, uint32_t line, uint32_t column, const char* file_name, const char* function_name, const char* log_data, size_t log_data_size) {
+    core_logger_ptr->log(core_logger_ptr->impl, static_cast<aimrt_log_level_t>(lvl), line, column, file_name, function_name, log_data, log_data_size);  //
+  };
 }
 
 void AimRTCore::ResetCoreLogger() {
@@ -288,8 +267,7 @@ void AimRTCore::ResetCoreLogger() {
 }
 
 aimrt::executor::ExecutorRef AimRTCore::GetExecutor(std::string_view executor_name) {
-  if (executor_name.empty() || executor_name == guard_thread_executor_.Name())
-    return aimrt::executor::ExecutorRef(guard_thread_executor_.NativeHandle());
+  if (executor_name.empty() || executor_name == guard_thread_executor_.Name()) return aimrt::executor::ExecutorRef(guard_thread_executor_.NativeHandle());
   return GetExecutorManager().GetExecutor(executor_name);
 }
 
@@ -304,19 +282,13 @@ void AimRTCore::InitCoreProxy(const util::ModuleDetailInfo& info, module::CorePr
 }
 
 void AimRTCore::CheckCfgFile() const {
-  std::string check_msg = util::CheckYamlNodes(
-      configurator_manager_.GetRootOptionsNode()["aimrt"],
-      configurator_manager_.GetUserRootOptionsNode()["aimrt"],
-      "aimrt");
+  std::string check_msg = util::CheckYamlNodes(configurator_manager_.GetRootOptionsNode()["aimrt"], configurator_manager_.GetUserRootOptionsNode()["aimrt"], "aimrt");
 
-  if (!check_msg.empty())
-    AIMRT_WARN("Configuration Name Warning in \"{}\":\n{}",
-               configurator_manager_.GetConfigureFilePath(), check_msg);
+  if (!check_msg.empty()) AIMRT_WARN("Configuration Name Warning in \"{}\":\n{}", configurator_manager_.GetConfigureFilePath(), check_msg);
 }
 
 std::string AimRTCore::GenInitializationReport() const {
-  AIMRT_CHECK_ERROR_THROW(state_ == State::kPostInit,
-                          "Initialization report can only be generated after initialization is complete.");
+  AIMRT_CHECK_ERROR_THROW(state_ == State::kPostInit, "Initialization report can only be generated after initialization is complete.");
 
   std::list<std::pair<std::string, std::string>> report;
 
@@ -338,8 +310,7 @@ std::string AimRTCore::GenInitializationReport() const {
   size_t count = 0;
   for (auto& itr : report) {
     ++count;
-    result << "[" << count << "]. " << itr.first << "\n"
-           << itr.second << "\n\n";
+    result << "[" << count << "]. " << itr.first << "\n" << itr.second << "\n\n";
   }
 
   result << "\n----------------------- AimRT Initialization Report End ------------------------\n\n";

@@ -10,11 +10,7 @@
 using namespace aimrt::examples::cpp::ros2_chn;
 
 static std::tuple<std::string_view, std::function<aimrt::ModuleBase*()>> aimrt_module_register_array[]{
-    {"NormalPublisherModule", []() -> aimrt::ModuleBase* {
-       return new normal_publisher_module::NormalPublisherModule();
-     }},
-    {"NormalSubscriberModule", []() -> aimrt::ModuleBase* {
-       return new normal_subscriber_module::NormalSubscriberModule();
-     }}};
+    {"NormalPublisherModule", []() -> aimrt::ModuleBase* { return new normal_publisher_module::NormalPublisherModule(); }},
+    {"NormalSubscriberModule", []() -> aimrt::ModuleBase* { return new normal_subscriber_module::NormalSubscriberModule(); }}};
 
 AIMRT_PKG_MAIN(aimrt_module_register_array)

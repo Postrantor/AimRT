@@ -13,13 +13,13 @@
 
 namespace aimrt::plugins::zenoh_plugin {
 class ZenohPlugin : public AimRTCorePluginBase {
- public:
+public:
   struct Options {
     std::string native_cfg_path;
     std::string limit_domain;
   };
 
- public:
+public:
   ZenohPlugin() = default;
   ~ZenohPlugin() override = default;
 
@@ -28,12 +28,12 @@ class ZenohPlugin : public AimRTCorePluginBase {
   bool Initialize(runtime::core::AimRTCore *core_ptr) noexcept override;
   void Shutdown() noexcept override;
 
- private:
+private:
   void SetPluginLogger();
   void RegisterZenohChannelBackend();
   void RegisterZenohRpcBackend();
 
- private:
+private:
   runtime::core::AimRTCore *core_ptr_ = nullptr;
 
   Options options_;

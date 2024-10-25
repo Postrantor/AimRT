@@ -13,7 +13,7 @@
 namespace aimrt::runtime::core::channel {
 
 class LocalChannelBackend : public ChannelBackendBase {
- public:
+public:
   struct Options {
     bool subscriber_use_inline_executor = true;
     std::string subscriber_executor;
@@ -26,9 +26,8 @@ class LocalChannelBackend : public ChannelBackendBase {
     kShutdown,
   };
 
- public:
-  LocalChannelBackend()
-      : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
+public:
+  LocalChannelBackend() : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
   ~LocalChannelBackend() override = default;
 
   std::string_view Name() const noexcept override { return "local"; }
@@ -43,19 +42,15 @@ class LocalChannelBackend : public ChannelBackendBase {
   void SetLogger(const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr) { logger_ptr_ = logger_ptr; }
   const aimrt::common::util::LoggerWrapper& GetLogger() const { return *logger_ptr_; }
 
-  void SetChannelRegistry(const ChannelRegistry* channel_registry_ptr) noexcept override {
-    channel_registry_ptr_ = channel_registry_ptr;
-  }
+  void SetChannelRegistry(const ChannelRegistry* channel_registry_ptr) noexcept override { channel_registry_ptr_ = channel_registry_ptr; }
 
-  bool RegisterPublishType(
-      const PublishTypeWrapper& publish_type_wrapper) noexcept override;
+  bool RegisterPublishType(const PublishTypeWrapper& publish_type_wrapper) noexcept override;
   bool Subscribe(const SubscribeWrapper& subscribe_wrapper) noexcept override;
   void Publish(MsgWrapper& msg_wrapper) noexcept override;
 
-  void RegisterGetExecutorFunc(
-      const std::function<executor::ExecutorRef(std::string_view)>& get_executor_func);
+  void RegisterGetExecutorFunc(const std::function<executor::ExecutorRef(std::string_view)>& get_executor_func);
 
- private:
+private:
   Options options_;
   std::atomic<State> state_ = State::kPreInit;
   std::shared_ptr<aimrt::common::util::LoggerWrapper> logger_ptr_;
@@ -65,15 +60,13 @@ class LocalChannelBackend : public ChannelBackendBase {
   std::function<executor::ExecutorRef(std::string_view)> get_executor_func_;
   executor::ExecutorRef subscribe_executor_ref_;
 
-  using SubscribeIndexMap =
+  using SubscribeIndexMap = std::unordered_map<
+      std::string_view,  // msg_type
       std::unordered_map<
-          std::string_view,  // msg_type
+          std::string_view,  // topic
           std::unordered_map<
-              std::string_view,  // topic
-              std::unordered_map<
-                  std::string_view,  // lib_path
-                  std::unordered_set<
-                      std::string_view>>>>;  // module_name
+              std::string_view,                         // lib_path
+              std::unordered_set<std::string_view>>>>;  // module_name
   SubscribeIndexMap subscribe_index_map_;
 };
 

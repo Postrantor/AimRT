@@ -36,7 +36,7 @@ namespace aimrt::util {
 uint32_t TestPlainFunc(bool, double, uint64_t) { return 42; }
 
 class TestClass {
- public:
+public:
   static uint32_t foo(bool, double, uint64_t) { return 42; }
 
   uint32_t bar(bool, double, uint64_t) { return n; }
@@ -67,8 +67,7 @@ TEST(FUNCTION_TEST, MemberMethod) {
   ASSERT_EQ(f(false, 1.23, 888), 42);
 
   TestClass c{100};
-  Function<test_function_ops_3_t> f2(
-      std::bind(&TestClass::bar, &c, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+  Function<test_function_ops_3_t> f2(std::bind(&TestClass::bar, &c, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
   ASSERT_EQ(f2(false, 1.23, 888), 100);
 }
 

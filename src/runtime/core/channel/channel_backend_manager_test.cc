@@ -8,12 +8,10 @@
 namespace aimrt::runtime::core::channel {
 
 class MockChannelBackend : public ChannelBackendBase {
- public:
+public:
   std::string_view Name() const noexcept override { return "mock_backend"; }
 
-  void Initialize(YAML::Node options_node) noexcept override {
-    is_initialized_ = true;
-  }
+  void Initialize(YAML::Node options_node) noexcept override { is_initialized_ = true; }
   void Start() override { is_statrted_ = true; }
 
   void Shutdown() override { is_shutdowned_ = false; }
@@ -28,9 +26,7 @@ class MockChannelBackend : public ChannelBackendBase {
     return true;
   }
 
-  void Publish(MsgWrapper& msg_wrapper) noexcept override {
-    is_published = true;
-  }
+  void Publish(MsgWrapper& msg_wrapper) noexcept override { is_published = true; }
 
   bool is_initialized_ = false;
   bool is_statrted_ = false;
@@ -42,7 +38,7 @@ class MockChannelBackend : public ChannelBackendBase {
 };
 
 class ChannelBackendManagerTest : public ::testing::Test {
- protected:
+protected:
   void SetUp() override {
     EXPECT_EQ(channel_backend_manager_.GetState(), ChannelBackendManager::State::kPreInit);
     channel_backend_manager_.RegisterChannelBackend(mock_backend_ptr_.get());

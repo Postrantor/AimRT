@@ -12,11 +12,7 @@
 using namespace aimrt::examples::cpp::pb_chn;
 
 static std::tuple<std::string_view, std::function<aimrt::ModuleBase*()>> aimrt_module_register_array[]{
-    {"NormalPublisherModule", []() -> aimrt::ModuleBase* {
-       return new normal_publisher_module::NormalPublisherModule();
-     }},
-    {"BenchmarkPublisherModule", []() -> aimrt::ModuleBase* {
-       return new benchmark_publisher_module::BenchmarkPublisherModule();
-     }}};
+    {"NormalPublisherModule", []() -> aimrt::ModuleBase* { return new normal_publisher_module::NormalPublisherModule(); }},
+    {"BenchmarkPublisherModule", []() -> aimrt::ModuleBase* { return new benchmark_publisher_module::BenchmarkPublisherModule(); }}};
 
 AIMRT_PKG_MAIN(aimrt_module_register_array)

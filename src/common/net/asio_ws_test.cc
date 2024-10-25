@@ -25,19 +25,14 @@ TEST(NET_TEST, WebSocket_base) {
 
   // start cli
   auto ws_cli_ptr = std::make_shared<AsioWebSocketClient>(cli_sys_ptr->IO());
-  ws_cli_ptr->RegisterMsgHandle(
-      [&cli_result_str](const std::shared_ptr<asio::streambuf> &msg_buf_ptr) {
-        cli_result_str = std::string(
-            static_cast<const char *>(msg_buf_ptr->data().data()), msg_buf_ptr->size());
-        AIMRT_INFO("cli get a msg, size: {}, data: {}", cli_result_str.size(), cli_result_str);
-      });
+  ws_cli_ptr->RegisterMsgHandle([&cli_result_str](const std::shared_ptr<asio::streambuf> &msg_buf_ptr) {
+    cli_result_str = std::string(static_cast<const char *>(msg_buf_ptr->data().data()), msg_buf_ptr->size());
+    AIMRT_INFO("cli get a msg, size: {}, data: {}", cli_result_str.size(), cli_result_str);
+  });
 
-  ws_cli_ptr->Initialize(AsioWebSocketClient::Options{
-      .host = "127.0.0.1",
-      .service = "50180"});
+  ws_cli_ptr->Initialize(AsioWebSocketClient::Options{.host = "127.0.0.1", .service = "50180"});
 
-  cli_sys_ptr->RegisterSvrFunc([ws_cli_ptr] { ws_cli_ptr->Start(); },
-                               [ws_cli_ptr] { ws_cli_ptr->Shutdown(); });
+  cli_sys_ptr->RegisterSvrFunc([ws_cli_ptr] { ws_cli_ptr->Start(); }, [ws_cli_ptr] { ws_cli_ptr->Shutdown(); });
 
   std::thread t_cli([cli_sys_ptr] {
     AIMRT_INFO("cli_sys_ptr start.");
@@ -50,21 +45,15 @@ TEST(NET_TEST, WebSocket_base) {
   std::thread t_svr([svr_sys_ptr, &svr_result_str] {
     AIMRT_INFO("svr_sys_ptr start.");
     auto ws_svr_ptr = std::make_shared<AsioWebSocketServer>(svr_sys_ptr->IO());
-    ws_svr_ptr->RegisterMsgHandle(
-        [ws_svr_ptr, &svr_result_str](const asio::ip::tcp::endpoint &ep,
-                                      const std::shared_ptr<asio::streambuf> &msg_buf_ptr) {
-          svr_result_str = std::string(
-              static_cast<const char *>(msg_buf_ptr->data().data()), msg_buf_ptr->size());
-          AIMRT_INFO("svr get a msg from {}, size: {}, data: {}",
-                     aimrt::common::util::SSToString(ep), svr_result_str.size(), svr_result_str);
-          ws_svr_ptr->SendMsg(ep, msg_buf_ptr);
-        });
+    ws_svr_ptr->RegisterMsgHandle([ws_svr_ptr, &svr_result_str](const asio::ip::tcp::endpoint &ep, const std::shared_ptr<asio::streambuf> &msg_buf_ptr) {
+      svr_result_str = std::string(static_cast<const char *>(msg_buf_ptr->data().data()), msg_buf_ptr->size());
+      AIMRT_INFO("svr get a msg from {}, size: {}, data: {}", aimrt::common::util::SSToString(ep), svr_result_str.size(), svr_result_str);
+      ws_svr_ptr->SendMsg(ep, msg_buf_ptr);
+    });
 
-    ws_svr_ptr->Initialize(AsioWebSocketServer::Options{
-        .ep = {asio::ip::address_v4(), 50180}});
+    ws_svr_ptr->Initialize(AsioWebSocketServer::Options{.ep = {asio::ip::address_v4(), 50180}});
 
-    svr_sys_ptr->RegisterSvrFunc([ws_svr_ptr] { ws_svr_ptr->Start(); },
-                                 [ws_svr_ptr] { ws_svr_ptr->Shutdown(); });
+    svr_sys_ptr->RegisterSvrFunc([ws_svr_ptr] { ws_svr_ptr->Start(); }, [ws_svr_ptr] { ws_svr_ptr->Shutdown(); });
 
     svr_sys_ptr->Start();
     svr_sys_ptr->Join();

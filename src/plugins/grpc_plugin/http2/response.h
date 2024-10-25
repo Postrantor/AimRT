@@ -14,7 +14,7 @@
 namespace aimrt::plugins::grpc_plugin::http2 {
 
 class Response {
- public:
+public:
   explicit Response(size_t capacity = 8192) : body_(capacity) {}
 
   void SetStreamId(int32_t stream_id) { stream_id_ = stream_id; }
@@ -30,28 +30,18 @@ class Response {
   void SetHttpStatus(HttpStatus status) { http_status_ = status; }
   [[nodiscard]] HttpStatus GetHttpStatus() const { return http_status_; }
 
-  void AddHeader(std::string_view name, std::string_view value) {
-    headers_.emplace(name, value);
-  }
+  void AddHeader(std::string_view name, std::string_view value) { headers_.emplace(name, value); }
 
-  void AddTrailer(std::string_view name, std::string_view value) {
-    trailers_.emplace(name, value);
-  }
+  void AddTrailer(std::string_view name, std::string_view value) { trailers_.emplace(name, value); }
 
-  void Write(const uint8_t* data, size_t len) {
-    body_.Write(data, len);
-  }
+  void Write(const uint8_t* data, size_t len) { body_.Write(data, len); }
 
-  void Write(std::string_view data) {
-    body_.Write(reinterpret_cast<const uint8_t*>(data.data()), data.size());
-  }
+  void Write(std::string_view data) { body_.Write(reinterpret_cast<const uint8_t*>(data.data()), data.size()); }
 
   [[nodiscard]] std::string ToString() const {
     std::ostringstream ss;
     ss << "Response{"
-       << "stream_id=" << stream_id_
-       << ", http_status=" << static_cast<int>(http_status_)
-       << ", headers={";
+       << "stream_id=" << stream_id_ << ", http_status=" << static_cast<int>(http_status_) << ", headers={";
     for (const auto& [name, value] : headers_) {
       ss << ", " << name << "=" << value;
     }
@@ -63,7 +53,7 @@ class Response {
     return ss.str();
   }
 
- private:
+private:
   int32_t stream_id_ = -1;
   Headers headers_;
   Trailers trailers_;

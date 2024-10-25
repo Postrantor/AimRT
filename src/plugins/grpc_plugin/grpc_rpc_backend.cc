@@ -60,9 +60,8 @@ struct convert<aimrt::plugins::grpc_plugin::GrpcRpcBackend::Options> {
   static bool decode(const Node& node, Options& rhs) {
     if (node["clients_options"] && node["clients_options"].IsSequence()) {
       for (const auto& client_options_node : node["clients_options"]) {
-        auto client_options = Options::ClientOptions{
-            .func_name = client_options_node["func_name"].as<std::string>(),
-            .server_url = client_options_node["server_url"].as<std::string>()};
+        auto client_options =
+            Options::ClientOptions{.func_name = client_options_node["func_name"].as<std::string>(), .server_url = client_options_node["server_url"].as<std::string>()};
 
         rhs.clients_options.emplace_back(std::move(client_options));
       }
@@ -70,8 +69,7 @@ struct convert<aimrt::plugins::grpc_plugin::GrpcRpcBackend::Options> {
 
     if (node["servers_options"] && node["servers_options"].IsSequence()) {
       for (const auto& server_options_node : node["servers_options"]) {
-        auto server_options = Options::ServerOptions{
-            .func_name = server_options_node["func_name"].as<std::string>()};
+        auto server_options = Options::ServerOptions{.func_name = server_options_node["func_name"].as<std::string>()};
 
         rhs.servers_options.emplace_back(std::move(server_options));
       }
@@ -95,22 +93,17 @@ namespace {
 void CheckGrpcMessageBody(const http2::SimpleBuffer& buffer) {
   auto body_str_view = buffer.GetStringView();
   std::optional<grpc::GrpcMessagePrefix> prefix = grpc::ParseGrpcMessagePrefix(body_str_view);
-  AIMRT_CHECK_ERROR_THROW(prefix,
-                          "Http2 request body is not a valid grpc message, body_len: {}", body_str_view.size());
-  AIMRT_CHECK_ERROR_THROW(prefix->compression_flag == 0,
-                          "Not support grpc compression Now");
-  AIMRT_CHECK_ERROR_THROW(body_str_view.size() == grpc::kGrpcMessagePrefixSize + prefix->message_length,
-                          "Http2 request body size not equal to grpc message length");
+  AIMRT_CHECK_ERROR_THROW(prefix, "Http2 request body is not a valid grpc message, body_len: {}", body_str_view.size());
+  AIMRT_CHECK_ERROR_THROW(prefix->compression_flag == 0, "Not support grpc compression Now");
+  AIMRT_CHECK_ERROR_THROW(body_str_view.size() == grpc::kGrpcMessagePrefixSize + prefix->message_length, "Http2 request body size not equal to grpc message length");
 }
 
 void CheckGrpcReqHeaders(const http2::RequestPtr& req) {
   // Check the content-type, only support application/grpc and application/grpc+proto
   if (auto content_type_itr = req->GetHeaders().find("content-type"); content_type_itr == req->GetHeaders().end()) {
     AIMRT_ERROR_THROW("content-type is not set for grpc");
-  } else if (content_type_itr->second != "application/grpc" &&
-             content_type_itr->second != "application/grpc+proto") {
-    AIMRT_ERROR_THROW("content-type is {}, which is not supported",
-                      content_type_itr->second);
+  } else if (content_type_itr->second != "application/grpc" && content_type_itr->second != "application/grpc+proto") {
+    AIMRT_ERROR_THROW("content-type is {}, which is not supported", content_type_itr->second);
   }
 
   // Check the te, must be trailers
@@ -121,41 +114,30 @@ void CheckGrpcReqHeaders(const http2::RequestPtr& req) {
   }
 
   // Check the method, must be POST
-  AIMRT_CHECK_ERROR_THROW(req->GetMethod() == "POST",
-                          "Method is {}, which is not supported", req->GetMethod());
+  AIMRT_CHECK_ERROR_THROW(req->GetMethod() == "POST", "Method is {}, which is not supported", req->GetMethod());
 
   // Check the scheme, only support http now （TODO: support https）
-  AIMRT_CHECK_ERROR_THROW(req->GetUrl().protocol == "http",
-                          "Scheme is {}, which is not supported", req->GetUrl().protocol);
+  AIMRT_CHECK_ERROR_THROW(req->GetUrl().protocol == "http", "Scheme is {}, which is not supported", req->GetUrl().protocol);
 }
 }  // namespace
 
 void GrpcRpcBackend::Initialize(YAML::Node options_node) {
   AIMRT_DEBUG("Initialize grpc rpc backend.");
 
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-      "Http Rpc backend can only be initialized once.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "Http Rpc backend can only be initialized once.");
 
-  if (options_node && !options_node.IsNull())
-    options_ = options_node.as<Options>();
+  if (options_node && !options_node.IsNull()) options_ = options_node.as<Options>();
 
   options_node = options_;
 }
 
-void GrpcRpcBackend::Start() {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kStart) == State::kInit,
-      "Method can only be called when state is 'Init'.");
-}
+void GrpcRpcBackend::Start() { AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'."); }
 
 void GrpcRpcBackend::Shutdown() {
-  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-    return;
+  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 }
 
-bool GrpcRpcBackend::RegisterServiceFunc(
-    const runtime::core::rpc::ServiceFuncWrapper& service_func_wrapper) noexcept {
+bool GrpcRpcBackend::RegisterServiceFunc(const runtime::core::rpc::ServiceFuncWrapper& service_func_wrapper) noexcept {
   try {
     if (state_.load() != State::kInit) {
       AIMRT_ERROR("Service func can only be registered when state is 'Init'.");
@@ -172,18 +154,13 @@ bool GrpcRpcBackend::RegisterServiceFunc(
     // pb:/aimrt.protocols.example.ExampleService/GetBarData -> /aimrt.protocols.example.ExampleService/GetBarData
     auto pattern = std::string(GetRealFuncName(service_func_wrapper.info.func_name));
 
-    plugins::grpc_plugin::server::HttpHandle http_handle =
-        [this, &service_func_wrapper](
-            const http2::RequestPtr& req,
-            http2::ResponsePtr& rsp)
-        -> boost::asio::awaitable<void> {
+    plugins::grpc_plugin::server::HttpHandle http_handle = [this, &service_func_wrapper](const http2::RequestPtr& req, http2::ResponsePtr& rsp) -> boost::asio::awaitable<void> {
       AIMRT_TRACE("Http2 handle for rpc, path: {}", req->GetUrl().path);
 
       CheckGrpcReqHeaders(req);
       CheckGrpcMessageBody(req->GetBody());
 
-      auto service_invoke_wrapper_ptr = std::make_shared<runtime::core::rpc::InvokeWrapper>(
-          runtime::core::rpc::InvokeWrapper{.info = service_func_wrapper.info});
+      auto service_invoke_wrapper_ptr = std::make_shared<runtime::core::rpc::InvokeWrapper>(runtime::core::rpc::InvokeWrapper{.info = service_func_wrapper.info});
 
       auto ctx_ptr = std::make_shared<rpc::Context>(aimrt_rpc_context_type_t::AIMRT_RPC_SERVER_CONTEXT);
       service_invoke_wrapper_ptr->ctx_ref = ctx_ptr;
@@ -219,16 +196,13 @@ bool GrpcRpcBackend::RegisterServiceFunc(
 
       // Deserialize the request
       std::vector<aimrt_buffer_view_t> buffer_view_vec;
-      buffer_view_vec.push_back({.data = body_str_view.data(),
-                                 .len = body_str_view.size()});
-      auto buffer_array_view = aimrt_buffer_array_view_t{.data = buffer_view_vec.data(),
-                                                         .len = buffer_view_vec.size()};
+      buffer_view_vec.push_back({.data = body_str_view.data(), .len = body_str_view.size()});
+      auto buffer_array_view = aimrt_buffer_array_view_t{.data = buffer_view_vec.data(), .len = buffer_view_vec.size()};
 
       auto service_req_ptr = service_func_wrapper.info.req_type_support_ref.CreateSharedPtr();
       service_invoke_wrapper_ptr->req_ptr = service_req_ptr.get();
 
-      bool deserialize_ret = service_func_wrapper.info.req_type_support_ref.Deserialize(
-          serialization_type, buffer_array_view, service_req_ptr.get());
+      bool deserialize_ret = service_func_wrapper.info.req_type_support_ref.Deserialize(serialization_type, buffer_array_view, service_req_ptr.get());
       AIMRT_CHECK_ERROR_THROW(deserialize_ret, "Http2 request deserialize failed.");
       auto service_rsp_ptr = service_func_wrapper.info.rsp_type_support_ref.CreateSharedPtr();
       service_invoke_wrapper_ptr->rsp_ptr = service_rsp_ptr.get();
@@ -236,41 +210,33 @@ bool GrpcRpcBackend::RegisterServiceFunc(
       // Set the callback
       uint32_t ret_code = 0;
       auto sig_timer_ptr = std::make_shared<boost::asio::steady_timer>(*io_ptr_, chrono::nanoseconds::max());
-      service_invoke_wrapper_ptr->callback =
-          [service_invoke_wrapper_ptr,
-           serialization_type,
-           &rsp,
-           &ret_code,
-           &sig_timer_ptr](aimrt::rpc::Status status) {
-            if (!status.OK()) [[unlikely]] {
-              ret_code = status.Code();
-              sig_timer_ptr->expires_at(chrono::steady_clock::time_point::min());
-              return;
-            }
+      service_invoke_wrapper_ptr->callback = [service_invoke_wrapper_ptr, serialization_type, &rsp, &ret_code, &sig_timer_ptr](aimrt::rpc::Status status) {
+        if (!status.OK()) [[unlikely]] {
+          ret_code = status.Code();
+          sig_timer_ptr->expires_at(chrono::steady_clock::time_point::min());
+          return;
+        }
 
-            // Serialize the response
-            auto buffer_array_view_ptr =
-                aimrt::runtime::core::rpc::TrySerializeRspWithCache(*service_invoke_wrapper_ptr, serialization_type);
-            if (!buffer_array_view_ptr) [[unlikely]] {
-              ret_code = AIMRT_RPC_STATUS_SVR_SERIALIZATION_FAILED;
-              sig_timer_ptr->expires_at(chrono::steady_clock::time_point::min());
-              return;
-            }
+        // Serialize the response
+        auto buffer_array_view_ptr = aimrt::runtime::core::rpc::TrySerializeRspWithCache(*service_invoke_wrapper_ptr, serialization_type);
+        if (!buffer_array_view_ptr) [[unlikely]] {
+          ret_code = AIMRT_RPC_STATUS_SVR_SERIALIZATION_FAILED;
+          sig_timer_ptr->expires_at(chrono::steady_clock::time_point::min());
+          return;
+        }
 
-            // Fill the response data
-            auto prefix = grpc::EncodeGrpcMessagePrefix(grpc::GrpcMessagePrefix{
-                .compression_flag = 0,
-                .message_length = static_cast<uint32_t>(buffer_array_view_ptr->BufferSize())});
-            rsp->Write(prefix);
-            for (size_t i = 0; i < buffer_array_view_ptr->Size(); ++i) {
-              auto buffer_array_view = buffer_array_view_ptr->Data()[i];
-              rsp->Write(reinterpret_cast<const uint8_t*>(buffer_array_view.data), buffer_array_view.len);
-            }
+        // Fill the response data
+        auto prefix = grpc::EncodeGrpcMessagePrefix(grpc::GrpcMessagePrefix{.compression_flag = 0, .message_length = static_cast<uint32_t>(buffer_array_view_ptr->BufferSize())});
+        rsp->Write(prefix);
+        for (size_t i = 0; i < buffer_array_view_ptr->Size(); ++i) {
+          auto buffer_array_view = buffer_array_view_ptr->Data()[i];
+          rsp->Write(reinterpret_cast<const uint8_t*>(buffer_array_view.data), buffer_array_view.len);
+        }
 
-            rsp->AddTrailer("grpc-status", "0");
+        rsp->AddTrailer("grpc-status", "0");
 
-            sig_timer_ptr->expires_at(chrono::steady_clock::time_point::min());
-          };  // service_invoke_wrapper_ptr->callback
+        sig_timer_ptr->expires_at(chrono::steady_clock::time_point::min());
+      };  // service_invoke_wrapper_ptr->callback
 
       service_func_wrapper.service_func(service_invoke_wrapper_ptr);
 
@@ -300,14 +266,12 @@ bool GrpcRpcBackend::RegisterClientFunc(const runtime::core::rpc::ClientFuncWrap
   // Basically, we need to find the server url for each client function.
   const auto& info = client_func_wrapper.info;
 
-  auto find_client_option = std::find_if(
-      options_.clients_options.begin(), options_.clients_options.end(),
-      [func_name = GetRealFuncName(info.func_name)](const Options::ClientOptions& client_option) {
+  auto find_client_option =
+      std::find_if(options_.clients_options.begin(), options_.clients_options.end(), [func_name = GetRealFuncName(info.func_name)](const Options::ClientOptions& client_option) {
         try {
           return std::regex_match(func_name.begin(), func_name.end(), std::regex(client_option.func_name, std::regex::ECMAScript));
         } catch (const std::exception& e) {
-          AIMRT_WARN("Regex get exception, expr: {}, string: {}, exception info: {}",
-                     client_option.func_name, func_name, e.what());
+          AIMRT_WARN("Regex get exception, expr: {}, string: {}, exception info: {}", client_option.func_name, func_name, e.what());
           return false;
         }
       });
@@ -323,8 +287,7 @@ bool GrpcRpcBackend::RegisterClientFunc(const runtime::core::rpc::ClientFuncWrap
   return true;
 }
 
-void GrpcRpcBackend::Invoke(
-    const std::shared_ptr<runtime::core::rpc::InvokeWrapper>& client_invoke_wrapper_ptr) noexcept {
+void GrpcRpcBackend::Invoke(const std::shared_ptr<runtime::core::rpc::InvokeWrapper>& client_invoke_wrapper_ptr) noexcept {
   try {
     if (state_.load() != State::kStart) [[unlikely]] {
       AIMRT_WARN("Method can only be called when state is 'Start'.");
@@ -359,14 +322,11 @@ void GrpcRpcBackend::Invoke(
       url->path = std::string(GetRealFuncName(info.func_name));
     }
 
-    AIMRT_TRACE("Http2 cli session send request, remote addr {}, path: {}",
-                url->host, url->path);
+    AIMRT_TRACE("Http2 cli session send request, remote addr {}, path: {}", url->host, url->path);
 
     asio::co_spawn(
         *io_ptr_,
-        [http2_cli_pool_ptr = http2_cli_pool_ptr_,
-         client_invoke_wrapper_ptr,
-         url]() -> asio::awaitable<void> {
+        [http2_cli_pool_ptr = http2_cli_pool_ptr_, client_invoke_wrapper_ptr, url]() -> asio::awaitable<void> {
           const auto& info = client_invoke_wrapper_ptr->info;
 
           try {
@@ -405,17 +365,15 @@ void GrpcRpcBackend::Invoke(
 
             std::string serialization_type(client_invoke_wrapper_ptr->ctx_ref.GetSerializationType());
             AIMRT_CHECK_ERROR_THROW(serialization_type == "pb", "Only support pb serialization now");
-            auto buffer_array_view_ptr =
-                aimrt::runtime::core::rpc::TrySerializeReqWithCache(*client_invoke_wrapper_ptr, serialization_type);
+            auto buffer_array_view_ptr = aimrt::runtime::core::rpc::TrySerializeReqWithCache(*client_invoke_wrapper_ptr, serialization_type);
             if (!buffer_array_view_ptr) [[unlikely]] {
               AIMRT_WARN("Serialize request failed.");
               client_invoke_wrapper_ptr->callback(rpc::Status(AIMRT_RPC_STATUS_CLI_SERIALIZATION_FAILED));
               co_return;
             }
 
-            auto prefix = grpc::EncodeGrpcMessagePrefix(grpc::GrpcMessagePrefix{
-                .compression_flag = 0,
-                .message_length = static_cast<uint32_t>(buffer_array_view_ptr->BufferSize())});
+            auto prefix =
+                grpc::EncodeGrpcMessagePrefix(grpc::GrpcMessagePrefix{.compression_flag = 0, .message_length = static_cast<uint32_t>(buffer_array_view_ptr->BufferSize())});
             req_ptr->Write(prefix);
 
             for (size_t i = 0; i < buffer_array_view_ptr->Size(); ++i) {
@@ -453,8 +411,7 @@ void GrpcRpcBackend::Invoke(
               co_return;
             }
             if (body_str_view.size() != 5 + rsp_prefix->message_length) [[unlikely]] {
-              AIMRT_WARN("Http2 response body size not equal to grpc message length, body_len: {}, message_len: {}",
-                         body_str_view.size(), rsp_prefix->message_length);
+              AIMRT_WARN("Http2 response body size not equal to grpc message length, body_len: {}, message_len: {}", body_str_view.size(), rsp_prefix->message_length);
               client_invoke_wrapper_ptr->callback(rpc::Status(AIMRT_RPC_STATUS_CLI_BACKEND_INTERNAL_ERROR));
               co_return;
             }
@@ -464,12 +421,9 @@ void GrpcRpcBackend::Invoke(
 
             // deserialize the response
             std::vector<aimrt_buffer_view_t> buffer_view_vec;
-            buffer_view_vec.push_back({.data = body_str_view.data(),
-                                       .len = body_str_view.size()});
-            auto buffer_array_view = aimrt_buffer_array_view_t{.data = buffer_view_vec.data(),
-                                                               .len = buffer_view_vec.size()};
-            auto deserialize_ret = client_invoke_wrapper_ptr->info.rsp_type_support_ref.Deserialize(
-                serialization_type, buffer_array_view, client_invoke_wrapper_ptr->rsp_ptr);
+            buffer_view_vec.push_back({.data = body_str_view.data(), .len = body_str_view.size()});
+            auto buffer_array_view = aimrt_buffer_array_view_t{.data = buffer_view_vec.data(), .len = buffer_view_vec.size()};
+            auto deserialize_ret = client_invoke_wrapper_ptr->info.rsp_type_support_ref.Deserialize(serialization_type, buffer_array_view, client_invoke_wrapper_ptr->rsp_ptr);
             if (!deserialize_ret) [[unlikely]] {
               AIMRT_WARN("Deserialize response failed.");
               client_invoke_wrapper_ptr->callback(rpc::Status(AIMRT_RPC_STATUS_CLI_DESERIALIZATION_FAILED));

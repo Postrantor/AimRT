@@ -65,12 +65,7 @@ typedef struct {
    * Input 5: Pointer to the buffer array
    * Output: Serialization result
    */
-  bool (*serialize)(
-      void* impl,
-      aimrt_string_view_t serialization_type,
-      const void* msg,
-      const aimrt_buffer_array_allocator_t* allocator,
-      aimrt_buffer_array_t* buffer_array);
+  bool (*serialize)(void* impl, aimrt_string_view_t serialization_type, const void* msg, const aimrt_buffer_array_allocator_t* allocator, aimrt_buffer_array_t* buffer_array);
 
   /**
    * @brief Function to deserialize the msg
@@ -81,11 +76,7 @@ typedef struct {
    * Input 4: Pointer to the msg to be deserialized
    * Output: Deserialization result
    */
-  bool (*deserialize)(
-      void* impl,
-      aimrt_string_view_t serialization_type,
-      aimrt_buffer_array_view_t buffer_array_view,
-      void* msg);
+  bool (*deserialize)(void* impl, aimrt_string_view_t serialization_type, aimrt_buffer_array_view_t buffer_array_view, void* msg);
 
   /**
    * @brief Number of serialization types supported

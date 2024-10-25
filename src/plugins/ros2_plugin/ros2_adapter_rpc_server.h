@@ -10,47 +10,47 @@
 namespace aimrt::plugins::ros2_plugin {
 
 class Ros2AdapterServer : public rclcpp::ServiceBase {
- public:
-  Ros2AdapterServer(const std::shared_ptr<rcl_node_t>& node_handle,
-                    const runtime::core::rpc::ServiceFuncWrapper& service_func_wrapper,
-                    const std::string& real_ros2_func_name,
-                    const rclcpp::QoS& qos);
+public:
+  Ros2AdapterServer(
+      const std::shared_ptr<rcl_node_t>& node_handle,
+      const runtime::core::rpc::ServiceFuncWrapper& service_func_wrapper,
+      const std::string& real_ros2_func_name,
+      const rclcpp::QoS& qos);
   ~Ros2AdapterServer() override = default;
 
   std::shared_ptr<void> create_request() override;
   std::shared_ptr<rmw_request_id_t> create_request_header() override;
-  void handle_request(std::shared_ptr<rmw_request_id_t> request_header,
-                      std::shared_ptr<void> request) override;
+  void handle_request(std::shared_ptr<rmw_request_id_t> request_header, std::shared_ptr<void> request) override;
 
   void Start() { run_flag_.store(true); }
   void Shutdown() { run_flag_.store(false); }
 
- private:
+private:
   std::atomic_bool run_flag_ = false;
   const runtime::core::rpc::ServiceFuncWrapper& service_func_wrapper_;
   std::string real_ros2_func_name_;
 };
 
 class Ros2AdapterWrapperServer : public rclcpp::ServiceBase {
- public:
-  Ros2AdapterWrapperServer(const std::shared_ptr<rcl_node_t>& node_handle,
-                           const runtime::core::rpc::ServiceFuncWrapper& service_func_wrapper,
-                           const std::string& real_ros2_func_name,
-                           const rclcpp::QoS& qos);
+public:
+  Ros2AdapterWrapperServer(
+      const std::shared_ptr<rcl_node_t>& node_handle,
+      const runtime::core::rpc::ServiceFuncWrapper& service_func_wrapper,
+      const std::string& real_ros2_func_name,
+      const rclcpp::QoS& qos);
   ~Ros2AdapterWrapperServer() override = default;
 
   std::shared_ptr<void> create_request() override;
   std::shared_ptr<rmw_request_id_t> create_request_header() override;
-  void handle_request(std::shared_ptr<rmw_request_id_t> request_header,
-                      std::shared_ptr<void> request) override;
+  void handle_request(std::shared_ptr<rmw_request_id_t> request_header, std::shared_ptr<void> request) override;
 
   void Start() { run_flag_.store(true); }
   void Shutdown() { run_flag_.store(false); }
 
- private:
+private:
   void ReturnRspWithStatusCode(const std::shared_ptr<rmw_request_id_t>& request_header, uint32_t code);
 
- private:
+private:
   std::atomic_bool run_flag_ = false;
   const runtime::core::rpc::ServiceFuncWrapper& service_func_wrapper_;
   std::string real_ros2_func_name_;

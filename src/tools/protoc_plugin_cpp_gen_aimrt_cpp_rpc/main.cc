@@ -10,8 +10,7 @@
 #include <google/protobuf/compiler/plugin.pb.h>
 #include <google/protobuf/descriptor.h>
 
-std::string& ReplaceString(std::string& source, const std::string& replace_what,
-                           const std::string& replace_with_what) {
+std::string& ReplaceString(std::string& source, const std::string& replace_what, const std::string& replace_with_what) {
   std::string::size_type pos = 0;
   while (true) {
     pos = source.find(replace_what, pos);
@@ -23,8 +22,7 @@ std::string& ReplaceString(std::string& source, const std::string& replace_what,
   return source;
 }
 
-std::vector<std::string> SplitToVec(const std::string& source,
-                                    const std::string& sep, bool clear = true) {
+std::vector<std::string> SplitToVec(const std::string& source, const std::string& sep, bool clear = true) {
   std::vector<std::string> result;
   if (source.empty() || sep.empty()) return result;
 
@@ -45,13 +43,11 @@ std::vector<std::string> SplitToVec(const std::string& source,
 }
 
 class AimRTCodeGenerator final : public google::protobuf::compiler::CodeGenerator {
- public:
+public:
   AimRTCodeGenerator() = default;
   ~AimRTCodeGenerator() override = default;
 
-  uint64_t GetSupportedFeatures() const override {
-    return FEATURE_PROTO3_OPTIONAL;
-  }
+  uint64_t GetSupportedFeatures() const override { return FEATURE_PROTO3_OPTIONAL; }
 
   constexpr static std::string_view kTHfile = R"str(/**
  * @file {{file_name}}.aimrt_rpc.pb.h
@@ -619,9 +615,7 @@ aimrt::co::Task<aimrt::rpc::Status> {{service_name}}CoProxy::{{rpc_func_name}}(
       auto end_pos = result.find(kMethodEndFlag, begin_pos + kMethodBeginFlag.size());
       if (end_pos == std::string::npos) break;
 
-      std::string cur_temp = result.substr(
-          begin_pos + kMethodBeginFlag.size(),
-          end_pos - begin_pos - kMethodBeginFlag.size());
+      std::string cur_temp = result.substr(begin_pos + kMethodBeginFlag.size(), end_pos - begin_pos - kMethodBeginFlag.size());
       std::string cur_result;
       for (const auto& node : service_node.method_vec) {
         cur_result += GenMethodCode(cur_temp, node);
@@ -652,9 +646,7 @@ aimrt::co::Task<aimrt::rpc::Status> {{service_name}}CoProxy::{{rpc_func_name}}(
       auto end_pos = result.find(kServiceEndFlag, begin_pos + kServiceBeginFlag.size());
       if (end_pos == std::string::npos) break;
 
-      std::string cur_temp = result.substr(
-          begin_pos + kServiceBeginFlag.size(),
-          end_pos - begin_pos - kServiceBeginFlag.size());
+      std::string cur_temp = result.substr(begin_pos + kServiceBeginFlag.size(), end_pos - begin_pos - kServiceBeginFlag.size());
       std::string cur_result;
       for (const auto& node : package_node.service_vec) {
         cur_result += GenServiceCode(cur_temp, node);
@@ -667,9 +659,7 @@ aimrt::co::Task<aimrt::rpc::Status> {{service_name}}CoProxy::{{rpc_func_name}}(
     return result;
   }
 
-  static std::string ProtoFileBaseName(const std::string& full_name) {
-    return full_name.substr(0, full_name.rfind('.'));
-  }
+  static std::string ProtoFileBaseName(const std::string& full_name) { return full_name.substr(0, full_name.rfind('.')); }
 
   static std::string GenNamespaceStr(const std::string& ns) {
     std::string result = ns;
@@ -695,18 +685,14 @@ aimrt::co::Task<aimrt::rpc::Status> {{service_name}}CoProxy::{{rpc_func_name}}(
     return result;
   }
 
-  static void WriteToFile(google::protobuf::compiler::GeneratorContext* context,
-                          const std::string& file_name,
-                          const std::string& file_context) {
+  static void WriteToFile(google::protobuf::compiler::GeneratorContext* context, const std::string& file_name, const std::string& file_context) {
     std::unique_ptr<google::protobuf::io::ZeroCopyOutputStream> output(context->Open(file_name));
     google::protobuf::io::CodedOutputStream coded_out(output.get());
     coded_out.WriteRaw(file_context.data(), file_context.size());
   }
 
-  bool Generate(const google::protobuf::FileDescriptor* file,
-                const std::string& parameter,
-                google::protobuf::compiler::GeneratorContext* context,
-                std::string* error) const override {
+  bool Generate(const google::protobuf::FileDescriptor* file, const std::string& parameter, google::protobuf::compiler::GeneratorContext* context, std::string* error)
+      const override {
     const std::string& file_name = ProtoFileBaseName(file->name());
 
     PackageNode package_node;

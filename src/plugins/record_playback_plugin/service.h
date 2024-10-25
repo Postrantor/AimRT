@@ -12,19 +12,13 @@
 namespace aimrt::plugins::record_playback_plugin {
 
 class RecordPlaybackServiceImpl : public aimrt::protocols::record_playback_plugin::RecordPlaybackServiceCoService {
- public:
+public:
   RecordPlaybackServiceImpl() = default;
   ~RecordPlaybackServiceImpl() override = default;
 
-  void SetRecordActionMap(
-      std::unordered_map<std::string_view, std::unique_ptr<RecordAction>>* record_action_map_ptr) {
-    record_action_map_ptr_ = record_action_map_ptr;
-  }
+  void SetRecordActionMap(std::unordered_map<std::string_view, std::unique_ptr<RecordAction>>* record_action_map_ptr) { record_action_map_ptr_ = record_action_map_ptr; }
 
-  void SetPlaybackActionMap(
-      std::unordered_map<std::string_view, std::unique_ptr<PlaybackAction>>* playback_action_map_ptr) {
-    playback_action_map_ptr_ = playback_action_map_ptr;
-  }
+  void SetPlaybackActionMap(std::unordered_map<std::string_view, std::unique_ptr<PlaybackAction>>* playback_action_map_ptr) { playback_action_map_ptr_ = playback_action_map_ptr; }
 
   aimrt::co::Task<aimrt::rpc::Status> StartRecord(
       aimrt::rpc::ContextRef ctx_ref,
@@ -46,7 +40,7 @@ class RecordPlaybackServiceImpl : public aimrt::protocols::record_playback_plugi
       const ::aimrt::protocols::record_playback_plugin::StopPlaybackReq& req,
       ::aimrt::protocols::record_playback_plugin::CommonRsp& rsp) override;
 
- private:
+private:
   enum class ErrorCode : uint32_t {
     kSuc = 0,
     kInvalidActionName = 1,
@@ -55,12 +49,7 @@ class RecordPlaybackServiceImpl : public aimrt::protocols::record_playback_plugi
     kStartPlaybackFailed = 4,
   };
 
-  static constexpr std::string_view kErrorInfoArray[] = {
-      "",
-      "INVALID_ACTION_NAME",
-      "INVALID_ACTION_MODE",
-      "START_RECORD_FAILED",
-      "START_PLAYBACK_FAILED"};
+  static constexpr std::string_view kErrorInfoArray[] = {"", "INVALID_ACTION_NAME", "INVALID_ACTION_MODE", "START_RECORD_FAILED", "START_PLAYBACK_FAILED"};
 
   template <typename T>
   void SetErrorCode(ErrorCode code, T& rsp) {

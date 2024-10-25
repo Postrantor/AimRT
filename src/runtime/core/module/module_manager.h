@@ -22,7 +22,7 @@
 namespace aimrt::runtime::core::module {
 
 class ModuleManager {
- public:
+public:
   struct Options {
     struct PkgLoaderOptions {
       std::string path;
@@ -50,9 +50,8 @@ class ModuleManager {
 
   using CoreProxyConfigurator = std::function<void(const util::ModuleDetailInfo&, CoreProxy&)>;
 
- public:
-  ModuleManager()
-      : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
+public:
+  ModuleManager() : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
   ~ModuleManager() = default;
 
   ModuleManager(const ModuleManager&) = delete;
@@ -66,15 +65,11 @@ class ModuleManager {
   void RegisterModule(const aimrt_module_base_t* module) { RegisterModule("core", module); }
 
   const aimrt_core_base_t* CreateModule(std::string_view pkg, aimrt_module_info_t module_info);
-  const aimrt_core_base_t* CreateModule(aimrt_module_info_t module_info) {
-    return CreateModule("core", module_info);
-  }
+  const aimrt_core_base_t* CreateModule(aimrt_module_info_t module_info) { return CreateModule("core", module_info); }
   const aimrt_core_base_t* CreateModule(std::string_view pkg, std::string_view module_name) {
     return CreateModule(pkg, aimrt_module_info_t{.name = aimrt::util::ToAimRTStringView(module_name)});
   }
-  const aimrt_core_base_t* CreateModule(std::string_view module_name) {
-    return CreateModule(aimrt_module_info_t{.name = aimrt::util::ToAimRTStringView(module_name)});
-  }
+  const aimrt_core_base_t* CreateModule(std::string_view module_name) { return CreateModule(aimrt_module_info_t{.name = aimrt::util::ToAimRTStringView(module_name)}); }
 
   void RegisterCoreProxyConfigurator(CoreProxyConfigurator&& module_proxy_configurator);
 
@@ -89,7 +84,7 @@ class ModuleManager {
   void SetLogger(const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr) { logger_ptr_ = logger_ptr; }
   const aimrt::common::util::LoggerWrapper& GetLogger() const { return *logger_ptr_; }
 
- private:
+private:
   struct ModuleWrapper {
     util::ModuleDetailInfo info;                // 模块配置
     ModuleLoader* loader_ptr = nullptr;         // 所属的动态库
@@ -100,7 +95,7 @@ class ModuleManager {
   std::optional<Options::ModuleOptions> GetModuleOptions(std::string_view module_name);
   void InitModule(ModuleWrapper* module_wrapper_ptr);
 
- private:
+private:
   Options options_;
   std::atomic<State> state_ = State::kPreInit;
   std::shared_ptr<aimrt::common::util::LoggerWrapper> logger_ptr_;

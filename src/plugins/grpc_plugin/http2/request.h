@@ -12,15 +12,14 @@
 namespace aimrt::plugins::grpc_plugin::http2 {
 
 class Request {
- public:
+public:
   using OnDataCallback = std::function<void(const uint8_t* data, size_t len)>;
   using OnEofCallback = std::function<void()>;
   using OnHeaderCallback = std::function<void(const Headers& headers)>;
   using OnRstCallback = std::function<void(uint32_t error_code)>;
 
- public:
-  explicit Request(size_t capacity = 8192)
-      : body_(capacity) {}
+public:
+  explicit Request(size_t capacity = 8192) : body_(capacity) {}
 
   [[nodiscard]] int32_t GetStreamId() const { return stream_id_; }
   void SetStreamId(int32_t stream_id) { stream_id_ = stream_id; }
@@ -36,19 +35,13 @@ class Request {
   [[nodiscard]] const SimpleBuffer& GetBody() const { return body_; }
   [[nodiscard]] SimpleBuffer& GetMutableBody() { return body_; }
 
-  void AddHeader(std::string_view name, std::string_view value) {
-    headers_.emplace(name, value);
-  }
+  void AddHeader(std::string_view name, std::string_view value) { headers_.emplace(name, value); }
 
-  void Write(const uint8_t* data, size_t len) {
-    body_.Write(data, len);
-  }
+  void Write(const uint8_t* data, size_t len) { body_.Write(data, len); }
 
-  void Write(const std::string& data) {
-    body_.Write(reinterpret_cast<const uint8_t*>(data.data()), data.size());
-  }
+  void Write(const std::string& data) { body_.Write(reinterpret_cast<const uint8_t*>(data.data()), data.size()); }
 
- private:
+private:
   int32_t stream_id_ = -1;
   common::util::Url<std::string> url_;
   std::string method_;

@@ -17,8 +17,7 @@ struct convert<aimrt::plugins::zenoh_plugin::ZenohRpcBackend::Options> {
   }
 
   static bool decode(const Node& node, Options& rhs) {
-    if (node["timeout_executor"])
-      rhs.timeout_executor = node["timeout_executor"].as<std::string>();
+    if (node["timeout_executor"]) rhs.timeout_executor = node["timeout_executor"].as<std::string>();
 
     return true;
   }
@@ -28,55 +27,37 @@ struct convert<aimrt::plugins::zenoh_plugin::ZenohRpcBackend::Options> {
 namespace aimrt::plugins::zenoh_plugin {
 
 void ZenohRpcBackend::Initialize(YAML::Node options_node) {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::Init) == State::PreInit,
-      "Zenoh Rpc backend can only be initialized once.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::Init) == State::PreInit, "Zenoh Rpc backend can only be initialized once.");
 
-  if (options_node && !options_node.IsNull())
-    options_ = options_node.as<Options>();
+  if (options_node && !options_node.IsNull()) options_ = options_node.as<Options>();
 
-  client_tool_ptr_ =
-      std::make_unique<runtime::core::util::RpcClientTool<std::shared_ptr<runtime::core::rpc::InvokeWrapper>>>();
+  client_tool_ptr_ = std::make_unique<runtime::core::util::RpcClientTool<std::shared_ptr<runtime::core::rpc::InvokeWrapper>>>();
 
   if (!options_.timeout_executor.empty()) {
-    AIMRT_CHECK_ERROR_THROW(
-        get_executor_func_,
-        "Get executor function is not set before initialize.");
+    AIMRT_CHECK_ERROR_THROW(get_executor_func_, "Get executor function is not set before initialize.");
 
     auto timeout_executor = get_executor_func_(options_.timeout_executor);
 
-    AIMRT_CHECK_ERROR_THROW(
-        timeout_executor,
-        "Get timeout executor '{}' failed.", options_.timeout_executor);
+    AIMRT_CHECK_ERROR_THROW(timeout_executor, "Get timeout executor '{}' failed.", options_.timeout_executor);
 
     client_tool_ptr_->RegisterTimeoutExecutor(timeout_executor);
-    client_tool_ptr_->RegisterTimeoutHandle(
-        [](auto&& client_invoke_wrapper_ptr) {
-          client_invoke_wrapper_ptr->callback(aimrt::rpc::Status(AIMRT_RPC_STATUS_TIMEOUT));
-        });
+    client_tool_ptr_->RegisterTimeoutHandle([](auto&& client_invoke_wrapper_ptr) { client_invoke_wrapper_ptr->callback(aimrt::rpc::Status(AIMRT_RPC_STATUS_TIMEOUT)); });
 
-    AIMRT_TRACE("zenoh rpc backend enable the timeout function, use '{}' as timeout executor.",
-                options_.timeout_executor);
+    AIMRT_TRACE("zenoh rpc backend enable the timeout function, use '{}' as timeout executor.", options_.timeout_executor);
   } else {
     AIMRT_TRACE("zenoh rpc backend does not enable the timeout function.");
   }
 }
 
-void ZenohRpcBackend::Start() {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::Start) == State::Init,
-      "Method can only be called when state is 'Init'.");
-}
+void ZenohRpcBackend::Start() { AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::Start) == State::Init, "Method can only be called when state is 'Init'."); }
 
 void ZenohRpcBackend::Shutdown() {
-  if (std::atomic_exchange(&state_, State::Shutdown) == State::Shutdown)
-    return;
+  if (std::atomic_exchange(&state_, State::Shutdown) == State::Shutdown) return;
 
   client_tool_ptr_.reset();
 }
 
-bool ZenohRpcBackend::RegisterServiceFunc(
-    const runtime::core::rpc::ServiceFuncWrapper& service_func_wrapper) noexcept {
+bool ZenohRpcBackend::RegisterServiceFunc(const runtime::core::rpc::ServiceFuncWrapper& service_func_wrapper) noexcept {
   try {
     if (state_.load() != State::Init) {
       AIMRT_ERROR("Service func can only be registered when state is 'Init'.");
@@ -86,15 +67,12 @@ bool ZenohRpcBackend::RegisterServiceFunc(
     namespace util = aimrt::common::util;
     const auto& info = service_func_wrapper.info;
 
-    std::string pattern = std::string("aimrt_rpc/") +
-                          util::UrlEncode(GetRealFuncName(info.func_name)) +
-                          limit_domain_;
+    std::string pattern = std::string("aimrt_rpc/") + util::UrlEncode(GetRealFuncName(info.func_name)) + limit_domain_;
 
     auto handle = [this, &service_func_wrapper, pattern](const z_loaned_sample_t* message) {
       try {
         // create service invoke wrapper
-        auto service_invoke_wrapper_ptr = std::make_shared<runtime::core::rpc::InvokeWrapper>(
-            runtime::core::rpc::InvokeWrapper{.info = service_func_wrapper.info});
+        auto service_invoke_wrapper_ptr = std::make_shared<runtime::core::rpc::InvokeWrapper>(runtime::core::rpc::InvokeWrapper{.info = service_func_wrapper.info});
         const auto& info = service_invoke_wrapper_ptr->info;
 
         // create ctx
@@ -129,19 +107,14 @@ bool ZenohRpcBackend::RegisterServiceFunc(
 
           // deserialize msg
           auto remaining_buf = buf_oper.GetRemainingBuffer();
-          aimrt_buffer_view_t buffer_view{
-              .data = remaining_buf.data(),
-              .len = remaining_buf.size()};
+          aimrt_buffer_view_t buffer_view{.data = remaining_buf.data(), .len = remaining_buf.size()};
 
-          aimrt_buffer_array_view_t buffer_array_view{
-              .data = &buffer_view,
-              .len = 1};
+          aimrt_buffer_array_view_t buffer_array_view{.data = &buffer_view, .len = 1};
 
           std::shared_ptr<void> service_req_ptr = info.req_type_support_ref.CreateSharedPtr();
           service_invoke_wrapper_ptr->req_ptr = service_req_ptr.get();
 
-          bool deserialize_ret = info.req_type_support_ref.Deserialize(
-              serialization_type, buffer_array_view, service_req_ptr.get());
+          bool deserialize_ret = info.req_type_support_ref.Deserialize(serialization_type, buffer_array_view, service_req_ptr.get());
 
           AIMRT_CHECK_ERROR_THROW(deserialize_ret, "Zenoh req deserialize failed.");
 
@@ -150,50 +123,38 @@ bool ZenohRpcBackend::RegisterServiceFunc(
           service_invoke_wrapper_ptr->rsp_ptr = service_rsp_ptr.get();
 
           // set callback
-          service_invoke_wrapper_ptr->callback =
-              [this,
-               service_invoke_wrapper_ptr,
-               ctx_ptr,
-               service_req_ptr,
-               service_rsp_ptr,
-               serialization_type{std::move(serialization_type)},
-               pattern{std::move(pattern)},
-               req_id_buf](aimrt::rpc::Status status) {
-                if (!status.OK()) [[unlikely]] {
-                  ReturnRspWithStatusCode(
-                      pattern, serialization_type, req_id_buf, status.Code());
-                  return;
-                }
+          service_invoke_wrapper_ptr->callback = [this, service_invoke_wrapper_ptr, ctx_ptr, service_req_ptr, service_rsp_ptr, serialization_type{std::move(serialization_type)},
+                                                  pattern{std::move(pattern)}, req_id_buf](aimrt::rpc::Status status) {
+            if (!status.OK()) [[unlikely]] {
+              ReturnRspWithStatusCode(pattern, serialization_type, req_id_buf, status.Code());
+              return;
+            }
 
-                // serivice rsp serialize
-                auto buffer_array_view_ptr = aimrt::runtime::core::rpc::TrySerializeRspWithCache(
-                    *service_invoke_wrapper_ptr, serialization_type);
-                if (!buffer_array_view_ptr) [[unlikely]] {
-                  ReturnRspWithStatusCode(
-                      pattern, serialization_type, req_id_buf, AIMRT_RPC_STATUS_SVR_SERIALIZATION_FAILED);
+            // serivice rsp serialize
+            auto buffer_array_view_ptr = aimrt::runtime::core::rpc::TrySerializeRspWithCache(*service_invoke_wrapper_ptr, serialization_type);
+            if (!buffer_array_view_ptr) [[unlikely]] {
+              ReturnRspWithStatusCode(pattern, serialization_type, req_id_buf, AIMRT_RPC_STATUS_SVR_SERIALIZATION_FAILED);
 
-                  return;
-                }
-                const auto* buffer_array_data = buffer_array_view_ptr->Data();
-                const size_t buffer_array_len = buffer_array_view_ptr->Size();
-                size_t rsp_size = buffer_array_view_ptr->BufferSize();
+              return;
+            }
+            const auto* buffer_array_data = buffer_array_view_ptr->Data();
+            const size_t buffer_array_len = buffer_array_view_ptr->Size();
+            size_t rsp_size = buffer_array_view_ptr->BufferSize();
 
-                size_t pkg_size = 1 + serialization_type.size() + 4 + 4 + rsp_size;
+            size_t pkg_size = 1 + serialization_type.size() + 4 + 4 + rsp_size;
 
-                std::vector<char> msg_buf_vec(pkg_size);
-                util::BufferOperator buf_oper(msg_buf_vec.data(), msg_buf_vec.size());
-                buf_oper.SetString(serialization_type, util::BufferLenType::kUInt8);
-                buf_oper.SetBuffer(req_id_buf, sizeof(req_id_buf));
-                buf_oper.SetUint32(0);
+            std::vector<char> msg_buf_vec(pkg_size);
+            util::BufferOperator buf_oper(msg_buf_vec.data(), msg_buf_vec.size());
+            buf_oper.SetString(serialization_type, util::BufferLenType::kUInt8);
+            buf_oper.SetBuffer(req_id_buf, sizeof(req_id_buf));
+            buf_oper.SetUint32(0);
 
-                for (size_t ii = 0; ii < buffer_array_len; ++ii) {
-                  buf_oper.SetBuffer(
-                      static_cast<const char*>(buffer_array_data[ii].data),
-                      buffer_array_data[ii].len);
-                }
+            for (size_t ii = 0; ii < buffer_array_len; ++ii) {
+              buf_oper.SetBuffer(static_cast<const char*>(buffer_array_data[ii].data), buffer_array_data[ii].len);
+            }
 
-                zenoh_manager_ptr_->Publish("rsp/" + pattern, msg_buf_vec.data(), pkg_size);
-              };
+            zenoh_manager_ptr_->Publish("rsp/" + pattern, msg_buf_vec.data(), pkg_size);
+          };
           // call service
           service_func_wrapper.service_func(service_invoke_wrapper_ptr);
 
@@ -212,8 +173,7 @@ bool ZenohRpcBackend::RegisterServiceFunc(
   }
 }
 
-bool ZenohRpcBackend::RegisterClientFunc(
-    const runtime::core::rpc::ClientFuncWrapper& client_func_wrapper) noexcept {
+bool ZenohRpcBackend::RegisterClientFunc(const runtime::core::rpc::ClientFuncWrapper& client_func_wrapper) noexcept {
   try {
     if (state_.load() != State::Init) {
       AIMRT_ERROR("Client func can only be registered when state is 'Init'.");
@@ -224,9 +184,7 @@ bool ZenohRpcBackend::RegisterClientFunc(
 
     const auto& info = client_func_wrapper.info;
 
-    std::string pattern = std::string("aimrt_rpc/") +
-                          util::UrlEncode(GetRealFuncName(info.func_name)) +
-                          limit_domain_;
+    std::string pattern = std::string("aimrt_rpc/") + util::UrlEncode(GetRealFuncName(info.func_name)) + limit_domain_;
     auto handle = [this](const z_loaned_sample_t* message) {
       std::shared_ptr<runtime::core::rpc::InvokeWrapper> client_invoke_wrapper_ptr;
       try {
@@ -267,16 +225,11 @@ bool ZenohRpcBackend::RegisterClientFunc(
 
         // client rsp deserialize
         auto remaining_buf = buf_oper.GetRemainingBuffer();
-        aimrt_buffer_view_t buffer_view{
-            .data = remaining_buf.data(),
-            .len = remaining_buf.size()};
+        aimrt_buffer_view_t buffer_view{.data = remaining_buf.data(), .len = remaining_buf.size()};
 
-        aimrt_buffer_array_view_t buffer_array_view{
-            .data = &buffer_view,
-            .len = 1};
+        aimrt_buffer_array_view_t buffer_array_view{.data = &buffer_view, .len = 1};
 
-        bool deserialize_ret = info.rsp_type_support_ref.Deserialize(
-            serialization_type, buffer_array_view, client_invoke_wrapper_ptr->rsp_ptr);
+        bool deserialize_ret = info.rsp_type_support_ref.Deserialize(serialization_type, buffer_array_view, client_invoke_wrapper_ptr->rsp_ptr);
 
         if (!deserialize_ret) {
           // deserialize failed
@@ -290,8 +243,7 @@ bool ZenohRpcBackend::RegisterClientFunc(
         AIMRT_WARN("Handle zenoh rpc msg failed, exception info: {}", e.what());
       }
 
-      if (client_invoke_wrapper_ptr)
-        client_invoke_wrapper_ptr->callback(aimrt::rpc::Status(AIMRT_RPC_STATUS_CLI_BACKEND_INTERNAL_ERROR));
+      if (client_invoke_wrapper_ptr) client_invoke_wrapper_ptr->callback(aimrt::rpc::Status(AIMRT_RPC_STATUS_CLI_BACKEND_INTERNAL_ERROR));
     };
 
     zenoh_manager_ptr_->RegisterRpcNode(pattern, std::move(handle), "client");
@@ -302,8 +254,7 @@ bool ZenohRpcBackend::RegisterClientFunc(
   return true;
 }
 
-void ZenohRpcBackend::Invoke(
-    const std::shared_ptr<runtime::core::rpc::InvokeWrapper>& client_invoke_wrapper_ptr) noexcept {
+void ZenohRpcBackend::Invoke(const std::shared_ptr<runtime::core::rpc::InvokeWrapper>& client_invoke_wrapper_ptr) noexcept {
   try {
     if (state_.load() != State::Start) [[unlikely]] {
       AIMRT_WARN("Method can only be called when state is 'Start'.");
@@ -315,14 +266,11 @@ void ZenohRpcBackend::Invoke(
 
     const auto& info = client_invoke_wrapper_ptr->info;
 
-    std::string pattern = std::string("aimrt_rpc/") +
-                          util::UrlEncode(GetRealFuncName(info.func_name)) +
-                          limit_domain_;
+    std::string pattern = std::string("aimrt_rpc/") + util::UrlEncode(GetRealFuncName(info.func_name)) + limit_domain_;
 
     uint32_t cur_req_id = req_id_++;
 
-    auto serialization_type =
-        client_invoke_wrapper_ptr->ctx_ref.GetMetaValue(AIMRT_RPC_CONTEXT_KEY_SERIALIZATION_TYPE);
+    auto serialization_type = client_invoke_wrapper_ptr->ctx_ref.GetMetaValue(AIMRT_RPC_CONTEXT_KEY_SERIALIZATION_TYPE);
 
     if (serialization_type.size() > 255) [[unlikely]] {
       client_invoke_wrapper_ptr->callback(aimrt::rpc::Status(AIMRT_RPC_STATUS_CLI_UNKNOWN));
@@ -330,8 +278,7 @@ void ZenohRpcBackend::Invoke(
     }
 
     // client req serialize
-    auto buffer_array_view_ptr = aimrt::runtime::core::rpc::TrySerializeReqWithCache(
-        *client_invoke_wrapper_ptr, serialization_type);
+    auto buffer_array_view_ptr = aimrt::runtime::core::rpc::TrySerializeReqWithCache(*client_invoke_wrapper_ptr, serialization_type);
     if (!buffer_array_view_ptr) [[unlikely]] {
       // serialize failed
       client_invoke_wrapper_ptr->callback(aimrt::rpc::Status(AIMRT_RPC_STATUS_CLI_SERIALIZATION_FAILED));
@@ -361,11 +308,7 @@ void ZenohRpcBackend::Invoke(
       context_meta_kv.emplace_back(val);
     }
     // padding zenoh pkg
-    size_t z_pkg_size = 1 + serialization_type.size() +
-                        1 + pattern.size() +
-                        4 +
-                        context_meta_kv_size +
-                        req_size;
+    size_t z_pkg_size = 1 + serialization_type.size() + 1 + pattern.size() + 4 + context_meta_kv_size + req_size;
 
     auto timeout = client_invoke_wrapper_ptr->ctx_ref.Timeout();
     auto record_ptr = client_invoke_wrapper_ptr;
@@ -392,9 +335,7 @@ void ZenohRpcBackend::Invoke(
 
     // data
     for (size_t ii = 0; ii < buffer_array_len; ++ii) {
-      buf_oper.SetBuffer(
-          static_cast<const char*>(buffer_array_data[ii].data),
-          buffer_array_data[ii].len);
+      buf_oper.SetBuffer(static_cast<const char*>(buffer_array_data[ii].data), buffer_array_data[ii].len);
     }
 
     // send data
@@ -405,19 +346,12 @@ void ZenohRpcBackend::Invoke(
   }
 }
 
-void ZenohRpcBackend::RegisterGetExecutorFunc(
-    const std::function<aimrt::executor::ExecutorRef(std::string_view)>& get_executor_func) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::PreInit,
-      "Method can only be called when state is 'PreInit'.");
+void ZenohRpcBackend::RegisterGetExecutorFunc(const std::function<aimrt::executor::ExecutorRef(std::string_view)>& get_executor_func) {
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::PreInit, "Method can only be called when state is 'PreInit'.");
   get_executor_func_ = get_executor_func;
 }
 
-void ZenohRpcBackend::ReturnRspWithStatusCode(
-    const std::string& pattern,
-    std::string_view serialization_type,
-    const char* req_id_buf,
-    uint32_t code) {
+void ZenohRpcBackend::ReturnRspWithStatusCode(const std::string& pattern, std::string_view serialization_type, const char* req_id_buf, uint32_t code) {
   namespace util = aimrt::common::util;
 
   int pkg_size = 1 + serialization_type.size() + 4 + 4;

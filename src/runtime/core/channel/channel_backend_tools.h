@@ -10,7 +10,7 @@
 namespace aimrt::runtime::core::channel {
 
 class SubscribeTool {
- public:
+public:
   SubscribeTool() = default;
   ~SubscribeTool() = default;
 
@@ -18,9 +18,7 @@ class SubscribeTool {
   SubscribeTool& operator=(const SubscribeTool&) = delete;
 
   void AddSubscribeWrapper(const runtime::core::channel::SubscribeWrapper* sub_wrapper_ptr) {
-    require_cache_serialization_types_.insert(
-        sub_wrapper_ptr->require_cache_serialization_types.begin(),
-        sub_wrapper_ptr->require_cache_serialization_types.end());
+    require_cache_serialization_types_.insert(sub_wrapper_ptr->require_cache_serialization_types.begin(), sub_wrapper_ptr->require_cache_serialization_types.end());
     sub_wrapper_vec_.emplace_back(sub_wrapper_ptr);
   }
 
@@ -30,10 +28,7 @@ class SubscribeTool {
       const std::shared_ptr<void>& msg_ptr) const {
     AIMRT_ASSERT(&msg_sub_wrapper == sub_wrapper_vec_[0], "Unexpected errors.");
 
-    runtime::core::channel::MsgWrapper sub_msg_wrapper{
-        .info = msg_sub_wrapper.info,
-        .msg_ptr = msg_ptr.get(),
-        .ctx_ref = ctx_ptr};
+    runtime::core::channel::MsgWrapper sub_msg_wrapper{.info = msg_sub_wrapper.info, .msg_ptr = msg_ptr.get(), .ctx_ref = ctx_ptr};
 
     sub_msg_wrapper.msg_cache_ptr = msg_ptr;
 
@@ -45,24 +40,17 @@ class SubscribeTool {
     auto serialization_type = msg_sub_wrapper.info.msg_type_support_ref.DefaultSerializationType();
 
     bool serialize_ret = msg_sub_wrapper.info.msg_type_support_ref.Serialize(
-        serialization_type,
-        msg_ptr.get(),
-        buffer_array_ptr->AllocatorNativeHandle(),
-        buffer_array_ptr->BufferArrayNativeHandle());
+        serialization_type, msg_ptr.get(), buffer_array_ptr->AllocatorNativeHandle(), buffer_array_ptr->BufferArrayNativeHandle());
 
     AIMRT_ASSERT(serialize_ret, "Serialize failed.");
 
     auto* ptr = buffer_array_ptr.get();
-    auto buffer_array_view_ptr = std::shared_ptr<aimrt::util::BufferArrayView>(
-        new aimrt::util::BufferArrayView(*ptr),
-        [buffer_array_ptr{std::move(buffer_array_ptr)}](const auto* ptr) { delete ptr; });
+    auto buffer_array_view_ptr =
+        std::shared_ptr<aimrt::util::BufferArrayView>(new aimrt::util::BufferArrayView(*ptr), [buffer_array_ptr{std::move(buffer_array_ptr)}](const auto* ptr) { delete ptr; });
 
     for (size_t ii = 1; ii < sub_wrapper_vec_.size(); ++ii) {
       const auto* sub_wrapper_ptr = sub_wrapper_vec_[ii];
-      runtime::core::channel::MsgWrapper sub_msg_wrapper{
-          .info = sub_wrapper_ptr->info,
-          .msg_ptr = nullptr,
-          .ctx_ref = ctx_ptr};
+      runtime::core::channel::MsgWrapper sub_msg_wrapper{.info = sub_wrapper_ptr->info, .msg_ptr = nullptr, .ctx_ref = ctx_ptr};
 
       sub_msg_wrapper.serialization_cache.emplace(serialization_type, buffer_array_view_ptr);
 
@@ -70,12 +58,9 @@ class SubscribeTool {
     }
   }
 
-  void DoSubscribeCallback(
-      const std::shared_ptr<aimrt::channel::Context>& ctx_ptr,
-      const std::string& serialization_type,
-      const aimrt::util::BufferArrayView& buffer_array_view) const {
-    bool need_cache_flag =
-        (require_cache_serialization_types_.find(serialization_type) != require_cache_serialization_types_.end());
+  void DoSubscribeCallback(const std::shared_ptr<aimrt::channel::Context>& ctx_ptr, const std::string& serialization_type, const aimrt::util::BufferArrayView& buffer_array_view)
+      const {
+    bool need_cache_flag = (require_cache_serialization_types_.find(serialization_type) != require_cache_serialization_types_.end());
 
     if (!need_cache_flag) {
       DoSubscribeCallbackWithoutCache(ctx_ptr, serialization_type, buffer_array_view);
@@ -93,19 +78,14 @@ class SubscribeTool {
 
       auto* ptr = buffer_ptr.get();
       auto buffer_array_view_ptr = std::shared_ptr<aimrt::util::BufferArrayView>(
-          new aimrt::util::BufferArrayView(ptr->data(), ptr->size()),
-          [buffer_ptr{std::move(buffer_ptr)}](const auto* ptr) { delete ptr; });
+          new aimrt::util::BufferArrayView(ptr->data(), ptr->size()), [buffer_ptr{std::move(buffer_ptr)}](const auto* ptr) { delete ptr; });
 
       DoSubscribeCallbackWithCache(ctx_ptr, serialization_type, buffer_array_view_ptr);
     }
   }
 
-  void DoSubscribeCallback(
-      const std::shared_ptr<aimrt::channel::Context>& ctx_ptr,
-      const std::string& serialization_type,
-      const void* data, size_t len) const {
-    bool need_cache_flag =
-        (require_cache_serialization_types_.find(serialization_type) != require_cache_serialization_types_.end());
+  void DoSubscribeCallback(const std::shared_ptr<aimrt::channel::Context>& ctx_ptr, const std::string& serialization_type, const void* data, size_t len) const {
+    bool need_cache_flag = (require_cache_serialization_types_.find(serialization_type) != require_cache_serialization_types_.end());
 
     if (!need_cache_flag) {
       aimrt::util::BufferArrayView buffer_array_view(data, len);
@@ -116,14 +96,13 @@ class SubscribeTool {
 
       auto* ptr = buffer_ptr.get();
       auto buffer_array_view_ptr = std::shared_ptr<aimrt::util::BufferArrayView>(
-          new aimrt::util::BufferArrayView(ptr->data(), ptr->size()),
-          [buffer_ptr{std::move(buffer_ptr)}](const auto* ptr) { delete ptr; });
+          new aimrt::util::BufferArrayView(ptr->data(), ptr->size()), [buffer_ptr{std::move(buffer_ptr)}](const auto* ptr) { delete ptr; });
 
       DoSubscribeCallbackWithCache(ctx_ptr, serialization_type, buffer_array_view_ptr);
     }
   }
 
- private:
+private:
   void DoSubscribeCallbackWithoutCache(
       const std::shared_ptr<aimrt::channel::Context>& ctx_ptr,
       const std::string& serialization_type,
@@ -133,15 +112,11 @@ class SubscribeTool {
 
       std::shared_ptr<void> msg_ptr = subscribe_type_support_ref.CreateSharedPtr();
 
-      bool deserialize_ret = subscribe_type_support_ref.Deserialize(
-          serialization_type, *(buffer_array_view.NativeHandle()), msg_ptr.get());
+      bool deserialize_ret = subscribe_type_support_ref.Deserialize(serialization_type, *(buffer_array_view.NativeHandle()), msg_ptr.get());
 
       AIMRT_ASSERT(deserialize_ret, "Msg deserialize failed.");
 
-      runtime::core::channel::MsgWrapper sub_msg_wrapper{
-          .info = sub_wrapper_ptr->info,
-          .msg_ptr = msg_ptr.get(),
-          .ctx_ref = ctx_ptr};
+      runtime::core::channel::MsgWrapper sub_msg_wrapper{.info = sub_wrapper_ptr->info, .msg_ptr = msg_ptr.get(), .ctx_ref = ctx_ptr};
 
       sub_msg_wrapper.msg_cache_ptr = msg_ptr;
 
@@ -154,10 +129,7 @@ class SubscribeTool {
       const std::string& serialization_type,
       const std::shared_ptr<aimrt::util::BufferArrayView>& buffer_array_view_ptr) const {
     for (const auto* sub_wrapper_ptr : sub_wrapper_vec_) {
-      runtime::core::channel::MsgWrapper sub_msg_wrapper{
-          .info = sub_wrapper_ptr->info,
-          .msg_ptr = nullptr,
-          .ctx_ref = ctx_ptr};
+      runtime::core::channel::MsgWrapper sub_msg_wrapper{.info = sub_wrapper_ptr->info, .msg_ptr = nullptr, .ctx_ref = ctx_ptr};
 
       sub_msg_wrapper.serialization_cache.emplace(serialization_type, buffer_array_view_ptr);
 
@@ -165,7 +137,7 @@ class SubscribeTool {
     }
   }
 
- private:
+private:
   std::vector<const runtime::core::channel::SubscribeWrapper*> sub_wrapper_vec_;
   std::unordered_set<std::string> require_cache_serialization_types_;
 };
@@ -176,8 +148,7 @@ inline void CheckMsg(MsgWrapper& msg_wrapper) {
   const auto& serialization_cache = msg_wrapper.serialization_cache;
   const auto& info = msg_wrapper.info;
 
-  AIMRT_ASSERT(!serialization_cache.empty(),
-               "Can not get msg, msg is null and serialization cache is empty.");
+  AIMRT_ASSERT(!serialization_cache.empty(), "Can not get msg, msg is null and serialization cache is empty.");
 
   if (serialization_cache.size() == 1) {
     auto msg_cache_ptr = info.msg_type_support_ref.CreateSharedPtr();
@@ -185,11 +156,9 @@ inline void CheckMsg(MsgWrapper& msg_wrapper) {
     const auto& serialization_type = serialization_cache.begin()->first;
     auto buffer_array_view_ptr = serialization_cache.begin()->second;
 
-    bool deserialize_ret = info.msg_type_support_ref.Deserialize(
-        serialization_type, *(buffer_array_view_ptr->NativeHandle()), msg_cache_ptr.get());
+    bool deserialize_ret = info.msg_type_support_ref.Deserialize(serialization_type, *(buffer_array_view_ptr->NativeHandle()), msg_cache_ptr.get());
 
-    AIMRT_ASSERT(deserialize_ret,
-                 "Can not get msg, msg is null and deserialize failed.");
+    AIMRT_ASSERT(deserialize_ret, "Can not get msg, msg is null and deserialize failed.");
 
     msg_wrapper.msg_cache_ptr = std::move(msg_cache_ptr);
     msg_wrapper.msg_ptr = msg_wrapper.msg_cache_ptr.get();
@@ -209,11 +178,9 @@ inline void CheckMsg(MsgWrapper& msg_wrapper) {
 
     auto buffer_array_view_ptr = finditr->second;
 
-    bool deserialize_ret = info.msg_type_support_ref.Deserialize(
-        serialization_type, *(buffer_array_view_ptr->NativeHandle()), msg_cache_ptr.get());
+    bool deserialize_ret = info.msg_type_support_ref.Deserialize(serialization_type, *(buffer_array_view_ptr->NativeHandle()), msg_cache_ptr.get());
 
-    AIMRT_ASSERT(deserialize_ret,
-                 "Can not get msg, msg is null and deserialize failed.");
+    AIMRT_ASSERT(deserialize_ret, "Can not get msg, msg is null and deserialize failed.");
 
     msg_wrapper.msg_cache_ptr = std::move(msg_cache_ptr);
     msg_wrapper.msg_ptr = msg_wrapper.msg_cache_ptr.get();
@@ -232,38 +199,31 @@ inline bool TryCheckMsg(MsgWrapper& msg_wrapper) noexcept {
   }
 }
 
-inline std::shared_ptr<aimrt::util::BufferArrayView> SerializeMsgWithCache(
-    MsgWrapper& msg_wrapper, std::string_view serialization_type) {
+inline std::shared_ptr<aimrt::util::BufferArrayView> SerializeMsgWithCache(MsgWrapper& msg_wrapper, std::string_view serialization_type) {
   auto& serialization_cache = msg_wrapper.serialization_cache;
   const auto& info = msg_wrapper.info;
 
   auto finditr = serialization_cache.find(serialization_type);
-  if (finditr != serialization_cache.end())
-    return finditr->second;
+  if (finditr != serialization_cache.end()) return finditr->second;
 
   CheckMsg(msg_wrapper);
 
   auto buffer_array_ptr = std::make_unique<aimrt::util::BufferArray>();
-  bool serialize_ret = info.msg_type_support_ref.Serialize(
-      serialization_type,
-      msg_wrapper.msg_ptr,
-      buffer_array_ptr->AllocatorNativeHandle(),
-      buffer_array_ptr->BufferArrayNativeHandle());
+  bool serialize_ret =
+      info.msg_type_support_ref.Serialize(serialization_type, msg_wrapper.msg_ptr, buffer_array_ptr->AllocatorNativeHandle(), buffer_array_ptr->BufferArrayNativeHandle());
 
   AIMRT_ASSERT(serialize_ret, "Serialize failed.");
 
   auto* ptr = buffer_array_ptr.get();
-  auto buffer_array_view_ptr = std::shared_ptr<aimrt::util::BufferArrayView>(
-      new aimrt::util::BufferArrayView(*ptr),
-      [buffer_array_ptr{std::move(buffer_array_ptr)}](const auto* ptr) { delete ptr; });
+  auto buffer_array_view_ptr =
+      std::shared_ptr<aimrt::util::BufferArrayView>(new aimrt::util::BufferArrayView(*ptr), [buffer_array_ptr{std::move(buffer_array_ptr)}](const auto* ptr) { delete ptr; });
 
   serialization_cache.emplace(serialization_type, buffer_array_view_ptr);
 
   return buffer_array_view_ptr;
 }
 
-inline std::shared_ptr<aimrt::util::BufferArrayView> TrySerializeMsgWithCache(
-    MsgWrapper& msg_wrapper, std::string_view serialization_type) noexcept {
+inline std::shared_ptr<aimrt::util::BufferArrayView> TrySerializeMsgWithCache(MsgWrapper& msg_wrapper, std::string_view serialization_type) noexcept {
   try {
     return SerializeMsgWithCache(msg_wrapper, serialization_type);
   } catch (...) {

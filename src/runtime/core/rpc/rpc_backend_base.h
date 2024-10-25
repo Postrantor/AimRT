@@ -10,7 +10,7 @@
 namespace aimrt::runtime::core::rpc {
 
 class RpcBackendBase {
- public:
+public:
   RpcBackendBase() = default;
   virtual ~RpcBackendBase() = default;
 
@@ -42,8 +42,7 @@ class RpcBackendBase {
    * @param service_func_wrapper
    * @return Register result
    */
-  virtual bool RegisterServiceFunc(
-      const ServiceFuncWrapper& service_func_wrapper) noexcept = 0;
+  virtual bool RegisterServiceFunc(const ServiceFuncWrapper& service_func_wrapper) noexcept = 0;
 
   /**
    * @brief Register client func
@@ -53,8 +52,7 @@ class RpcBackendBase {
    * @param client_func_wrapper
    * @return Register result
    */
-  virtual bool RegisterClientFunc(
-      const ClientFuncWrapper& client_func_wrapper) noexcept = 0;
+  virtual bool RegisterClientFunc(const ClientFuncWrapper& client_func_wrapper) noexcept = 0;
 
   /**
    * @brief Invoke a rpc call
@@ -63,8 +61,7 @@ class RpcBackendBase {
    *
    * @param client_invoke_wrapper_ptr
    */
-  virtual void Invoke(
-      const std::shared_ptr<InvokeWrapper>& client_invoke_wrapper_ptr) noexcept = 0;
+  virtual void Invoke(const std::shared_ptr<InvokeWrapper>& client_invoke_wrapper_ptr) noexcept = 0;
 };
 
 }  // namespace aimrt::runtime::core::rpc

@@ -10,9 +10,8 @@
 namespace aimrt::runtime::core::allocator {
 
 class AllocatorProxy {
- public:
-  explicit AllocatorProxy()
-      : base_(GenBase(this)) {}
+public:
+  explicit AllocatorProxy() : base_(GenBase(this)) {}
   ~AllocatorProxy() = default;
 
   AllocatorProxy(const AllocatorProxy&) = delete;
@@ -20,7 +19,7 @@ class AllocatorProxy {
 
   const aimrt_allocator_base_t* NativeHandle() const { return &base_; }
 
- private:
+private:
   static void* GetThreadLocalBuf(size_t buf_size) {
     constexpr size_t kMaxThreadLocalBufSize = 1024 * 1024 * 16;
     constexpr size_t kMinThreadLocalBufSize = 1024 * 4;
@@ -38,14 +37,11 @@ class AllocatorProxy {
 
     thread_local Buf thread_local_buf;
 
-    if (thread_local_buf.size >= buf_size)
-      return thread_local_buf.buf;
+    if (thread_local_buf.size >= buf_size) return thread_local_buf.buf;
 
-    if (thread_local_buf.buf != nullptr)
-      free(thread_local_buf.buf);
+    if (thread_local_buf.buf != nullptr) free(thread_local_buf.buf);
 
-    while (thread_local_buf.size < buf_size)
-      thread_local_buf.size <<= 1;
+    while (thread_local_buf.size < buf_size) thread_local_buf.size <<= 1;
 
     thread_local_buf.buf = malloc(thread_local_buf.size);
 
@@ -53,14 +49,10 @@ class AllocatorProxy {
   }
 
   static aimrt_allocator_base_t GenBase(void* impl) {
-    return aimrt_allocator_base_t{
-        .get_thread_local_buf = [](void* impl, size_t buf_size) -> void* {
-          return AllocatorProxy::GetThreadLocalBuf(buf_size);
-        },
-        .impl = impl};
+    return aimrt_allocator_base_t{.get_thread_local_buf = [](void* impl, size_t buf_size) -> void* { return AllocatorProxy::GetThreadLocalBuf(buf_size); }, .impl = impl};
   }
 
- private:
+private:
   const aimrt_allocator_base_t base_;
 };
 

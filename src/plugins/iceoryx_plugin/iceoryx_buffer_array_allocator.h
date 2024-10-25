@@ -12,7 +12,7 @@
 namespace aimrt::util {
 
 class IceoryxBufferArrayAllocator {
- public:
+public:
   IceoryxBufferArrayAllocator(uint64_t iox_shm_capicity, void* iox_shm_head_ptr)
       : iox_shm_capicity_(iox_shm_capicity),
         iox_shm_head_ptr_(iox_shm_head_ptr),
@@ -54,9 +54,7 @@ class IceoryxBufferArrayAllocator {
     }
 
     static constexpr size_t kInitCapacitySzie = 2;
-    size_t new_capacity = (buffer_array->capacity < kInitCapacitySzie)
-                              ? kInitCapacitySzie
-                              : (buffer_array->capacity << 1);
+    size_t new_capacity = (buffer_array->capacity < kInitCapacitySzie) ? kInitCapacitySzie : (buffer_array->capacity << 1);
 
     Reserve(buffer_array, new_capacity);
 
@@ -71,19 +69,21 @@ class IceoryxBufferArrayAllocator {
 
   static const aimrt_buffer_array_allocator_t GenBase(void* impl) {
     return aimrt_buffer_array_allocator_t{
-        .reserve = [](void* impl, aimrt_buffer_array_t* buffer_array, size_t new_cap) {
-          static_cast<IceoryxBufferArrayAllocator*>(impl)->Reserve(buffer_array, new_cap);  //
-        },
+        .reserve =
+            [](void* impl, aimrt_buffer_array_t* buffer_array, size_t new_cap) {
+              static_cast<IceoryxBufferArrayAllocator*>(impl)->Reserve(buffer_array, new_cap);  //
+            },
         .allocate = [](void* impl, aimrt_buffer_array_t* buffer_array, size_t size) -> aimrt_buffer_t {
           return static_cast<IceoryxBufferArrayAllocator*>(impl)->Allocate(buffer_array, size);
         },
-        .release = [](void* impl, aimrt_buffer_array_t* buffer_array) {
-          static_cast<IceoryxBufferArrayAllocator*>(impl)->Release(buffer_array);  //
-        },
+        .release =
+            [](void* impl, aimrt_buffer_array_t* buffer_array) {
+              static_cast<IceoryxBufferArrayAllocator*>(impl)->Release(buffer_array);  //
+            },
         .impl = impl};
   }
 
- private:
+private:
   const aimrt_buffer_array_allocator_t base_;
 
   void* iox_shm_head_ptr_;

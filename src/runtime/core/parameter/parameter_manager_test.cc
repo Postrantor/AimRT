@@ -7,7 +7,7 @@
 namespace aimrt::runtime::core::parameter {
 
 class ParameterManagerTest : public ::testing::Test {
- protected:
+protected:
   void SetUp() override {
     YAML::Node options_node_test = YAML::Load(R"str()str");
     EXPECT_EQ(parametre_manager_.GetState(), ParameterManager::State::kPreInit);

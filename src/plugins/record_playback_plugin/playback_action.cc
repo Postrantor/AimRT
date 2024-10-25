@@ -55,16 +55,12 @@ struct convert<aimrt::plugins::record_playback_plugin::PlaybackAction::Options> 
 
     rhs.executor = node["executor"].as<std::string>();
 
-    if (node["skip_duration_s"])
-      rhs.skip_duration_s = node["skip_duration_s"].as<uint64_t>();
-    if (node["play_duration_s"])
-      rhs.play_duration_s = node["play_duration_s"].as<uint64_t>();
+    if (node["skip_duration_s"]) rhs.skip_duration_s = node["skip_duration_s"].as<uint64_t>();
+    if (node["play_duration_s"]) rhs.play_duration_s = node["play_duration_s"].as<uint64_t>();
 
     if (node["topic_meta_list"] && node["topic_meta_list"].IsSequence()) {
       for (const auto& topic_meta_node : node["topic_meta_list"]) {
-        auto topic_meta = Options::TopicMeta{
-            .topic_name = topic_meta_node["topic_name"].as<std::string>(),
-            .msg_type = topic_meta_node["msg_type"].as<std::string>()};
+        auto topic_meta = Options::TopicMeta{.topic_name = topic_meta_node["topic_name"].as<std::string>(), .msg_type = topic_meta_node["msg_type"].as<std::string>()};
 
         rhs.topic_meta_list.emplace_back(std::move(topic_meta));
       }
@@ -79,16 +75,11 @@ struct convert<aimrt::plugins::record_playback_plugin::PlaybackAction::Options> 
 namespace aimrt::plugins::record_playback_plugin {
 
 void PlaybackAction::Initialize(YAML::Node options_node) {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-      "Local channel backend can only be initialized once.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "Local channel backend can only be initialized once.");
 
-  if (options_node && !options_node.IsNull())
-    options_ = options_node.as<Options>();
+  if (options_node && !options_node.IsNull()) options_ = options_node.as<Options>();
 
-  AIMRT_CHECK_ERROR_THROW(
-      get_type_support_func_,
-      "Get type support function is not set before initialize.");
+  AIMRT_CHECK_ERROR_THROW(get_type_support_func_, "Get type support function is not set before initialize.");
 
   options_.bag_path = std::filesystem::canonical(std::filesystem::absolute(options_.bag_path)).string();
 
@@ -96,16 +87,14 @@ void PlaybackAction::Initialize(YAML::Node options_node) {
   auto metadata_yaml_file_path = std::filesystem::path(options_.bag_path) / "metadata.yaml";
 
   AIMRT_CHECK_ERROR_THROW(
-      std::filesystem::exists(metadata_yaml_file_path) && std::filesystem::is_regular_file(metadata_yaml_file_path),
-      "Can not find 'metadata.yaml' in bag path '{}'.", options_.bag_path);
+      std::filesystem::exists(metadata_yaml_file_path) && std::filesystem::is_regular_file(metadata_yaml_file_path), "Can not find 'metadata.yaml' in bag path '{}'.",
+      options_.bag_path);
 
   auto metadata_root_node = YAML::LoadFile(metadata_yaml_file_path.string());
   metadata_ = metadata_root_node["aimrt_bagfile_information"].as<MetaData>();
 
   // 检查version
-  AIMRT_CHECK_ERROR_THROW(metadata_.version == kVersion,
-                          "Version inconsistency, cur plugin version: {}, bag version: {}",
-                          kVersion, metadata_.version);
+  AIMRT_CHECK_ERROR_THROW(metadata_.version == kVersion, "Version inconsistency, cur plugin version: {}, bag version: {}", kVersion, metadata_.version);
 
   // 检查 select topic meta
   if (!options_.topic_meta_list.empty()) {
@@ -113,15 +102,12 @@ void PlaybackAction::Initialize(YAML::Node options_node) {
 
     std::vector<TopicMeta> select_topics;
     for (auto item : options_.topic_meta_list) {
-      auto finditr = std::find_if(
-          metadata_.topics.begin(), metadata_.topics.end(),
-          [&item](const auto& topic_meta) {
-            return (item.topic_name == topic_meta.topic_name) && (item.msg_type == topic_meta.msg_type);
-          });
+      auto finditr = std::find_if(metadata_.topics.begin(), metadata_.topics.end(), [&item](const auto& topic_meta) {
+        return (item.topic_name == topic_meta.topic_name) && (item.msg_type == topic_meta.msg_type);
+      });
 
       if (finditr == metadata_.topics.end()) [[unlikely]] {
-        AIMRT_WARN("Can not find topic '{}' with msg type '{}' in bag '{}'.",
-                   item.topic_name, item.msg_type, options_.bag_path);
+        AIMRT_WARN("Can not find topic '{}' with msg type '{}' in bag '{}'.", item.topic_name, item.msg_type, options_.bag_path);
 
         continue;
       }
@@ -147,37 +133,31 @@ void PlaybackAction::Initialize(YAML::Node options_node) {
   for (auto& topic_meta : metadata_.topics) {
     // 检查消息类型
     auto type_support_ref = get_type_support_func_(topic_meta.msg_type);
-    AIMRT_CHECK_ERROR_THROW(type_support_ref,
-                            "Can not find type '{}' in any type support pkg!", topic_meta.msg_type);
+    AIMRT_CHECK_ERROR_THROW(type_support_ref, "Can not find type '{}' in any type support pkg!", topic_meta.msg_type);
 
     // 检查序列化类型
     bool check_ret = type_support_ref.CheckSerializationTypeSupported(topic_meta.serialization_type);
-    AIMRT_CHECK_ERROR_THROW(check_ret,
-                            "Msg type '{}' does not support serialization type '{}'.",
-                            topic_meta.msg_type, topic_meta.serialization_type);
+    AIMRT_CHECK_ERROR_THROW(check_ret, "Msg type '{}' does not support serialization type '{}'.", topic_meta.msg_type, topic_meta.serialization_type);
 
     topic_meta_map_.emplace(topic_meta.id, topic_meta);
   }
 
   // 检查 files
-  AIMRT_CHECK_ERROR_THROW(!metadata_.files.empty(),
-                          "Empty bag! bag path: {}", options_.bag_path);
+  AIMRT_CHECK_ERROR_THROW(!metadata_.files.empty(), "Empty bag! bag path: {}", options_.bag_path);
 
   for (auto& item : metadata_.files) {
     const auto db_file_path = std::filesystem::path(options_.bag_path) / item.path;
 
     AIMRT_CHECK_ERROR_THROW(
-        std::filesystem::exists(db_file_path) && std::filesystem::is_regular_file(db_file_path),
-        "Can not find bag file '{}' in bag path '{}'.", db_file_path.string(), options_.bag_path);
+        std::filesystem::exists(db_file_path) && std::filesystem::is_regular_file(db_file_path), "Can not find bag file '{}' in bag path '{}'.", db_file_path.string(),
+        options_.bag_path);
   }
 
   options_node = options_;
 }
 
 void PlaybackAction::Start() {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kStart) == State::kInit,
-      "Method can only be called when state is 'Init'.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'.");
 
   // start imd mode
   if (options_.mode == Options::Mode::kImd) {
@@ -191,61 +171,42 @@ void PlaybackAction::Start() {
 }
 
 void PlaybackAction::Shutdown() {
-  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-    return;
+  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 
   std::lock_guard<std::mutex> lck(playback_state_mutex_);
-  if (playback_state_ == PlayBackState::kPlaying)
-    playback_state_ = PlayBackState::kGetStopSignal;
+  if (playback_state_ == PlayBackState::kPlaying) playback_state_ = PlayBackState::kGetStopSignal;
 }
 
 void PlaybackAction::InitExecutor() {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kInit,
-      "Method can only be called when state is 'Init'.");
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kInit, "Method can only be called when state is 'Init'.");
 
-  AIMRT_CHECK_ERROR_THROW(
-      get_executor_func_,
-      "Get executor function is not set before initialize.");
+  AIMRT_CHECK_ERROR_THROW(get_executor_func_, "Get executor function is not set before initialize.");
 
   executor_ = get_executor_func_(options_.executor);
-  AIMRT_CHECK_ERROR_THROW(
-      executor_, "Can not get executor {}.", options_.executor);
-  AIMRT_CHECK_ERROR_THROW(
-      executor_.SupportTimerSchedule(),
-      "Record executor {} do not support time schedule!", options_.executor);
+  AIMRT_CHECK_ERROR_THROW(executor_, "Can not get executor {}.", options_.executor);
+  AIMRT_CHECK_ERROR_THROW(executor_.SupportTimerSchedule(), "Record executor {} do not support time schedule!", options_.executor);
 }
 
-void PlaybackAction::RegisterGetExecutorFunc(
-    const std::function<executor::ExecutorRef(std::string_view)>& get_executor_func) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kPreInit,
-      "Method can only be called when state is 'PreInit'.");
+void PlaybackAction::RegisterGetExecutorFunc(const std::function<executor::ExecutorRef(std::string_view)>& get_executor_func) {
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
   get_executor_func_ = get_executor_func;
 }
 
-void PlaybackAction::RegisterGetTypeSupportFunc(
-    const std::function<aimrt::util::TypeSupportRef(std::string_view)>& get_type_support_func) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kPreInit,
-      "Method can only be called when state is 'PreInit'.");
+void PlaybackAction::RegisterGetTypeSupportFunc(const std::function<aimrt::util::TypeSupportRef(std::string_view)>& get_type_support_func) {
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
   get_type_support_func_ = get_type_support_func;
 }
 
 void PlaybackAction::RegisterPubRecordFunc(std::function<void(const OneRecord&)>&& func) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kInit,
-      "Method can only be called when state is 'Init'.");
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kInit, "Method can only be called when state is 'Init'.");
 
   pub_record_func_ = std::move(func);
 }
 
 bool PlaybackAction::StartSignalPlayback(uint64_t skip_duration_s, uint64_t play_duration_s) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kStart,
-      "Method can only be called when state is 'Start'.");
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kStart, "Method can only be called when state is 'Start'.");
 
   if (options_.mode != Options::Mode::kSignal) [[unlikely]] {
     AIMRT_WARN("Cur action mode is not signal mode.");
@@ -267,9 +228,7 @@ bool PlaybackAction::StartSignalPlayback(uint64_t skip_duration_s, uint64_t play
 }
 
 void PlaybackAction::StopSignalPlayback() {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kStart,
-      "Method can only be called when state is 'Start'.");
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kStart, "Method can only be called when state is 'Start'.");
 
   if (options_.mode != Options::Mode::kSignal) [[unlikely]] {
     AIMRT_WARN("Cur action mode is not signal mode.");
@@ -277,8 +236,7 @@ void PlaybackAction::StopSignalPlayback() {
   }
 
   std::lock_guard<std::mutex> lck(playback_state_mutex_);
-  if (playback_state_ == PlayBackState::kPlaying)
-    playback_state_ = PlayBackState::kGetStopSignal;
+  if (playback_state_ == PlayBackState::kPlaying) playback_state_ = PlayBackState::kGetStopSignal;
 }
 
 bool PlaybackAction::OpenNewDb() {
@@ -300,9 +258,7 @@ bool PlaybackAction::OpenNewDb() {
 
   // open db
   int ret = sqlite3_open(db_file_path.c_str(), &db_);
-  AIMRT_CHECK_ERROR_THROW(ret == SQLITE_OK,
-                          "Sqlite3 open db file failed, path: {}, ret: {}, error info: {}",
-                          db_file_path, ret, sqlite3_errmsg(db_));
+  AIMRT_CHECK_ERROR_THROW(ret == SQLITE_OK, "Sqlite3 open db file failed, path: {}, ret: {}, error info: {}", db_file_path, ret, sqlite3_errmsg(db_));
 
   AIMRT_TRACE("Open new db, path: {}", db_file_path);
 
@@ -311,11 +267,9 @@ bool PlaybackAction::OpenNewDb() {
 
   std::vector<std::string> condition;
 
-  if (cur_db_start_timestamp < start_playback_timestamp_)
-    condition.emplace_back("timestamp >= " + std::to_string(start_playback_timestamp_));
+  if (cur_db_start_timestamp < start_playback_timestamp_) condition.emplace_back("timestamp >= " + std::to_string(start_playback_timestamp_));
 
-  if (!select_msg_sql_topic_id_range_.empty())
-    condition.emplace_back("topic_id IN ( " + select_msg_sql_topic_id_range_ + " )");
+  if (!select_msg_sql_topic_id_range_.empty()) condition.emplace_back("topic_id IN ( " + select_msg_sql_topic_id_range_ + " )");
 
   for (size_t ii = 0; ii < condition.size(); ++ii) {
     if (ii == 0)
@@ -329,9 +283,7 @@ bool PlaybackAction::OpenNewDb() {
   AIMRT_TRACE("Sql str: {}, db path: {}", sql, db_file_path);
 
   ret = sqlite3_prepare_v3(db_, sql.c_str(), sql.size(), 0, &select_msg_stmt_, nullptr);
-  AIMRT_CHECK_ERROR_THROW(ret == SQLITE_OK,
-                          "Sqlite3 prepare failed, sql: {}, ret: {}, error info: {}",
-                          sql, ret, sqlite3_errmsg(db_));
+  AIMRT_CHECK_ERROR_THROW(ret == SQLITE_OK, "Sqlite3 prepare failed, sql: {}, ret: {}, error info: {}", sql, ret, sqlite3_errmsg(db_));
 
   return true;
 }
@@ -358,27 +310,23 @@ void PlaybackAction::StartPlaybackImpl(uint64_t skip_duration_s, uint64_t play_d
 
   size_t ii = 1;
   for (; ii < metadata_.files.size(); ++ii) {
-    if (metadata_.files[ii].start_timestamp > start_playback_timestamp_)
-      break;
+    if (metadata_.files[ii].start_timestamp > start_playback_timestamp_) break;
   }
   cur_db_file_index_ = ii - 1;
 
-  AIMRT_TRACE("Start a new playback, skip_duration_s: {}, play_duration_s: {}, start_playback_timestamp: {}, stop_playback_timestamp: {}, use db index: {}",
-              skip_duration_s, play_duration_s,
-              start_playback_timestamp_, stop_playback_timestamp_,
-              cur_db_file_index_);
+  AIMRT_TRACE(
+      "Start a new playback, skip_duration_s: {}, play_duration_s: {}, start_playback_timestamp: {}, stop_playback_timestamp: {}, use db index: {}", skip_duration_s,
+      play_duration_s, start_playback_timestamp_, stop_playback_timestamp_, cur_db_file_index_);
 
   start_timestamp_ = aimrt::common::util::GetCurTimestampNs();
 
   CloseDb();
 
   // 开始两个task包
-  std::shared_ptr<void> task_counter_ptr(
-      nullptr,
-      [this](...) {
-        std::lock_guard<std::mutex> lck(playback_state_mutex_);
-        playback_state_ = PlayBackState::kReadyToPlay;
-      });
+  std::shared_ptr<void> task_counter_ptr(nullptr, [this](...) {
+    std::lock_guard<std::mutex> lck(playback_state_mutex_);
+    playback_state_ = PlayBackState::kReadyToPlay;
+  });
 
   AddPlaybackTasks(task_counter_ptr);
   AddPlaybackTasks(task_counter_ptr);
@@ -427,21 +375,15 @@ void PlaybackAction::AddPlaybackTasks(const std::shared_ptr<void>& task_counter_
 
       auto data_ptr = std::make_unique<std::string>(static_cast<const char*>(buf), size);
 
-      aimrt_buffer_view_t buffer_view{
-          .data = data_ptr->data(),
-          .len = data_ptr->size()};
+      aimrt_buffer_view_t buffer_view{.data = data_ptr->data(), .len = data_ptr->size()};
 
-      aimrt_buffer_array_view_t buffer_array_view{
-          .data = &buffer_view,
-          .len = 1};
+      aimrt_buffer_array_view_t buffer_array_view{.data = &buffer_view, .len = 1};
 
-      records.emplace_back(
-          OneRecord{
-              .topic_index = static_cast<uint64_t>(topic_id),
-              .dt = timestamp - start_playback_timestamp_,
-              .buffer_view_ptr = std::shared_ptr<aimrt::util::BufferArrayView>(
-                  new aimrt::util::BufferArrayView(buffer_array_view),
-                  [data_ptr{std::move(data_ptr)}](const auto* ptr) { delete ptr; })});
+      records.emplace_back(OneRecord{
+          .topic_index = static_cast<uint64_t>(topic_id),
+          .dt = timestamp - start_playback_timestamp_,
+          .buffer_view_ptr = std::shared_ptr<aimrt::util::BufferArrayView>(
+              new aimrt::util::BufferArrayView(buffer_array_view), [data_ptr{std::move(data_ptr)}](const auto* ptr) { delete ptr; })});
 
       if (cur_start_timestamp == 0) [[unlikely]] {
         cur_start_timestamp = timestamp;
@@ -474,20 +416,14 @@ void PlaybackAction::AddPlaybackTasks(const std::shared_ptr<void>& task_counter_
     auto tp = aimrt::common::util::GetTimePointFromTimestampNs(start_timestamp_ + record.dt);
 
     if (ii < len - 1) {
-      executor_.ExecuteAt(
-          tp,
-          [this, record{std::move(record)}]() {
-            pub_record_func_(record);
-          });
+      executor_.ExecuteAt(tp, [this, record{std::move(record)}]() { pub_record_func_(record); });
     } else {
-      executor_.ExecuteAt(
-          tp,
-          [this, record{std::move(record)}, task_counter_ptr]() {
-            pub_record_func_(record);
+      executor_.ExecuteAt(tp, [this, record{std::move(record)}, task_counter_ptr]() {
+        pub_record_func_(record);
 
-            // add new playback tasks to last publish task
-            AddPlaybackTasks(task_counter_ptr);
-          });
+        // add new playback tasks to last publish task
+        AddPlaybackTasks(task_counter_ptr);
+      });
     }
   }
 }

@@ -26,11 +26,9 @@ TEST(NET_TEST, Http_base) {
   std::thread t_svr([svr_sys_ptr] {
     AIMRT_INFO("svr_sys_ptr start.");
     auto http_svr_ptr = std::make_shared<AsioHttpServer>(svr_sys_ptr->IO());
-    http_svr_ptr->Initialize(AsioHttpServer::Options{
-        .ep = {asio::ip::address_v4(), 50080}});
+    http_svr_ptr->Initialize(AsioHttpServer::Options{.ep = {asio::ip::address_v4(), 50080}});
 
-    svr_sys_ptr->RegisterSvrFunc([http_svr_ptr] { http_svr_ptr->Start(); },
-                                 [http_svr_ptr] { http_svr_ptr->Shutdown(); });
+    svr_sys_ptr->RegisterSvrFunc([http_svr_ptr] { http_svr_ptr->Start(); }, [http_svr_ptr] { http_svr_ptr->Shutdown(); });
 
     svr_sys_ptr->Start();
     svr_sys_ptr->Join();
@@ -41,8 +39,7 @@ TEST(NET_TEST, Http_base) {
   auto http_cli_pool_ptr = std::make_shared<AsioHttpClientPool>(cli_sys_ptr->IO());
   http_cli_pool_ptr->Initialize(AsioHttpClientPool::Options{});
 
-  cli_sys_ptr->RegisterSvrFunc([http_cli_pool_ptr] { http_cli_pool_ptr->Start(); },
-                               [http_cli_pool_ptr] { http_cli_pool_ptr->Shutdown(); });
+  cli_sys_ptr->RegisterSvrFunc([http_cli_pool_ptr] { http_cli_pool_ptr->Start(); }, [http_cli_pool_ptr] { http_cli_pool_ptr->Shutdown(); });
 
   std::thread t_cli([cli_sys_ptr] {
     AIMRT_INFO("cli_sys_ptr start.");
@@ -54,9 +51,7 @@ TEST(NET_TEST, Http_base) {
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   // call http
-  auto http_send_recv =
-      [http_cli_pool_ptr](AsioHttpClient::Options client_options, bool expect_exp = false)
-      -> asio::awaitable<void> {
+  auto http_send_recv = [http_cli_pool_ptr](AsioHttpClient::Options client_options, bool expect_exp = false) -> asio::awaitable<void> {
     bool exp_flag = false;
     try {
       auto client_ptr = co_await http_cli_pool_ptr->GetClient(client_options);
@@ -95,14 +90,8 @@ TEST(NET_TEST, Http_base) {
     co_return;
   };
 
-  auto co_future_1 = asio::co_spawn(
-      *(cli_sys_ptr->IO()),
-      http_send_recv(AsioHttpClient::Options{"127.0.0.1", "50080"}),
-      asio::use_future);
-  auto co_future_2 = asio::co_spawn(
-      *(cli_sys_ptr->IO()),
-      http_send_recv(AsioHttpClient::Options{"127.0.0.1", "50080"}),
-      asio::use_future);
+  auto co_future_1 = asio::co_spawn(*(cli_sys_ptr->IO()), http_send_recv(AsioHttpClient::Options{"127.0.0.1", "50080"}), asio::use_future);
+  auto co_future_2 = asio::co_spawn(*(cli_sys_ptr->IO()), http_send_recv(AsioHttpClient::Options{"127.0.0.1", "50080"}), asio::use_future);
 
   co_future_1.wait();
   co_future_2.wait();
@@ -125,11 +114,9 @@ TEST(NET_TEST, Http_multi_server) {
   std::thread t_svr1([svr1_sys_ptr] {
     AIMRT_INFO("svr1_sys_ptr start.");
     auto http_svr_ptr = std::make_shared<AsioHttpServer>(svr1_sys_ptr->IO());
-    http_svr_ptr->Initialize(AsioHttpServer::Options{
-        .ep = {asio::ip::address_v4(), 50080}});
+    http_svr_ptr->Initialize(AsioHttpServer::Options{.ep = {asio::ip::address_v4(), 50080}});
 
-    svr1_sys_ptr->RegisterSvrFunc([http_svr_ptr] { http_svr_ptr->Start(); },
-                                  [http_svr_ptr] { http_svr_ptr->Shutdown(); });
+    svr1_sys_ptr->RegisterSvrFunc([http_svr_ptr] { http_svr_ptr->Start(); }, [http_svr_ptr] { http_svr_ptr->Shutdown(); });
 
     svr1_sys_ptr->Start();
     svr1_sys_ptr->Join();
@@ -140,11 +127,9 @@ TEST(NET_TEST, Http_multi_server) {
   std::thread t_svr2([svr2_sys_ptr] {
     AIMRT_INFO("svr2_sys_ptr start.");
     auto http_svr_ptr = std::make_shared<AsioHttpServer>(svr2_sys_ptr->IO());
-    http_svr_ptr->Initialize(AsioHttpServer::Options{
-        .ep = {asio::ip::address_v4(), 50081}});
+    http_svr_ptr->Initialize(AsioHttpServer::Options{.ep = {asio::ip::address_v4(), 50081}});
 
-    svr2_sys_ptr->RegisterSvrFunc([http_svr_ptr] { http_svr_ptr->Start(); },
-                                  [http_svr_ptr] { http_svr_ptr->Shutdown(); });
+    svr2_sys_ptr->RegisterSvrFunc([http_svr_ptr] { http_svr_ptr->Start(); }, [http_svr_ptr] { http_svr_ptr->Shutdown(); });
 
     svr2_sys_ptr->Start();
     svr2_sys_ptr->Join();
@@ -155,8 +140,7 @@ TEST(NET_TEST, Http_multi_server) {
   auto http_cli_pool_ptr = std::make_shared<AsioHttpClientPool>(cli_sys_ptr->IO());
   http_cli_pool_ptr->Initialize(AsioHttpClientPool::Options{});
 
-  cli_sys_ptr->RegisterSvrFunc([http_cli_pool_ptr] { http_cli_pool_ptr->Start(); },
-                               [http_cli_pool_ptr] { http_cli_pool_ptr->Shutdown(); });
+  cli_sys_ptr->RegisterSvrFunc([http_cli_pool_ptr] { http_cli_pool_ptr->Start(); }, [http_cli_pool_ptr] { http_cli_pool_ptr->Shutdown(); });
 
   std::thread t_cli([cli_sys_ptr] {
     AIMRT_INFO("cli_sys_ptr start.");
@@ -168,9 +152,7 @@ TEST(NET_TEST, Http_multi_server) {
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   // call http
-  auto http_send_recv =
-      [http_cli_pool_ptr](AsioHttpClient::Options client_options, bool expect_exp = false)
-      -> asio::awaitable<void> {
+  auto http_send_recv = [http_cli_pool_ptr](AsioHttpClient::Options client_options, bool expect_exp = false) -> asio::awaitable<void> {
     bool exp_flag = false;
     try {
       auto client_ptr = co_await http_cli_pool_ptr->GetClient(client_options);
@@ -211,14 +193,8 @@ TEST(NET_TEST, Http_multi_server) {
     co_return;
   };
 
-  auto co_future_1 = asio::co_spawn(
-      *(cli_sys_ptr->IO()),
-      http_send_recv(AsioHttpClient::Options{"127.0.0.1", "50080"}),
-      asio::use_future);
-  auto co_future_2 = asio::co_spawn(
-      *(cli_sys_ptr->IO()),
-      http_send_recv(AsioHttpClient::Options{"127.0.0.1", "50081"}),
-      asio::use_future);
+  auto co_future_1 = asio::co_spawn(*(cli_sys_ptr->IO()), http_send_recv(AsioHttpClient::Options{"127.0.0.1", "50080"}), asio::use_future);
+  auto co_future_2 = asio::co_spawn(*(cli_sys_ptr->IO()), http_send_recv(AsioHttpClient::Options{"127.0.0.1", "50081"}), asio::use_future);
 
   co_future_1.wait();
   co_future_2.wait();
@@ -245,8 +221,7 @@ TEST(NET_TEST, Http_server_restart) {
   auto http_cli_ptr = std::make_shared<AsioHttpClient>(cli_sys_ptr->IO());
   http_cli_ptr->Initialize(AsioHttpClient::Options{"127.0.0.1", "50080"});
 
-  cli_sys_ptr->RegisterSvrFunc([http_cli_ptr] { http_cli_ptr->Start(); },
-                               [http_cli_ptr] { http_cli_ptr->Shutdown(); });
+  cli_sys_ptr->RegisterSvrFunc([http_cli_ptr] { http_cli_ptr->Start(); }, [http_cli_ptr] { http_cli_ptr->Shutdown(); });
 
   std::thread t_cli([cli_sys_ptr] {
     AIMRT_INFO("cli_sys_ptr start.");
@@ -255,8 +230,7 @@ TEST(NET_TEST, Http_server_restart) {
     AIMRT_INFO("cli_sys_ptr exit.");
   });
 
-  auto http_send_recv =
-      [http_cli_ptr](bool expect_exp = false) -> asio::awaitable<void> {
+  auto http_send_recv = [http_cli_ptr](bool expect_exp = false) -> asio::awaitable<void> {
     bool exp_flag = false;
     try {
       http::request<http::string_body> req{http::verb::get, "/", 11};
@@ -297,11 +271,9 @@ TEST(NET_TEST, Http_server_restart) {
   std::thread t_svr1([svr1_sys_ptr] {
     AIMRT_INFO("svr1_sys_ptr start.");
     auto http_svr_ptr = std::make_shared<AsioHttpServer>(svr1_sys_ptr->IO());
-    http_svr_ptr->Initialize(AsioHttpServer::Options{
-        .ep = {asio::ip::address_v4(), 50080}});
+    http_svr_ptr->Initialize(AsioHttpServer::Options{.ep = {asio::ip::address_v4(), 50080}});
 
-    svr1_sys_ptr->RegisterSvrFunc([http_svr_ptr] { http_svr_ptr->Start(); },
-                                  [http_svr_ptr] { http_svr_ptr->Shutdown(); });
+    svr1_sys_ptr->RegisterSvrFunc([http_svr_ptr] { http_svr_ptr->Start(); }, [http_svr_ptr] { http_svr_ptr->Shutdown(); });
 
     svr1_sys_ptr->Start();
     svr1_sys_ptr->Join();
@@ -310,17 +282,13 @@ TEST(NET_TEST, Http_server_restart) {
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   // call http
-  auto co_future_1_1 = asio::co_spawn(
-      *(cli_sys_ptr->IO()), http_send_recv(), asio::use_future);
-  auto co_future_1_2 = asio::co_spawn(
-      *(cli_sys_ptr->IO()), http_send_recv(), asio::use_future);
+  auto co_future_1_1 = asio::co_spawn(*(cli_sys_ptr->IO()), http_send_recv(), asio::use_future);
+  auto co_future_1_2 = asio::co_spawn(*(cli_sys_ptr->IO()), http_send_recv(), asio::use_future);
   co_future_1_1.wait();
   co_future_1_2.wait();
 
-  auto co_future_1_3 = asio::co_spawn(
-      *(cli_sys_ptr->IO()), http_send_recv(), asio::use_future);
-  auto co_future_1_4 = asio::co_spawn(
-      *(cli_sys_ptr->IO()), http_send_recv(), asio::use_future);
+  auto co_future_1_3 = asio::co_spawn(*(cli_sys_ptr->IO()), http_send_recv(), asio::use_future);
+  auto co_future_1_4 = asio::co_spawn(*(cli_sys_ptr->IO()), http_send_recv(), asio::use_future);
   co_future_1_3.wait();
   co_future_1_4.wait();
 
@@ -332,11 +300,9 @@ TEST(NET_TEST, Http_server_restart) {
   std::thread t_svr2([svr2_sys_ptr] {
     AIMRT_INFO("svr2_sys_ptr start.");
     auto http_svr_ptr = std::make_shared<AsioHttpServer>(svr2_sys_ptr->IO());
-    http_svr_ptr->Initialize(AsioHttpServer::Options{
-        .ep = {asio::ip::address_v4(), 50080}});
+    http_svr_ptr->Initialize(AsioHttpServer::Options{.ep = {asio::ip::address_v4(), 50080}});
 
-    svr2_sys_ptr->RegisterSvrFunc([http_svr_ptr] { http_svr_ptr->Start(); },
-                                  [http_svr_ptr] { http_svr_ptr->Shutdown(); });
+    svr2_sys_ptr->RegisterSvrFunc([http_svr_ptr] { http_svr_ptr->Start(); }, [http_svr_ptr] { http_svr_ptr->Shutdown(); });
     svr2_sys_ptr->Start();
     svr2_sys_ptr->Join();
     AIMRT_INFO("svr2_sys_ptr exit.");
@@ -345,15 +311,12 @@ TEST(NET_TEST, Http_server_restart) {
 
   // call http
   // 服务端重启，客户端这边之前的session都会失效，请求会抛异常
-  auto co_future_2_1 = asio::co_spawn(
-      *(cli_sys_ptr->IO()), http_send_recv(true), asio::use_future);
-  auto co_future_2_2 = asio::co_spawn(
-      *(cli_sys_ptr->IO()), http_send_recv(true), asio::use_future);
+  auto co_future_2_1 = asio::co_spawn(*(cli_sys_ptr->IO()), http_send_recv(true), asio::use_future);
+  auto co_future_2_2 = asio::co_spawn(*(cli_sys_ptr->IO()), http_send_recv(true), asio::use_future);
   co_future_2_1.wait();
   co_future_2_2.wait();
 
-  auto co_future_2_3 = asio::co_spawn(
-      *(cli_sys_ptr->IO()), http_send_recv(), asio::use_future);
+  auto co_future_2_3 = asio::co_spawn(*(cli_sys_ptr->IO()), http_send_recv(), asio::use_future);
   co_future_2_3.wait();
 
   // stop svr2
@@ -373,8 +336,7 @@ TEST(NET_TEST, Http_server_handle) {
   auto http_cli_ptr = std::make_shared<AsioHttpClient>(cli_sys_ptr->IO());
   http_cli_ptr->Initialize(AsioHttpClient::Options{"127.0.0.1", "50080"});
 
-  cli_sys_ptr->RegisterSvrFunc([http_cli_ptr] { http_cli_ptr->Start(); },
-                               [http_cli_ptr] { http_cli_ptr->Shutdown(); });
+  cli_sys_ptr->RegisterSvrFunc([http_cli_ptr] { http_cli_ptr->Start(); }, [http_cli_ptr] { http_cli_ptr->Shutdown(); });
 
   std::thread t_cli([cli_sys_ptr] {
     AIMRT_INFO("cli_sys_ptr start.");
@@ -384,11 +346,8 @@ TEST(NET_TEST, Http_server_handle) {
   });
 
   // start svr
-  AsioHttpServer::HttpHandle<http::string_body> http_handle =
-      [](const http::request<http::dynamic_body>& req,
-         http::response<http::string_body>& rsp,
-         std::chrono::nanoseconds timeout)
-      -> asio::awaitable<AsioHttpServer::HttpHandleStatus> {
+  AsioHttpServer::HttpHandle<http::string_body> http_handle = [](const http::request<http::dynamic_body>& req, http::response<http::string_body>& rsp,
+                                                                 std::chrono::nanoseconds timeout) -> asio::awaitable<AsioHttpServer::HttpHandleStatus> {
     AIMRT_INFO("handle req:\n{}", aimrt::common::util::SSToString(req));
 
     rsp = http::response<http::string_body>{http::status::ok, req.version()};
@@ -405,11 +364,9 @@ TEST(NET_TEST, Http_server_handle) {
 
   auto http_svr_ptr = std::make_shared<AsioHttpServer>(svr_sys_ptr->IO());
   http_svr_ptr->RegisterHttpHandleFunc<http::string_body>("/test/.*", std::move(http_handle));
-  http_svr_ptr->Initialize(AsioHttpServer::Options{
-      .ep = {asio::ip::address_v4(), 50080}});
+  http_svr_ptr->Initialize(AsioHttpServer::Options{.ep = {asio::ip::address_v4(), 50080}});
 
-  svr_sys_ptr->RegisterSvrFunc([http_svr_ptr] { http_svr_ptr->Start(); },
-                               [http_svr_ptr] { http_svr_ptr->Shutdown(); });
+  svr_sys_ptr->RegisterSvrFunc([http_svr_ptr] { http_svr_ptr->Start(); }, [http_svr_ptr] { http_svr_ptr->Shutdown(); });
 
   std::thread t_svr([svr_sys_ptr] {
     AIMRT_INFO("svr_sys_ptr start.");
@@ -420,8 +377,7 @@ TEST(NET_TEST, Http_server_handle) {
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   // call http
-  auto http_send_recv =
-      [http_cli_ptr](std::string msg, bool expect_exp = false) -> asio::awaitable<void> {
+  auto http_send_recv = [http_cli_ptr](std::string msg, bool expect_exp = false) -> asio::awaitable<void> {
     bool exp_flag = false;
     try {
       http::request<http::string_body> req{http::verb::post, "/test/xxx?key1=val1&key2=val2", 11};
@@ -456,12 +412,10 @@ TEST(NET_TEST, Http_server_handle) {
     EXPECT_EQ(exp_flag, expect_exp);
     co_return;
   };
-  auto co_future_1 = asio::co_spawn(
-      *(cli_sys_ptr->IO()), http_send_recv("msg11111111"), asio::use_future);
+  auto co_future_1 = asio::co_spawn(*(cli_sys_ptr->IO()), http_send_recv("msg11111111"), asio::use_future);
   co_future_1.wait();
 
-  auto co_future_2 = asio::co_spawn(
-      *(cli_sys_ptr->IO()), http_send_recv("msg2222222"), asio::use_future);
+  auto co_future_2 = asio::co_spawn(*(cli_sys_ptr->IO()), http_send_recv("msg2222222"), asio::use_future);
   co_future_2.wait();
 
   // stop svr

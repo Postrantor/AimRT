@@ -14,8 +14,7 @@ void RosTestRpcAsyncServiceImpl::RosTestRpc(
     std::function<void(aimrt::rpc::Status)>&& callback) {
   rsp.code = 123;
 
-  AIMRT_INFO("Get new rpc call. context: {}\n, req:\n{}\nreturn rsp:\n{}",
-             ctx.ToString(), example_ros2::srv::to_yaml(req), example_ros2::srv::to_yaml(rsp));
+  AIMRT_INFO("Get new rpc call. context: {}\n, req:\n{}\nreturn rsp:\n{}", ctx.ToString(), example_ros2::srv::to_yaml(req), example_ros2::srv::to_yaml(rsp));
 
   callback(aimrt::rpc::Status());
 }

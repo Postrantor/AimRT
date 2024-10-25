@@ -5,12 +5,8 @@
 
 namespace aimrt::plugins::iceoryx_plugin {
 
-void OnReceivedCallback(iox::popo::UntypedSubscriber* subscriber, MsgHandleFunc* handle) {
-  (*handle)(subscriber);
-}
-void IceoryxManager::Initialize() {
-  pid_ = GetPid();
-}
+void OnReceivedCallback(iox::popo::UntypedSubscriber* subscriber, MsgHandleFunc* handle) { (*handle)(subscriber); }
+void IceoryxManager::Initialize() { pid_ = GetPid(); }
 
 void IceoryxManager::Shutdown() {
   iox_pub_registry_.clear();
@@ -58,9 +54,9 @@ bool IceoryxManager::RegisterSubscriber(std::string& url, MsgHandleFunc&& handle
     std::shared_ptr<iox::popo::UntypedSubscriber> subscriber_ptr = std::make_shared<iox::popo::UntypedSubscriber>(Url2ServiceDescription(url));
     auto listener_ptr = std::make_shared<iox::popo::Listener>();
     listener_ptr
-        ->attachEvent(*subscriber_ptr,
-                      iox::popo::SubscriberEvent::DATA_RECEIVED,
-                      iox::popo::createNotificationCallback<iox::popo::UntypedSubscriber, MsgHandleFunc>(OnReceivedCallback, *handle_ptr))
+        ->attachEvent(
+            *subscriber_ptr, iox::popo::SubscriberEvent::DATA_RECEIVED,
+            iox::popo::createNotificationCallback<iox::popo::UntypedSubscriber, MsgHandleFunc>(OnReceivedCallback, *handle_ptr))
         .or_else([](auto) {
           std::cerr << "Unable to attach a subscriber!" << std::endl;
           std::exit(EXIT_FAILURE);

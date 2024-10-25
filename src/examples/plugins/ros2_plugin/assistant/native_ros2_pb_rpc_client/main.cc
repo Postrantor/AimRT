@@ -18,38 +18,27 @@ using RosRpcWrapper = ros2_plugin_proto::srv::RosRpcWrapper;
 using namespace std::chrono_literals;
 
 class RosTestRpcWrapperClient : public rclcpp::Node {
- public:
-  explicit RosTestRpcWrapperClient(
-      const std::string &node_name,
-      const rclcpp::NodeOptions &options = rclcpp::NodeOptions{})
-      : Node(node_name, options) {
+public:
+  explicit RosTestRpcWrapperClient(const std::string &node_name, const rclcpp::NodeOptions &options = rclcpp::NodeOptions{}) : Node(node_name, options) {
     // set QoS
     rclcpp::QoS qos(rclcpp::KeepLast(1000));
     qos.reliable();
     qos.lifespan(std::chrono::seconds(30));
     // rclcpp::QoS qos(rclcpp::KeepAll());
 
-    client_ = create_client<RosRpcWrapper>(
-        "/aimrt_2Eprotocols_2Eexample_2EExampleService/GetFooData",
-        qos.get_rmw_qos_profile());
+    client_ = create_client<RosRpcWrapper>("/aimrt_2Eprotocols_2Eexample_2EExampleService/GetFooData", qos.get_rmw_qos_profile());
 
-    timer_ = this->create_wall_timer(
-        5s,
-        [this]() {
-          std::vector<int64_t> pruned_requests;
-          // Prune all requests older than 5s.
-          size_t pruned = this->client_->prune_requests_older_than(
-              std::chrono::system_clock::now() - 5s, &pruned_requests);
-          if (pruned) {
-            RCLCPP_INFO(
-                this->get_logger(),
-                "The server hasn't replied for more than 5s, %zu requests were discarded, the discarded requests numbers are:",
-                pruned);
-            for (const auto &req_num : pruned_requests) {
-              RCLCPP_INFO(this->get_logger(), "\t%" PRId64, req_num);
-            }
-          }
-        });
+    timer_ = this->create_wall_timer(5s, [this]() {
+      std::vector<int64_t> pruned_requests;
+      // Prune all requests older than 5s.
+      size_t pruned = this->client_->prune_requests_older_than(std::chrono::system_clock::now() - 5s, &pruned_requests);
+      if (pruned) {
+        RCLCPP_INFO(this->get_logger(), "The server hasn't replied for more than 5s, %zu requests were discarded, the discarded requests numbers are:", pruned);
+        for (const auto &req_num : pruned_requests) {
+          RCLCPP_INFO(this->get_logger(), "\t%" PRId64, req_num);
+        }
+      }
+    });
   }
 
   bool wait_for_service_server() {
@@ -76,32 +65,27 @@ class RosTestRpcWrapperClient : public rclcpp::Node {
 
     using ServiceResponseFuture = rclcpp::Client<RosRpcWrapper>::SharedFuture;
 
-    auto result = client_->async_send_request(
-        wrapper_req,
-        [logger = this->get_logger()](ServiceResponseFuture future) {
-          const auto &wrapper_rsp = future.get();
+    auto result = client_->async_send_request(wrapper_req, [logger = this->get_logger()](ServiceResponseFuture future) {
+      const auto &wrapper_rsp = future.get();
 
-          if (wrapper_rsp->code == 0 && wrapper_rsp->serialization_type == "pb") {
-            // deserialize protobuf rsp from RosRpcWrapper Response
-            aimrt::protocols::example::GetFooDataRsp rsp;
+      if (wrapper_rsp->code == 0 && wrapper_rsp->serialization_type == "pb") {
+        // deserialize protobuf rsp from RosRpcWrapper Response
+        aimrt::protocols::example::GetFooDataRsp rsp;
 
-            if (rsp.ParseFromArray(wrapper_rsp->data.data(), wrapper_rsp->data.size())) {
-              RCLCPP_INFO(logger, "rsp code: %lu, rsp msg: %s", rsp.code(), rsp.msg().c_str());
-            } else {
-              RCLCPP_WARN(logger, "deserialize protobuf rsp from RosRpcWrapper Response failed!");
-            }
+        if (rsp.ParseFromArray(wrapper_rsp->data.data(), wrapper_rsp->data.size())) {
+          RCLCPP_INFO(logger, "rsp code: %lu, rsp msg: %s", rsp.code(), rsp.msg().c_str());
+        } else {
+          RCLCPP_WARN(logger, "deserialize protobuf rsp from RosRpcWrapper Response failed!");
+        }
 
-          } else {
-            RCLCPP_WARN(logger, "rsp frame code: %lu", wrapper_rsp->code);
-          }
-        });
-    RCLCPP_INFO(
-        this->get_logger(),
-        "Sending a request to the server (request_id =%" PRId64 "), we're going to let you know the result when ready!",
-        result.request_id);
+      } else {
+        RCLCPP_WARN(logger, "rsp frame code: %lu", wrapper_rsp->code);
+      }
+    });
+    RCLCPP_INFO(this->get_logger(), "Sending a request to the server (request_id =%" PRId64 "), we're going to let you know the result when ready!", result.request_id);
   }
 
- public:
+public:
   rclcpp::Client<RosRpcWrapper>::SharedPtr client_;
   rclcpp::TimerBase::SharedPtr timer_;
 };
@@ -115,12 +99,11 @@ int main(int argc, char *argv[]) {
   }
 
   std::promise<void> stop_async_spinner;
-  std::thread async_spinner_thread(
-      [stop_token = stop_async_spinner.get_future(), node]() {
-        rclcpp::executors::SingleThreadedExecutor executor;
-        executor.add_node(node);
-        executor.spin_until_future_complete(stop_token);
-      });
+  std::thread async_spinner_thread([stop_token = stop_async_spinner.get_future(), node]() {
+    rclcpp::executors::SingleThreadedExecutor executor;
+    executor.add_node(node);
+    executor.spin_until_future_complete(stop_token);
+  });
 
   node->queue_async_request();
 

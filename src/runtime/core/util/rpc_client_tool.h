@@ -14,23 +14,20 @@ namespace aimrt::runtime::core::util {
 
 template <typename MsgRecorder>
 class RpcClientTool {
- public:
+public:
   using TimeoutHandle = std::function<void(MsgRecorder&&)>;
 
- public:
+public:
   RpcClientTool() = default;
   ~RpcClientTool() = default;
 
   void RegisterTimeoutExecutor(aimrt::executor::ExecutorRef timeout_executor) {
-    if (!timeout_executor.SupportTimerSchedule())
-      throw std::runtime_error("Timeout executor do not support timer schedule.");
+    if (!timeout_executor.SupportTimerSchedule()) throw std::runtime_error("Timeout executor do not support timer schedule.");
 
     timeout_executor_ = timeout_executor;
   }
 
-  void RegisterTimeoutHandle(const TimeoutHandle& timeout_handle) {
-    timeout_handle_ = timeout_handle;
-  }
+  void RegisterTimeoutHandle(const TimeoutHandle& timeout_handle) { timeout_handle_ = timeout_handle; }
 
   bool Record(uint32_t req_id, std::chrono::nanoseconds timeout, MsgRecorder&& msg_recorder) {
     bool ret = client_msg_recorder_map_.emplace(req_id, std::move(msg_recorder));
@@ -63,7 +60,7 @@ class RpcClientTool {
     return result;
   }
 
- private:
+private:
   aimrt::executor::ExecutorRef timeout_executor_;
   TimeoutHandle timeout_handle_;
 

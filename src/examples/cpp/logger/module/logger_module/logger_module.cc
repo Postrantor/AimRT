@@ -13,8 +13,7 @@ bool LoggerModule::Initialize(aimrt::CoreRef core) {
 
   // Get executor handle
   executor_ = core_.GetExecutorManager().GetExecutor("work_executor");
-  AIMRT_HL_CHECK_ERROR_THROW(
-      core_.GetLogger(), executor_, "Get executor 'work_thread_pool' failed.");
+  AIMRT_HL_CHECK_ERROR_THROW(core_.GetLogger(), executor_, "Get executor 'work_thread_pool' failed.");
 
   AIMRT_HL_INFO(core_.GetLogger(), "Init succeeded.");
 

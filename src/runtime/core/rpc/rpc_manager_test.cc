@@ -6,7 +6,6 @@
 
 namespace aimrt::runtime::core::rpc {
 
-TEST(RpcManagerTest, RpcManagerTest) {
-}
+TEST(RpcManagerTest, RpcManagerTest) {}
 
 }  // namespace aimrt::runtime::core::rpc

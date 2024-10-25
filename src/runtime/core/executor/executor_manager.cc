@@ -35,12 +35,9 @@ struct convert<aimrt::runtime::core::executor::ExecutorManager::Options> {
 
     if (node["executors"] && node["executors"].IsSequence()) {
       for (const auto& executor_node : node["executors"]) {
-        auto executor_options = Options::ExecutorOptions{
-            .name = executor_node["name"].as<std::string>(),
-            .type = executor_node["type"].as<std::string>()};
+        auto executor_options = Options::ExecutorOptions{.name = executor_node["name"].as<std::string>(), .type = executor_node["type"].as<std::string>()};
 
-        if (executor_node["options"])
-          executor_options.options = executor_node["options"];
+        if (executor_node["options"]) executor_options.options = executor_node["options"];
 
         rhs.executors_options.emplace_back(std::move(executor_options));
       }
@@ -59,30 +56,21 @@ void ExecutorManager::Initialize(YAML::Node options_node) {
   RegisterSimpleThreadExecutorGenFunc();
   RegisterTImeWheelExecutorGenFunc();
 
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-      "Executor manager can only be initialized once.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "Executor manager can only be initialized once.");
 
-  if (options_node && !options_node.IsNull())
-    options_ = options_node.as<Options>();
+  if (options_node && !options_node.IsNull()) options_ = options_node.as<Options>();
 
   // 生成executor
   for (auto& executor_options : options_.executors_options) {
     AIMRT_CHECK_ERROR_THROW(
-        (executor_proxy_map_.find(executor_options.name) == executor_proxy_map_.end()) &&
-            (used_executor_names_.find(executor_options.name) == used_executor_names_.end()),
+        (executor_proxy_map_.find(executor_options.name) == executor_proxy_map_.end()) && (used_executor_names_.find(executor_options.name) == used_executor_names_.end()),
         "Duplicate executor name '{}'.", executor_options.name);
 
     auto finditr = executor_gen_func_map_.find(executor_options.type);
-    AIMRT_CHECK_ERROR_THROW(finditr != executor_gen_func_map_.end(),
-                            "Invalid executor type '{}'.",
-                            executor_options.type);
+    AIMRT_CHECK_ERROR_THROW(finditr != executor_gen_func_map_.end(), "Invalid executor type '{}'.", executor_options.type);
 
     auto executor_ptr = finditr->second();
-    AIMRT_CHECK_ERROR_THROW(
-        executor_ptr,
-        "Gen executor failed, executor name '{}', executor type '{}'.",
-        executor_options.name, executor_options.type);
+    AIMRT_CHECK_ERROR_THROW(executor_ptr, "Gen executor failed, executor name '{}', executor type '{}'.", executor_options.name, executor_options.type);
 
     executor_ptr->Initialize(executor_options.name, executor_options.options);
 
@@ -101,9 +89,7 @@ void ExecutorManager::Initialize(YAML::Node options_node) {
 }
 
 void ExecutorManager::Start() {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kStart) == State::kInit,
-      "Method can only be called when state is 'Init'.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'.");
 
   for (auto& itr : executor_vec_) {
     itr->Start();
@@ -113,8 +99,7 @@ void ExecutorManager::Start() {
 }
 
 void ExecutorManager::Shutdown() {
-  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-    return;
+  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 
   AIMRT_INFO("Executor manager shutdown.");
 
@@ -129,20 +114,14 @@ void ExecutorManager::Shutdown() {
   executor_gen_func_map_.clear();
 }
 
-void ExecutorManager::RegisterExecutorGenFunc(
-    std::string_view type, ExecutorGenFunc&& executor_gen_func) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kPreInit,
-      "Method can only be called when state is 'PreInit'.");
+void ExecutorManager::RegisterExecutorGenFunc(std::string_view type, ExecutorGenFunc&& executor_gen_func) {
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
   executor_gen_func_map_.emplace(type, std::move(executor_gen_func));
 }
 
-const ExecutorManagerProxy& ExecutorManager::GetExecutorManagerProxy(
-    const util::ModuleDetailInfo& module_info) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kInit,
-      "Method can only be called when state is 'Init'.");
+const ExecutorManagerProxy& ExecutorManager::GetExecutorManagerProxy(const util::ModuleDetailInfo& module_info) {
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kInit, "Method can only be called when state is 'Init'.");
 
   auto itr = executor_manager_proxy_map_.find(module_info.name);
   if (itr != executor_manager_proxy_map_.end()) return *(itr->second);
@@ -155,11 +134,9 @@ const ExecutorManagerProxy& ExecutorManager::GetExecutorManagerProxy(
   return *(emplace_ret.first->second);
 }
 
-aimrt::executor::ExecutorRef ExecutorManager::GetExecutor(
-    std::string_view executor_name) {
+aimrt::executor::ExecutorRef ExecutorManager::GetExecutor(std::string_view executor_name) {
   auto finditr = executor_proxy_map_.find(executor_name);
-  if (finditr != executor_proxy_map_.end())
-    return aimrt::executor::ExecutorRef(finditr->second->NativeHandle());
+  if (finditr != executor_proxy_map_.end()) return aimrt::executor::ExecutorRef(finditr->second->NativeHandle());
 
   AIMRT_WARN("Get executor failed, executor name '{}'", executor_name);
 
@@ -176,21 +153,15 @@ void ExecutorManager::RegisterAsioExecutorGenFunc() {
   RegisterExecutorGenFunc("asio_strand", [this]() -> std::unique_ptr<ExecutorBase> {
     auto ptr = std::make_unique<AsioStrandExecutor>();
     ptr->SetLogger(logger_ptr_);
-    ptr->RegisterGetAsioHandle(
-        [this](std::string_view name) -> asio::io_context* {
-          auto itr = std::find_if(
-              executor_vec_.begin(),
-              executor_vec_.end(),
-              [name](const std::unique_ptr<ExecutorBase>& executor) -> bool {
-                return (executor->Type() == "asio_thread") &&
-                       (executor->Name() == name);
-              });
+    ptr->RegisterGetAsioHandle([this](std::string_view name) -> asio::io_context* {
+      auto itr = std::find_if(executor_vec_.begin(), executor_vec_.end(), [name](const std::unique_ptr<ExecutorBase>& executor) -> bool {
+        return (executor->Type() == "asio_thread") && (executor->Name() == name);
+      });
 
-          if (itr != executor_vec_.end())
-            return dynamic_cast<AsioThreadExecutor*>(itr->get())->IOCTX();
+      if (itr != executor_vec_.end()) return dynamic_cast<AsioThreadExecutor*>(itr->get())->IOCTX();
 
-          return nullptr;
-        });
+      return nullptr;
+    });
     return ptr;
   });
 }
@@ -215,17 +186,13 @@ void ExecutorManager::RegisterTImeWheelExecutorGenFunc() {
   RegisterExecutorGenFunc("time_wheel", [this]() -> std::unique_ptr<ExecutorBase> {
     auto ptr = std::make_unique<TimeWheelExecutor>();
     ptr->SetLogger(logger_ptr_);
-    ptr->RegisterGetExecutorFunc([this](std::string_view name) {
-      return GetExecutor(name);
-    });
+    ptr->RegisterGetExecutorFunc([this](std::string_view name) { return GetExecutor(name); });
     return ptr;
   });
 }
 
 std::list<std::pair<std::string, std::string>> ExecutorManager::GenInitializationReport() const {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kInit,
-      "Method can only be called when state is 'Init'.");
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kInit, "Method can only be called when state is 'Init'.");
 
   std::vector<std::string> executor_type_vec;
   for (const auto& itr : executor_gen_func_map_) {
@@ -239,8 +206,7 @@ std::list<std::pair<std::string, std::string>> ExecutorManager::GenInitializatio
     executor_type_name_list = "[ " + aimrt::common::util::JoinVec(executor_type_vec, " , ") + " ]";
   }
 
-  std::vector<std::vector<std::string>> executor_info_table =
-      {{"name", "type", "thread safe", "support time schedule"}};
+  std::vector<std::vector<std::string>> executor_info_table = {{"name", "type", "thread safe", "support time schedule"}};
 
   for (const auto& item : executor_vec_) {
     std::vector<std::string> cur_executor_info(4);
@@ -251,9 +217,7 @@ std::list<std::pair<std::string, std::string>> ExecutorManager::GenInitializatio
     executor_info_table.emplace_back(std::move(cur_executor_info));
   }
 
-  std::list<std::pair<std::string, std::string>> report{
-      {"Executor Type List", executor_type_name_list},
-      {"Executor List", aimrt::common::util::DrawTable(executor_info_table)}};
+  std::list<std::pair<std::string, std::string>> report{{"Executor Type List", executor_type_name_list}, {"Executor List", aimrt::common::util::DrawTable(executor_info_table)}};
 
   for (const auto& backend_ptr : executor_vec_) {
     report.splice(report.end(), backend_ptr->GenInitializationReport());

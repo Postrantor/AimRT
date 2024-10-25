@@ -70,9 +70,7 @@ TEST(RPC_FILTER_TEST, CoFilterManager_multiple_filters) {
   EXPECT_TRUE(status_op);
   EXPECT_TRUE(*status_op);
 
-  EXPECT_STREQ(
-      ctx.GetMetaValue("order").data(),
-      "begin -> f2 begin -> f1 begin -> rpc handle -> f1 end -> f2 end -> end");
+  EXPECT_STREQ(ctx.GetMetaValue("order").data(), "begin -> f2 begin -> f1 begin -> rpc handle -> f1 end -> f2 end -> end");
 }
 
 }  // namespace aimrt::rpc

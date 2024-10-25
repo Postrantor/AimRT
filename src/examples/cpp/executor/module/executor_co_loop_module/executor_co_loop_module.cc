@@ -18,8 +18,7 @@ bool ExecutorCoLoopModule::Initialize(aimrt::CoreRef core) {
 
   // Check time schedule executor
   time_schedule_executor_ = core_.GetExecutorManager().GetExecutor("time_schedule_executor");
-  AIMRT_CHECK_ERROR_THROW(time_schedule_executor_ && time_schedule_executor_.SupportTimerSchedule(),
-                          "Can not get time_schedule_executor");
+  AIMRT_CHECK_ERROR_THROW(time_schedule_executor_ && time_schedule_executor_.SupportTimerSchedule(), "Can not get time_schedule_executor");
 
   AIMRT_INFO("Init succeeded.");
 

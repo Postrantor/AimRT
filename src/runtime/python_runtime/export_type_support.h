@@ -16,14 +16,12 @@
 namespace aimrt::runtime::python_runtime {
 
 class PyTypeSupport {
- public:
+public:
   using BufType = std::string;
 
   PyTypeSupport() : base_(GenBase(this)) {}
 
-  void SetTypeName(const std::string& s) {
-    type_name_ = s;
-  }
+  void SetTypeName(const std::string& s) { type_name_ = s; }
 
   void SetSerializationTypesSupportedList(const std::vector<std::string>& v) {
     serialization_types_supported_list_ = v;
@@ -36,14 +34,10 @@ class PyTypeSupport {
 
   const aimrt_type_support_base_t* NativeHandle() const { return &base_; }
 
- private:
-  void* Create() const {
-    return new BufType();
-  }
+private:
+  void* Create() const { return new BufType(); }
 
-  void Destroy(void* msg) const {
-    delete static_cast<BufType*>(msg);
-  }
+  void Destroy(void* msg) const { delete static_cast<BufType*>(msg); }
 
   void Copy(const void* from, void* to) const {
     const auto& from_buf = *static_cast<const BufType*>(from);
@@ -57,11 +51,7 @@ class PyTypeSupport {
     to_buf = std::move(from_buf);
   }
 
-  bool Serialize(
-      aimrt_string_view_t serialization_type,
-      const void* msg,
-      const aimrt_buffer_array_allocator_t* allocator,
-      aimrt_buffer_array_t* buffer_array) const {
+  bool Serialize(aimrt_string_view_t serialization_type, const void* msg, const aimrt_buffer_array_allocator_t* allocator, aimrt_buffer_array_t* buffer_array) const {
     const auto& msg_buf = *static_cast<const BufType*>(msg);
 
     auto buffer = allocator->allocate(allocator->impl, buffer_array, msg_buf.size());
@@ -71,10 +61,7 @@ class PyTypeSupport {
     return true;
   }
 
-  bool Deserialize(
-      aimrt_string_view_t serialization_type,
-      aimrt_buffer_array_view_t buffer_array_view,
-      void* msg) const {
+  bool Deserialize(aimrt_string_view_t serialization_type, aimrt_buffer_array_view_t buffer_array_view, void* msg) const {
     auto& msg_buf = *static_cast<BufType*>(msg);
 
     size_t total_size = 0;
@@ -86,8 +73,7 @@ class PyTypeSupport {
 
     size_t cur_size = 0;
     for (size_t ii = 0; ii < buffer_array_view.len; ++ii) {
-      memcpy(msg_buf.data() + cur_size, buffer_array_view.data[ii].data,
-             buffer_array_view.data[ii].len);
+      memcpy(msg_buf.data() + cur_size, buffer_array_view.data[ii].data, buffer_array_view.data[ii].len);
       cur_size += buffer_array_view.data[ii].len;
     }
 
@@ -96,40 +82,34 @@ class PyTypeSupport {
 
   static aimrt_type_support_base_t GenBase(void* impl) {
     return aimrt_type_support_base_t{
-        .type_name = [](void* impl) -> aimrt_string_view_t {
-          return aimrt::util::ToAimRTStringView(static_cast<PyTypeSupport*>(impl)->type_name_);
-        },
-        .create = [](void* impl) -> void* {
-          return static_cast<PyTypeSupport*>(impl)->Create();
-        },
-        .destroy = [](void* impl, void* msg) {
-          static_cast<PyTypeSupport*>(impl)->Destroy(msg);  //
-        },
-        .copy = [](void* impl, const void* from, void* to) {
-          static_cast<PyTypeSupport*>(impl)->Copy(from, to);  //
-        },
-        .move = [](void* impl, void* from, void* to) {
-          static_cast<PyTypeSupport*>(impl)->Move(from, to);  //
-        },
-        .serialize = [](void* impl, aimrt_string_view_t serialization_type, const void* msg, const aimrt_buffer_array_allocator_t* allocator, aimrt_buffer_array_t* buffer_array) -> bool {
-          return static_cast<PyTypeSupport*>(impl)->Serialize(serialization_type, msg, allocator, buffer_array);
-        },
+        .type_name = [](void* impl) -> aimrt_string_view_t { return aimrt::util::ToAimRTStringView(static_cast<PyTypeSupport*>(impl)->type_name_); },
+        .create = [](void* impl) -> void* { return static_cast<PyTypeSupport*>(impl)->Create(); },
+        .destroy =
+            [](void* impl, void* msg) {
+              static_cast<PyTypeSupport*>(impl)->Destroy(msg);  //
+            },
+        .copy =
+            [](void* impl, const void* from, void* to) {
+              static_cast<PyTypeSupport*>(impl)->Copy(from, to);  //
+            },
+        .move =
+            [](void* impl, void* from, void* to) {
+              static_cast<PyTypeSupport*>(impl)->Move(from, to);  //
+            },
+        .serialize = [](void* impl, aimrt_string_view_t serialization_type, const void* msg, const aimrt_buffer_array_allocator_t* allocator,
+                        aimrt_buffer_array_t* buffer_array) -> bool { return static_cast<PyTypeSupport*>(impl)->Serialize(serialization_type, msg, allocator, buffer_array); },
         .deserialize = [](void* impl, aimrt_string_view_t serialization_type, aimrt_buffer_array_view_t buffer_array_view, void* msg) -> bool {
           return static_cast<PyTypeSupport*>(impl)->Deserialize(serialization_type, buffer_array_view, msg);
         },
-        .serialization_types_supported_num = [](void* impl) -> size_t {
-          return static_cast<PyTypeSupport*>(impl)->serialization_types_supported_list_inner_.size();
-        },
+        .serialization_types_supported_num = [](void* impl) -> size_t { return static_cast<PyTypeSupport*>(impl)->serialization_types_supported_list_inner_.size(); },
         .serialization_types_supported_list = [](void* impl) -> const aimrt_string_view_t* {
           return static_cast<PyTypeSupport*>(impl)->serialization_types_supported_list_inner_.data();
         },
-        .custom_type_support_ptr = [](void* impl) -> const void* {
-          return nullptr;
-        },
+        .custom_type_support_ptr = [](void* impl) -> const void* { return nullptr; },
         .impl = impl};
   }
 
- private:
+private:
   aimrt_type_support_base_t base_;
   std::string type_name_;
   std::vector<std::string> serialization_types_supported_list_;

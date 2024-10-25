@@ -21,7 +21,7 @@
 namespace aimrt::runtime::core::executor {
 
 class ExecutorManager {
- public:
+public:
   struct Options {
     struct ExecutorOptions {
       std::string name;
@@ -40,9 +40,8 @@ class ExecutorManager {
 
   using ExecutorGenFunc = std::function<std::unique_ptr<ExecutorBase>()>;
 
- public:
-  ExecutorManager()
-      : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
+public:
+  ExecutorManager() : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
   ~ExecutorManager() = default;
 
   ExecutorManager(const ExecutorManager&) = delete;
@@ -52,13 +51,11 @@ class ExecutorManager {
   void Start();
   void Shutdown();
 
-  void RegisterExecutorGenFunc(std::string_view type,
-                               ExecutorGenFunc&& executor_gen_func);
+  void RegisterExecutorGenFunc(std::string_view type, ExecutorGenFunc&& executor_gen_func);
 
   const ExecutorManagerProxy& GetExecutorManagerProxy(const util::ModuleDetailInfo& module_info);
   const ExecutorManagerProxy& GetExecutorManagerProxy(std::string_view module_name = "core") {
-    return GetExecutorManagerProxy(
-        util::ModuleDetailInfo{.name = std::string(module_name), .pkg_path = "core"});
+    return GetExecutorManagerProxy(util::ModuleDetailInfo{.name = std::string(module_name), .pkg_path = "core"});
   }
 
   State GetState() const { return state_.load(); }
@@ -70,21 +67,17 @@ class ExecutorManager {
 
   aimrt::executor::ExecutorRef GetExecutor(std::string_view executor_name);
 
-  void SetUsedExecutorName(std::string_view executor_name) {
-    used_executor_names_.emplace(executor_name);
-  }
+  void SetUsedExecutorName(std::string_view executor_name) { used_executor_names_.emplace(executor_name); }
 
-  const std::vector<std::unique_ptr<ExecutorBase>>& GetAllExecutors() const {
-    return executor_vec_;
-  }
+  const std::vector<std::unique_ptr<ExecutorBase>>& GetAllExecutors() const { return executor_vec_; }
 
- private:
+private:
   void RegisterAsioExecutorGenFunc();
   void RegisterTBBExecutorGenFunc();
   void RegisterSimpleThreadExecutorGenFunc();
   void RegisterTImeWheelExecutorGenFunc();
 
- private:
+private:
   Options options_;
   std::atomic<State> state_ = State::kPreInit;
   std::shared_ptr<aimrt::common::util::LoggerWrapper> logger_ptr_;
@@ -95,17 +88,9 @@ class ExecutorManager {
 
   std::vector<std::unique_ptr<ExecutorBase>> executor_vec_;
 
-  std::unordered_map<
-      std::string,
-      std::unique_ptr<ExecutorProxy>,
-      aimrt::common::util::StringHash,
-      std::equal_to<>>
-      executor_proxy_map_;
+  std::unordered_map<std::string, std::unique_ptr<ExecutorProxy>, aimrt::common::util::StringHash, std::equal_to<>> executor_proxy_map_;
 
-  std::unordered_map<
-      std::string,
-      std::unique_ptr<ExecutorManagerProxy>>
-      executor_manager_proxy_map_;
+  std::unordered_map<std::string, std::unique_ptr<ExecutorManagerProxy>> executor_manager_proxy_map_;
 };
 
 }  // namespace aimrt::runtime::core::executor

@@ -11,9 +11,8 @@ namespace aimrt::plugins::opentelemetry_plugin {
 
 template <typename ContetxRefType>
 class ContextCarrier : public opentelemetry::context::propagation::TextMapCarrier {
- public:
-  explicit ContextCarrier(ContetxRefType ctx_ref)
-      : ctx_ref_(ctx_ref) {}
+public:
+  explicit ContextCarrier(ContetxRefType ctx_ref) : ctx_ref_(ctx_ref) {}
   ContextCarrier() = default;
 
   virtual std::string_view Get(std::string_view key) const noexcept override {

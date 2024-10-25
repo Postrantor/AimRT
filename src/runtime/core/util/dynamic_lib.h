@@ -8,15 +8,15 @@
 #include <string>
 
 #if defined(_WIN32)
-  #include <windows.h>
+#include <windows.h>
 #else
-  #include <dlfcn.h>
+#include <dlfcn.h>
 #endif
 
 namespace aimrt::common::util {
 
 class DynamicLib {
- public:
+public:
 #if defined(_WIN32)
   typedef FARPROC SymbolType;
   typedef HINSTANCE DynlibHandle;
@@ -25,7 +25,7 @@ class DynamicLib {
   typedef void* DynlibHandle;
 #endif
 
- public:
+public:
   DynamicLib() = default;
   ~DynamicLib() { Unload(); }
 
@@ -77,8 +77,7 @@ class DynamicLib {
   bool IsLoaded() const { return nullptr == handle_; }
 
   SymbolType GetSymbol(const std::string& symbol_name) {
-    if (nullptr == handle_)
-      throw std::runtime_error("DynamicLib does not load any lib.");
+    if (nullptr == handle_) throw std::runtime_error("DynamicLib does not load any lib.");
 
 #if defined(_WIN32)
     return GetProcAddress(handle_, symbol_name.c_str());
@@ -94,13 +93,9 @@ class DynamicLib {
   static std::string GetErr() {
 #if defined(_WIN32)
     LPTSTR lp_msg_buf;
-    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                  NULL,
-                  GetLastError(),
-                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                  (LPTSTR)&lp_msg_buf,
-                  0,
-                  NULL);
+    FormatMessage(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPTSTR)&lp_msg_buf, 0, NULL);
     std::string ret(lp_msg_buf);
     LocalFree(lp_msg_buf);
     return ret;
@@ -109,7 +104,7 @@ class DynamicLib {
 #endif
   }
 
- private:
+private:
   DynlibHandle handle_ = nullptr;
   std::string libname_;
   std::string lib_full_path_;

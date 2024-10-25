@@ -45,7 +45,7 @@ struct InvokeProxyInfoWrapper {
 };
 
 class RpcBackendManager {
- public:
+public:
   enum class State : uint32_t {
     kPreInit,
     kInit,
@@ -53,9 +53,8 @@ class RpcBackendManager {
     kShutdown,
   };
 
- public:
-  RpcBackendManager()
-      : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
+public:
+  RpcBackendManager() : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
   ~RpcBackendManager() = default;
 
   RpcBackendManager(const RpcBackendManager&) = delete;
@@ -72,18 +71,14 @@ class RpcBackendManager {
 
   void SetRpcRegistry(RpcRegistry* rpc_registry_ptr);
 
-  void SetClientsFiltersRules(
-      const std::vector<std::pair<std::string, std::vector<std::string>>>& rules);
-  void SetServersFiltersRules(
-      const std::vector<std::pair<std::string, std::vector<std::string>>>& rules);
+  void SetClientsFiltersRules(const std::vector<std::pair<std::string, std::vector<std::string>>>& rules);
+  void SetServersFiltersRules(const std::vector<std::pair<std::string, std::vector<std::string>>>& rules);
 
   void SetClientFrameworkAsyncRpcFilterManager(FrameworkAsyncRpcFilterManager* ptr);
   void SetServerFrameworkAsyncRpcFilterManager(FrameworkAsyncRpcFilterManager* ptr);
 
-  void SetClientsBackendsRules(
-      const std::vector<std::pair<std::string, std::vector<std::string>>>& rules);
-  void SetServersBackendsRules(
-      const std::vector<std::pair<std::string, std::vector<std::string>>>& rules);
+  void SetClientsBackendsRules(const std::vector<std::pair<std::string, std::vector<std::string>>>& rules);
+  void SetServersBackendsRules(const std::vector<std::pair<std::string, std::vector<std::string>>>& rules);
 
   void RegisterRpcBackend(RpcBackendBase* rpc_backend_ptr);
 
@@ -95,16 +90,12 @@ class RpcBackendManager {
   FuncBackendInfoMap GetClientsBackendInfo() const;
   FuncBackendInfoMap GetServersBackendInfo() const;
 
- private:
-  std::vector<RpcBackendBase*> GetBackendsByRules(
-      std::string_view func_name,
-      const std::vector<std::pair<std::string, std::vector<std::string>>>& rules);
+private:
+  std::vector<RpcBackendBase*> GetBackendsByRules(std::string_view func_name, const std::vector<std::pair<std::string, std::vector<std::string>>>& rules);
 
-  std::vector<std::string> GetFilterRules(
-      std::string_view func_name,
-      const std::vector<std::pair<std::string, std::vector<std::string>>>& rules);
+  std::vector<std::string> GetFilterRules(std::string_view func_name, const std::vector<std::pair<std::string, std::vector<std::string>>>& rules);
 
- private:
+private:
   std::atomic<State> state_ = State::kPreInit;
   std::shared_ptr<aimrt::common::util::LoggerWrapper> logger_ptr_;
 
@@ -124,18 +115,8 @@ class RpcBackendManager {
   std::vector<std::pair<std::string, std::vector<std::string>>> clients_backends_rules_;
   std::vector<std::pair<std::string, std::vector<std::string>>> servers_backends_rules_;
 
-  std::unordered_map<
-      std::string,
-      std::vector<RpcBackendBase*>,
-      aimrt::common::util::StringHash,
-      std::equal_to<>>
-      clients_backend_index_map_;
+  std::unordered_map<std::string, std::vector<RpcBackendBase*>, aimrt::common::util::StringHash, std::equal_to<>> clients_backend_index_map_;
 
-  std::unordered_map<
-      std::string,
-      std::vector<RpcBackendBase*>,
-      aimrt::common::util::StringHash,
-      std::equal_to<>>
-      servers_backend_index_map_;
+  std::unordered_map<std::string, std::vector<RpcBackendBase*>, aimrt::common::util::StringHash, std::equal_to<>> servers_backend_index_map_;
 };
 }  // namespace aimrt::runtime::core::rpc

@@ -59,17 +59,14 @@ TEST(ASIO_THREAD_EXECUTOR_TEST, execute) {
   EXPECT_FALSE(executor.IsInCurrentExecutor());
 
   bool ret = false;
-  executor.Execute(
-      [&]() { ret = executor.IsInCurrentExecutor(); });
+  executor.Execute([&]() { ret = executor.IsInCurrentExecutor(); });
 
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
   EXPECT_TRUE(ret);
 
   // ExecuteAt
   ret = false;
-  executor.ExecuteAt(
-      std::chrono::system_clock::now() + std::chrono::milliseconds(5),
-      [&]() { ret = true; });
+  executor.ExecuteAt(std::chrono::system_clock::now() + std::chrono::milliseconds(5), [&]() { ret = true; });
   EXPECT_FALSE(ret);
 
   std::this_thread::sleep_for(std::chrono::milliseconds(100));

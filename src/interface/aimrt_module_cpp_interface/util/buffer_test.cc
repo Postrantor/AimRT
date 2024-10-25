@@ -8,9 +8,7 @@
 
 namespace aimrt::util {
 
-bool CheckBufferEqual(const aimrt_buffer_t& lhs, const aimrt_buffer_t& rhs) {
-  return ((lhs.data == rhs.data) && (lhs.len == rhs.len));
-}
+bool CheckBufferEqual(const aimrt_buffer_t& lhs, const aimrt_buffer_t& rhs) { return ((lhs.data == rhs.data) && (lhs.len == rhs.len)); }
 
 TEST(BUFFER_TEST, Base) {
   // init

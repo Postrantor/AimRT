@@ -20,7 +20,7 @@
 namespace aimrt::plugins::record_playback_plugin {
 
 class RecordAction {
- public:
+public:
   struct Options {
     std::string bag_path;
     uint32_t max_bag_size_m = 2048;
@@ -49,7 +49,7 @@ class RecordAction {
     std::shared_ptr<aimrt::util::BufferArrayView> buffer_view_ptr;
   };
 
- public:
+public:
   RecordAction() = default;
   ~RecordAction() = default;
 
@@ -64,11 +64,9 @@ class RecordAction {
 
   const Options& GetOptions() const { return options_; }
 
-  void RegisterGetExecutorFunc(
-      const std::function<executor::ExecutorRef(std::string_view)>& get_executor_func);
+  void RegisterGetExecutorFunc(const std::function<executor::ExecutorRef(std::string_view)>& get_executor_func);
 
-  void RegisterGetTypeSupportFunc(
-      const std::function<aimrt::util::TypeSupportRef(std::string_view)>& get_type_support_func);
+  void RegisterGetTypeSupportFunc(const std::function<aimrt::util::TypeSupportRef(std::string_view)>& get_type_support_func);
 
   const auto& GetTopicMetaMap() const { return topic_meta_map_; }
   void AddRecord(OneRecord&& record);
@@ -76,7 +74,7 @@ class RecordAction {
   bool StartSignalRecord(uint64_t preparation_duration_s, uint64_t record_duration_s);
   void StopSignalRecord();
 
- private:
+private:
   void AddRecordImpl(OneRecord&& record);
 
   void OpenNewDb(uint64_t start_timestamp);
@@ -90,7 +88,7 @@ class RecordAction {
     kShutdown,
   };
 
- private:
+private:
   Options options_;
   std::atomic<State> state_ = State::kPreInit;
 

@@ -28,9 +28,7 @@ std::string GenerateRandomString(int min_length, int max_length) {
   return result;
 }
 
-std::string GenerateRandomString(int length) {
-  return GenerateRandomString(length, length);
-}
+std::string GenerateRandomString(int length) { return GenerateRandomString(length, length); }
 
 bool BenchmarkPublisherModule::Initialize(aimrt::CoreRef core) {
   core_ = core;
@@ -51,9 +49,7 @@ bool BenchmarkPublisherModule::Initialize(aimrt::CoreRef core) {
               .msg_count = bench_plan_node["msg_count"].as<uint32_t>()};
 
           AIMRT_CHECK_ERROR_THROW(
-              bench_plan.topic_number <= max_topic_number_,
-              "Bench plan topic number({}) is greater than max topic number({})",
-              bench_plan.topic_number, max_topic_number_);
+              bench_plan.topic_number <= max_topic_number_, "Bench plan topic number({}) is greater than max topic number({})", bench_plan.topic_number, max_topic_number_);
 
           bench_plans_.emplace_back(bench_plan);
         }
@@ -82,9 +78,7 @@ bool BenchmarkPublisherModule::Initialize(aimrt::CoreRef core) {
       bool ret = aimrt::channel::RegisterPublishType<aimrt::protocols::example::BenchmarkMessage>(publisher);
       AIMRT_CHECK_ERROR_THROW(ret, "Register publish type failed.");
 
-      publisher_wrapper_vec_.emplace_back(PublisherWrapper{
-          .publish_executor = executor,
-          .publisher = publisher});
+      publisher_wrapper_vec_.emplace_back(PublisherWrapper{.publish_executor = executor, .publisher = publisher});
     }
 
   } catch (const std::exception& e) {
@@ -177,31 +171,30 @@ void BenchmarkPublisherModule::StartSinglePlan(uint32_t plan_id, BenchPlan plan)
     std::promise<void> task_promise;
     future_vec.emplace_back(task_promise.get_future());
 
-    publish_executor.Execute(
-        [this, publisher, plan, task_promise{std::move(task_promise)}]() mutable {
-          aimrt::protocols::example::BenchmarkMessage msg;
-          msg.set_data(GenerateRandomString(plan.msg_size));
+    publish_executor.Execute([this, publisher, plan, task_promise{std::move(task_promise)}]() mutable {
+      aimrt::protocols::example::BenchmarkMessage msg;
+      msg.set_data(GenerateRandomString(plan.msg_size));
 
-          uint32_t send_count = 0;
+      uint32_t send_count = 0;
 
-          uint32_t sleep_ns = static_cast<uint32_t>(1000000000 / plan.channel_frq);
-          auto cur_tp = std::chrono::system_clock::now();
+      uint32_t sleep_ns = static_cast<uint32_t>(1000000000 / plan.channel_frq);
+      auto cur_tp = std::chrono::system_clock::now();
 
-          for (; send_count < plan.msg_count; ++send_count) {
-            if (!run_flag_.load()) [[unlikely]]
-              break;
+      for (; send_count < plan.msg_count; ++send_count) {
+        if (!run_flag_.load()) [[unlikely]]
+          break;
 
-            msg.set_seq(send_count);
-            msg.set_timestamp(aimrt::common::util::GetCurTimestampNs());
+        msg.set_seq(send_count);
+        msg.set_timestamp(aimrt::common::util::GetCurTimestampNs());
 
-            aimrt::channel::Publish(publisher, msg);
+        aimrt::channel::Publish(publisher, msg);
 
-            cur_tp += std::chrono::duration_cast<std::chrono::system_clock::duration>(std::chrono::nanoseconds(sleep_ns));
-            std::this_thread::sleep_until(cur_tp);
-          }
+        cur_tp += std::chrono::duration_cast<std::chrono::system_clock::duration>(std::chrono::nanoseconds(sleep_ns));
+        std::this_thread::sleep_until(cur_tp);
+      }
 
-          task_promise.set_value();
-        });
+      task_promise.set_value();
+    });
   }
 
   for (auto& fu : future_vec) fu.wait();

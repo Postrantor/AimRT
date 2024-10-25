@@ -12,10 +12,9 @@
 namespace aimrt::configurator {
 
 class ConfiguratorRef {
- public:
+public:
   ConfiguratorRef() = default;
-  explicit ConfiguratorRef(const aimrt_configurator_base_t* base_ptr)
-      : base_ptr_(base_ptr) {}
+  explicit ConfiguratorRef(const aimrt_configurator_base_t* base_ptr) : base_ptr_(base_ptr) {}
   ~ConfiguratorRef() = default;
 
   explicit operator bool() const { return (base_ptr_ != nullptr); }
@@ -32,7 +31,7 @@ class ConfiguratorRef {
     return aimrt::util::ToStdStringView(base_ptr_->config_file_path(base_ptr_->impl));
   }
 
- private:
+private:
   const aimrt_configurator_base_t* base_ptr_ = nullptr;
 };
 

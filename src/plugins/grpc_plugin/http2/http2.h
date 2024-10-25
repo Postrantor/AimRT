@@ -17,11 +17,12 @@ constexpr std::string_view kHeaderNameAuthority = ":authority";
 constexpr std::string_view kHeaderNameStatus = ":status";
 
 inline nghttp2_nv CreatePairWithoutCopy(std::string_view name, std::string_view value) {
-  return {.name = const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(name.data())),
-          .value = const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(value.data())),
-          .namelen = name.size(),
-          .valuelen = value.size(),
-          .flags = NGHTTP2_NV_FLAG_NO_COPY_NAME | NGHTTP2_NV_FLAG_NO_COPY_VALUE};
+  return {
+      .name = const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(name.data())),
+      .value = const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(value.data())),
+      .namelen = name.size(),
+      .valuelen = value.size(),
+      .flags = NGHTTP2_NV_FLAG_NO_COPY_NAME | NGHTTP2_NV_FLAG_NO_COPY_VALUE};
 }
 
 }  // namespace aimrt::plugins::grpc_plugin::http2

@@ -13,7 +13,7 @@
 namespace aimrt::plugins::record_playback_plugin {
 
 class RecordPlaybackPlugin : public AimRTCorePluginBase {
- public:
+public:
   struct Options {
     std::string service_name;
 
@@ -35,7 +35,7 @@ class RecordPlaybackPlugin : public AimRTCorePluginBase {
     std::vector<PlaybackActionOptions> playback_actions;
   };
 
- public:
+public:
   RecordPlaybackPlugin() = default;
   ~RecordPlaybackPlugin() override = default;
 
@@ -44,7 +44,7 @@ class RecordPlaybackPlugin : public AimRTCorePluginBase {
   bool Initialize(runtime::core::AimRTCore* core_ptr) noexcept override;
   void Shutdown() noexcept override;
 
- private:
+private:
   void InitTypeSupport(Options::TypeSupportPkg& options);
 
   void RegisterRpcService();
@@ -52,7 +52,7 @@ class RecordPlaybackPlugin : public AimRTCorePluginBase {
   void RegisterRecordChannel();
   void RegisterPlaybackChannel();
 
- private:
+private:
   runtime::core::AimRTCore* core_ptr_ = nullptr;
 
   Options options_;

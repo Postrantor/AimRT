@@ -41,10 +41,8 @@ using Dispatcher = net::HttpDispatcher<Awaitable<void>(const RequestPtr&, Respon
 namespace asio = boost::asio;
 
 class Connection : public std::enable_shared_from_this<Connection> {
- public:
-  Connection(const std::shared_ptr<IOCtx>& io_ptr,
-             const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr,
-             const std::shared_ptr<Dispatcher>& dispatcher_ptr)
+public:
+  Connection(const std::shared_ptr<IOCtx>& io_ptr, const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr, const std::shared_ptr<Dispatcher>& dispatcher_ptr)
       : io_ptr_(io_ptr),
         socket_strand_(asio::make_strand(*io_ptr)),
         socket_(socket_strand_),
@@ -59,18 +57,14 @@ class Connection : public std::enable_shared_from_this<Connection> {
   Connection& operator=(const Connection&) = delete;
 
   void Initialize(const std::shared_ptr<ConnectionOptions>& options_ptr) {
-    AIMRT_CHECK_ERROR_THROW(
-        std::atomic_exchange(&state_, ConnectionState::kInit) == ConnectionState::kPreInit,
-        "Method can only be called when state is 'PreInit'");
+    AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, ConnectionState::kInit) == ConnectionState::kPreInit, "Method can only be called when state is 'PreInit'");
 
     options_ptr_ = options_ptr;
     nghttp2_session_.InitSession(options_ptr->http2_settings);
   }
 
   void Start() {
-    AIMRT_CHECK_ERROR_THROW(
-        std::atomic_exchange(&state_, ConnectionState::kStart) == ConnectionState::kInit,
-        "Method can only be called when state is 'Init'");
+    AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, ConnectionState::kStart) == ConnectionState::kInit, "Method can only be called when state is 'Init'");
 
     remote_addr_ = socket_.remote_endpoint().address().to_string();
 
@@ -89,8 +83,7 @@ class Connection : public std::enable_shared_from_this<Connection> {
                 auto url = request_ptr->GetUrl();
                 const auto& handle = dispatcher_ptr_->GetHttpHandle(url.path);
                 if (!handle) {
-                  AIMRT_ERROR("Http svr session get bad request, remote addr {}, url not registered: {}",
-                              RemoteAddr(), url.path);
+                  AIMRT_ERROR("Http svr session get bad request, remote addr {}, url not registered: {}", RemoteAddr(), url.path);
                   co_return;
                 }
                 auto response_ptr = std::make_shared<Response>();
@@ -99,16 +92,14 @@ class Connection : public std::enable_shared_from_this<Connection> {
 
                 response_ptr->AddHeader("content-type", "application/grpc");
 
-                AIMRT_TRACE("Http svr session send response, remote addr {}, response size: {}", RemoteAddr(),
-                            response_ptr->GetBody().GetReadableSize());
+                AIMRT_TRACE("Http svr session send response, remote addr {}, response size: {}", RemoteAddr(), response_ptr->GetBody().GetReadableSize());
                 nghttp2_session_.SubmitResponse(response_ptr);
               }
               full_request_list.clear();
               co_await SendToRemote();
             }
           } catch (const std::exception& e) {
-            AIMRT_TRACE("Http svr session get exception and exit, remote addr {}, exception info: {}",
-                        RemoteAddr(), e.what());
+            AIMRT_TRACE("Http svr session get exception and exit, remote addr {}, exception info: {}", RemoteAddr(), e.what());
           }
 
           Shutdown();
@@ -128,16 +119,14 @@ class Connection : public std::enable_shared_from_this<Connection> {
               if (!tick_has_data_) {
                 AIMRT_TRACE(
                     "Http svr session exit due to timeout ({} ms), remote addr {}",
-                    std::chrono::duration_cast<std::chrono::milliseconds>(options_ptr_->max_no_data_duration).count(),
-                    RemoteAddr());
+                    std::chrono::duration_cast<std::chrono::milliseconds>(options_ptr_->max_no_data_duration).count(), RemoteAddr());
                 close_connect_flag_ = true;
                 break;
               }
               tick_has_data_ = false;
             }
           } catch (const std::exception& e) {
-            AIMRT_TRACE("Http svr session mgr get exception and exit, remote addr {}, exception info: {}",
-                        RemoteAddr(), e.what());
+            AIMRT_TRACE("Http svr session mgr get exception and exit, remote addr {}, exception info: {}", RemoteAddr(), e.what());
           }
 
           Shutdown();
@@ -160,8 +149,7 @@ class Connection : public std::enable_shared_from_this<Connection> {
         socket_.cancel();
         socket_.close();
       } catch (const std::exception& e) {
-        AIMRT_TRACE("Http svr session shutdown failed, remote addr {}, exception info: {}",
-                    RemoteAddr(), e.what());
+        AIMRT_TRACE("Http svr session shutdown failed, remote addr {}, exception info: {}", RemoteAddr(), e.what());
       }
     });
 
@@ -169,29 +157,20 @@ class Connection : public std::enable_shared_from_this<Connection> {
       try {
         timer_.cancel();
       } catch (const std::exception& e) {
-        AIMRT_TRACE("Http svr session mgr shutdown failed, remote addr {}, exception info: {}",
-                    RemoteAddr(), e.what());
+        AIMRT_TRACE("Http svr session mgr shutdown failed, remote addr {}, exception info: {}", RemoteAddr(), e.what());
       }
     });
   }
 
-  const aimrt::common::util::LoggerWrapper& GetLogger() const noexcept {
-    return *logger_ptr_;
-  }
+  const aimrt::common::util::LoggerWrapper& GetLogger() const noexcept { return *logger_ptr_; }
 
-  std::string_view RemoteAddr() const noexcept {
-    return remote_addr_;
-  }
+  std::string_view RemoteAddr() const noexcept { return remote_addr_; }
 
-  Tcp::socket& Socket() noexcept {
-    return socket_;
-  }
+  Tcp::socket& Socket() noexcept { return socket_; }
 
-  bool IsRunning() const noexcept {
-    return state_.load() == ConnectionState::kStart;
-  }
+  bool IsRunning() const noexcept { return state_.load() == ConnectionState::kStart; }
 
- private:
+private:
   Awaitable<void> ReceiveFromRemote() {
     std::array<uint8_t, 65536> buffer;
     auto nread = co_await socket_.async_read_some(asio::buffer(buffer), asio::use_awaitable);
@@ -208,8 +187,7 @@ class Connection : public std::enable_shared_from_this<Connection> {
     AIMRT_TRACE("Http svr session get data, remote addr {}, data: \n{}\n{}", RemoteAddr(), data_hex, data_str);
 #endif
 
-    auto recv_ok = nghttp2_session_.ParseRecvMessage(
-        std::string_view(reinterpret_cast<char*>(buffer.data()), nread));
+    auto recv_ok = nghttp2_session_.ParseRecvMessage(std::string_view(reinterpret_cast<char*>(buffer.data()), nread));
     if (recv_ok != 0) {
       AIMRT_ERROR("Http svr session parse recv response failed, remote addr {}, parse failed", RemoteAddr());
       throw std::runtime_error("Http svr session parse recv response failed");
@@ -224,13 +202,11 @@ class Connection : public std::enable_shared_from_this<Connection> {
       throw std::runtime_error("Http svr session serialize send response failed");
     }
     if (!send_buffer.Empty()) {
-      co_await asio::async_write(socket_,
-                                 asio::buffer(send_buffer.GetStringView()),
-                                 asio::use_awaitable);
+      co_await asio::async_write(socket_, asio::buffer(send_buffer.GetStringView()), asio::use_awaitable);
     }
   }
 
- private:
+private:
   enum class ConnectionState : uint32_t {
     kPreInit,
     kInit,

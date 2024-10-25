@@ -13,15 +13,11 @@
 namespace aimrt::plugins::zenoh_plugin {
 
 class ZenohChannelBackend : public runtime::core::channel::ChannelBackendBase {
- public:
-  struct Options {
-  };
+public:
+  struct Options {};
 
- public:
-  ZenohChannelBackend(
-      const std::shared_ptr<ZenohManager>& zenoh_util_ptr, const std::string& limit_domain)
-      : zenoh_manager_ptr_(zenoh_util_ptr),
-        limit_domain_(limit_domain) {}
+public:
+  ZenohChannelBackend(const std::shared_ptr<ZenohManager>& zenoh_util_ptr, const std::string& limit_domain) : zenoh_manager_ptr_(zenoh_util_ptr), limit_domain_(limit_domain) {}
 
   ~ZenohChannelBackend() override = default;
 
@@ -31,16 +27,13 @@ class ZenohChannelBackend : public runtime::core::channel::ChannelBackendBase {
   void Start() override;
   void Shutdown() override;
 
-  void SetChannelRegistry(const runtime::core::channel::ChannelRegistry* channel_registry_ptr) noexcept override {
-    channel_registry_ptr_ = channel_registry_ptr;
-  }
+  void SetChannelRegistry(const runtime::core::channel::ChannelRegistry* channel_registry_ptr) noexcept override { channel_registry_ptr_ = channel_registry_ptr; }
 
-  bool RegisterPublishType(
-      const runtime::core::channel::PublishTypeWrapper& publish_type_wrapper) noexcept override;
+  bool RegisterPublishType(const runtime::core::channel::PublishTypeWrapper& publish_type_wrapper) noexcept override;
   bool Subscribe(const runtime::core::channel::SubscribeWrapper& subscribe_wrapper) noexcept override;
   void Publish(runtime::core::channel::MsgWrapper& msg_wrapper) noexcept override;
 
- private:
+private:
   enum class State : uint32_t {
     kPreInit,
     kInit,
@@ -56,10 +49,7 @@ class ZenohChannelBackend : public runtime::core::channel::ChannelBackendBase {
   std::shared_ptr<ZenohManager> zenoh_manager_ptr_;
   std::string limit_domain_;
 
-  std::unordered_map<
-      std::string,
-      std::unique_ptr<aimrt::runtime::core::channel::SubscribeTool>>
-      subscribe_wrapper_map_;
+  std::unordered_map<std::string, std::unique_ptr<aimrt::runtime::core::channel::SubscribeTool>> subscribe_wrapper_map_;
 };
 
 }  // namespace aimrt::plugins::zenoh_plugin

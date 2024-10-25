@@ -9,9 +9,9 @@
 #include "iceoryx_posh/runtime/posh_runtime.hpp"
 
 #if defined(_WIN32)
-  #include <windows.h>
+#include <windows.h>
 #else
-  #include <unistd.h>
+#include <unistd.h>
 #endif
 
 namespace aimrt::plugins::iceoryx_plugin {
@@ -28,7 +28,7 @@ std::string GetPid();
 std::string IntToFixedLengthString(int number, int length);
 
 using namespace aimrt::runtime::core::channel;
-std::pair<std::shared_ptr<aimrt::util::BufferArrayView>, size_t> SerializeMsgSupportedIceoryx(
-    MsgWrapper& msg_wrapper, std::string_view serialization_type, aimrt::util::BufferArrayAllocatorRef allocator);
+std::pair<std::shared_ptr<aimrt::util::BufferArrayView>, size_t>
+SerializeMsgSupportedIceoryx(MsgWrapper& msg_wrapper, std::string_view serialization_type, aimrt::util::BufferArrayAllocatorRef allocator);
 
 }  // namespace aimrt::plugins::iceoryx_plugin

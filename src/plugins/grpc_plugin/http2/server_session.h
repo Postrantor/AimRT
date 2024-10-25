@@ -13,7 +13,7 @@ namespace aimrt::plugins::grpc_plugin::http2 {
 // https://github.com/trpc-group/trpc-cpp/blob/v1.2.0/trpc/codec/grpc/http2/server_session.h
 
 class ServerSession : public Session {
- public:
+public:
   int InitSession(Http2Settings settings) override;
 
   int SubmitResponse(const ResponsePtr& response_ptr) override;
@@ -23,12 +23,12 @@ class ServerSession : public Session {
   void OnFullRequest(const RequestPtr& request_ptr);
   [[nodiscard]] std::forward_list<RequestPtr> GetFullRequestList();
 
- private:
+private:
   int SubmitSettings(Http2Settings settings);
 
   int HandleClientMagic(std::string_view in);
 
- private:
+private:
   bool good_client_magic_ = false;
 
   std::forward_list<RequestPtr> full_request_list_;

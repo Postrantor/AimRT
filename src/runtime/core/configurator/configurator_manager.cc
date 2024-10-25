@@ -25,8 +25,7 @@ struct convert<aimrt::runtime::core::configurator::ConfiguratorManager::Options>
   static bool decode(const Node& node, Options& rhs) {
     if (!node.IsMap()) return false;
 
-    if (node["temp_cfg_path"])
-      rhs.temp_cfg_path = node["temp_cfg_path"].as<std::string>();
+    if (node["temp_cfg_path"]) rhs.temp_cfg_path = node["temp_cfg_path"].as<std::string>();
 
     return true;
   }
@@ -35,11 +34,8 @@ struct convert<aimrt::runtime::core::configurator::ConfiguratorManager::Options>
 
 namespace aimrt::runtime::core::configurator {
 
-void ConfiguratorManager::Initialize(
-    const std::filesystem::path& cfg_file_path) {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-      "Configurator manager can only be initialized once.");
+void ConfiguratorManager::Initialize(const std::filesystem::path& cfg_file_path) {
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "Configurator manager can only be initialized once.");
 
   cfg_file_path_ = cfg_file_path;
 
@@ -74,11 +70,9 @@ void ConfiguratorManager::Initialize(
   root_options_node["aimrt"] = YAML::Node();
 
   YAML::Node configurator_options_node = GetAimRTOptionsNode("configurator");
-  if (configurator_options_node && !configurator_options_node.IsNull())
-    options_ = configurator_options_node.as<Options>();
+  if (configurator_options_node && !configurator_options_node.IsNull()) options_ = configurator_options_node.as<Options>();
 
-  if (!(std::filesystem::exists(options_.temp_cfg_path) &&
-        std::filesystem::is_directory(options_.temp_cfg_path))) {
+  if (!(std::filesystem::exists(options_.temp_cfg_path) && std::filesystem::is_directory(options_.temp_cfg_path))) {
     std::filesystem::create_directories(options_.temp_cfg_path);
   }
 
@@ -88,39 +82,27 @@ void ConfiguratorManager::Initialize(
 }
 
 void ConfiguratorManager::Start() {
-  AIMRT_CHECK_ERROR_THROW(
-      std::atomic_exchange(&state_, State::kStart) == State::kInit,
-      "Method can only be called when state is 'Init'.");
+  AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'.");
 
   AIMRT_INFO("Configurator manager start completed.");
 }
 
 void ConfiguratorManager::Shutdown() {
-  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-    return;
+  if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 
   AIMRT_INFO("Configurator manager shutdown.");
 
   cfg_proxy_map_.clear();
 }
 
-YAML::Node ConfiguratorManager::GetOriRootOptionsNode() const {
-  return *ori_root_options_node_ptr_;
-}
+YAML::Node ConfiguratorManager::GetOriRootOptionsNode() const { return *ori_root_options_node_ptr_; }
 
-YAML::Node ConfiguratorManager::GetRootOptionsNode() const {
-  return *root_options_node_ptr_;
-}
+YAML::Node ConfiguratorManager::GetRootOptionsNode() const { return *root_options_node_ptr_; }
 
-YAML::Node ConfiguratorManager::GetUserRootOptionsNode() const {
-  return *user_root_options_node_ptr_;
-}
+YAML::Node ConfiguratorManager::GetUserRootOptionsNode() const { return *user_root_options_node_ptr_; }
 
-const ConfiguratorProxy& ConfiguratorManager::GetConfiguratorProxy(
-    const util::ModuleDetailInfo& module_info) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kInit,
-      "Method can only be called when state is 'Init'.");
+const ConfiguratorProxy& ConfiguratorManager::GetConfiguratorProxy(const util::ModuleDetailInfo& module_info) {
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kInit, "Method can only be called when state is 'Init'.");
 
   AIMRT_TRACE("Get configurator proxy for module '{}'.", module_info.name);
 
@@ -129,9 +111,7 @@ const ConfiguratorProxy& ConfiguratorManager::GetConfiguratorProxy(
 
   // 如果直接指定了配置文件路径，则使用指定的
   if (!module_info.cfg_file_path.empty()) {
-    auto emplace_ret = cfg_proxy_map_.emplace(
-        module_info.name,
-        std::make_unique<ConfiguratorProxy>(module_info.cfg_file_path));
+    auto emplace_ret = cfg_proxy_map_.emplace(module_info.name, std::make_unique<ConfiguratorProxy>(module_info.cfg_file_path));
     return *(emplace_ret.first->second);
   }
 
@@ -139,14 +119,10 @@ const ConfiguratorProxy& ConfiguratorManager::GetConfiguratorProxy(
   auto& root_options_node = *root_options_node_ptr_;
 
   // 如果根配置文件中有这个模块节点，则将内容生成到临时配置文件中
-  if (ori_root_options_node[module_info.name] &&
-      !ori_root_options_node[module_info.name].IsNull()) {
-    root_options_node[module_info.name] =
-        ori_root_options_node[module_info.name];
+  if (ori_root_options_node[module_info.name] && !ori_root_options_node[module_info.name].IsNull()) {
+    root_options_node[module_info.name] = ori_root_options_node[module_info.name];
 
-    std::filesystem::path temp_cfg_file_path =
-        options_.temp_cfg_path /
-        ("temp_cfg_file_for_" + module_info.name + ".yaml");
+    std::filesystem::path temp_cfg_file_path = options_.temp_cfg_path / ("temp_cfg_file_for_" + module_info.name + ".yaml");
     std::ofstream ofs;
     ofs.open(temp_cfg_file_path, std::ios::trunc);
     ofs << root_options_node[module_info.name];
@@ -154,9 +130,7 @@ const ConfiguratorProxy& ConfiguratorManager::GetConfiguratorProxy(
     ofs.clear();
     ofs.close();
 
-    auto emplace_ret = cfg_proxy_map_.emplace(
-        module_info.name,
-        std::make_unique<ConfiguratorProxy>(temp_cfg_file_path.string()));
+    auto emplace_ret = cfg_proxy_map_.emplace(module_info.name, std::make_unique<ConfiguratorProxy>(temp_cfg_file_path.string()));
     return *(emplace_ret.first->second);
   }
 
@@ -164,9 +138,7 @@ const ConfiguratorProxy& ConfiguratorManager::GetConfiguratorProxy(
 }
 
 YAML::Node ConfiguratorManager::GetAimRTOptionsNode(std::string_view key) {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kInit,
-      "Method can only be called when state is 'Init'.");
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kInit, "Method can only be called when state is 'Init'.");
 
   auto& ori_root_options_node = *ori_root_options_node_ptr_;
   auto& root_options_node = *root_options_node_ptr_;
@@ -175,22 +147,14 @@ YAML::Node ConfiguratorManager::GetAimRTOptionsNode(std::string_view key) {
 }
 
 std::list<std::pair<std::string, std::string>> ConfiguratorManager::GenInitializationReport() const {
-  AIMRT_CHECK_ERROR_THROW(
-      state_.load() == State::kInit,
-      "Method can only be called when state is 'Init'.");
+  AIMRT_CHECK_ERROR_THROW(state_.load() == State::kInit, "Method can only be called when state is 'Init'.");
 
-  auto check_msg = util::CheckYamlNodes(
-      GetRootOptionsNode()["aimrt"],
-      GetUserRootOptionsNode()["aimrt"],
-      "aimrt");
+  auto check_msg = util::CheckYamlNodes(GetRootOptionsNode()["aimrt"], GetUserRootOptionsNode()["aimrt"], "aimrt");
 
-  std::list<std::pair<std::string, std::string>> report{
-      {"AimRT Cfg File Path", cfg_file_path_.string()},
-      {"AimRT Core Option", YAML::Dump((*root_options_node_ptr_)["aimrt"])}};
+  std::list<std::pair<std::string, std::string>> report{{"AimRT Cfg File Path", cfg_file_path_.string()}, {"AimRT Core Option", YAML::Dump((*root_options_node_ptr_)["aimrt"])}};
 
   if (!check_msg.empty()) {
-    report.emplace_back(
-        std::pair<std::string, std::string>{"Configuration Warning", check_msg});
+    report.emplace_back(std::pair<std::string, std::string>{"Configuration Warning", check_msg});
   }
 
   return report;

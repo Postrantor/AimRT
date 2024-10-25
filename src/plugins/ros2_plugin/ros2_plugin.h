@@ -14,7 +14,7 @@
 namespace aimrt::plugins::ros2_plugin {
 
 class Ros2Plugin : public AimRTCorePluginBase {
- public:
+public:
   struct Options {
     std::string node_name;
     // SingleThreaded | StaticSingleThreaded | MultiThreaded
@@ -22,7 +22,7 @@ class Ros2Plugin : public AimRTCorePluginBase {
     uint32_t executor_thread_num = 2;
   };
 
- public:
+public:
   Ros2Plugin() = default;
   ~Ros2Plugin() override = default;
 
@@ -31,12 +31,12 @@ class Ros2Plugin : public AimRTCorePluginBase {
   bool Initialize(runtime::core::AimRTCore* core_ptr) noexcept override;
   void Shutdown() noexcept override;
 
- private:
+private:
   void SetPluginLogger();
   void RegisterRos2RpcBackend();
   void RegisterRos2ChannelBackend();
 
- private:
+private:
   runtime::core::AimRTCore* core_ptr_ = nullptr;
 
   Options options_;

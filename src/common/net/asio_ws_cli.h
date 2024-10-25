@@ -18,9 +18,8 @@
 
 namespace aimrt::common::net {
 
-class AsioWebSocketClient
-    : public std::enable_shared_from_this<AsioWebSocketClient> {
- public:
+class AsioWebSocketClient : public std::enable_shared_from_this<AsioWebSocketClient> {
+public:
   using IOCtx = boost::asio::io_context;
   using Tcp = boost::asio::ip::tcp;
   using WsStream = boost::beast::websocket::stream<boost::beast::tcp_stream>;
@@ -56,8 +55,7 @@ class AsioWebSocketClient
     static Options Verify(const Options& verify_options) {
       Options options(verify_options);
 
-      if (options.heart_beat_time < std::chrono::milliseconds(100))
-        options.heart_beat_time = std::chrono::milliseconds(100);
+      if (options.heart_beat_time < std::chrono::milliseconds(100)) options.heart_beat_time = std::chrono::milliseconds(100);
 
       return options;
     }
@@ -74,9 +72,7 @@ class AsioWebSocketClient
   AsioWebSocketClient& operator=(const AsioWebSocketClient&) = delete;
 
   void SetLogger(const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr) {
-    AIMRT_CHECK_ERROR_THROW(
-        state_.load() == State::kPreInit,
-        "Method can only be called when state is 'PreInit'.");
+    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
     logger_ptr_ = logger_ptr;
   }
@@ -84,31 +80,22 @@ class AsioWebSocketClient
   template <typename... Args>
     requires std::constructible_from<MsgHandle, Args...>
   void RegisterMsgHandle(Args&&... args) {
-    AIMRT_CHECK_ERROR_THROW(
-        state_.load() == State::kPreInit,
-        "Method can only be called when state is 'PreInit'.");
+    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
     msg_handle_ptr_ = std::make_shared<MsgHandle>(std::forward<Args>(args)...);
   }
 
   void Initialize(const Options& options) {
-    AIMRT_CHECK_ERROR_THROW(
-        std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-        "Method can only be called when state is 'PreInit'.");
+    AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
     options_ = Options::Verify(options);
     session_options_ptr_ = std::make_shared<SessionOptions>(options_);
   }
 
-  void Start() {
-    AIMRT_CHECK_ERROR_THROW(
-        std::atomic_exchange(&state_, State::kStart) == State::kInit,
-        "Method can only be called when state is 'Init'.");
-  }
+  void Start() { AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'."); }
 
   void Shutdown() {
-    if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-      return;
+    if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 
     auto self = shared_from_this();
     boost::asio::dispatch(mgr_strand_, [this, self]() {
@@ -128,8 +115,7 @@ class AsioWebSocketClient
       }
 
       if (!session_ptr_ || !session_ptr_->IsRunning()) {
-        session_ptr_ = std::make_shared<Session>(
-            io_ptr_, logger_ptr_, msg_handle_ptr_);
+        session_ptr_ = std::make_shared<Session>(io_ptr_, logger_ptr_, msg_handle_ptr_);
         session_ptr_->Initialize(session_options_ptr_);
         session_ptr_->Start();
       }
@@ -142,7 +128,7 @@ class AsioWebSocketClient
 
   bool IsRunning() const { return state_.load() == State::kStart; }
 
- private:
+private:
   struct SessionOptions {
     explicit SessionOptions(const Options& options)
         : host(options.host),
@@ -161,10 +147,8 @@ class AsioWebSocketClient
   };
 
   class Session : public std::enable_shared_from_this<Session> {
-   public:
-    Session(const std::shared_ptr<IOCtx>& io_ptr,
-            const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr,
-            const std::shared_ptr<MsgHandle>& msg_handle_ptr)
+  public:
+    Session(const std::shared_ptr<IOCtx>& io_ptr, const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr, const std::shared_ptr<MsgHandle>& msg_handle_ptr)
         : io_ptr_(io_ptr),
           session_socket_strand_(boost::asio::make_strand(*io_ptr)),
           stream_(session_socket_strand_),
@@ -178,17 +162,13 @@ class AsioWebSocketClient
     Session& operator=(const Session&) = delete;
 
     void Initialize(const std::shared_ptr<const SessionOptions>& session_options_ptr) {
-      AIMRT_CHECK_ERROR_THROW(
-          std::atomic_exchange(&state_, SessionState::kInit) == SessionState::kPreInit,
-          "Method can only be called when state is 'PreInit'.");
+      AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, SessionState::kInit) == SessionState::kPreInit, "Method can only be called when state is 'PreInit'.");
 
       session_options_ptr_ = session_options_ptr;
     }
 
     void Start() {
-      AIMRT_CHECK_ERROR_THROW(
-          std::atomic_exchange(&state_, SessionState::kStart) == SessionState::kInit,
-          "Method can only be called when state is 'Init'.");
+      AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, SessionState::kStart) == SessionState::kInit, "Method can only be called when state is 'Init'.");
 
       auto self = shared_from_this();
 
@@ -201,16 +181,11 @@ class AsioWebSocketClient
               namespace http = boost::beast::http;
               namespace websocket = boost::beast::websocket;
 
-              AIMRT_TRACE("WebSocket cli session create a new connect to {}:{}",
-                          session_options_ptr_->host,
-                          session_options_ptr_->service);
+              AIMRT_TRACE("WebSocket cli session create a new connect to {}:{}", session_options_ptr_->host, session_options_ptr_->service);
 
               // resolve
               asio::ip::tcp::resolver resolver(session_socket_strand_);
-              auto const dst = co_await resolver.async_resolve(
-                  session_options_ptr_->host,
-                  session_options_ptr_->service,
-                  asio::use_awaitable);
+              auto const dst = co_await resolver.async_resolve(session_options_ptr_->host, session_options_ptr_->service, asio::use_awaitable);
 
               stream_.next_layer().expires_after(std::chrono::seconds(5));
               co_await stream_.next_layer().async_connect(dst, asio::use_awaitable);
@@ -220,18 +195,13 @@ class AsioWebSocketClient
 
               stream_.next_layer().expires_never();
 
-              stream_.set_option(websocket::stream_base::timeout::suggested(
-                  boost::beast::role_type::client));
+              stream_.set_option(websocket::stream_base::timeout::suggested(boost::beast::role_type::client));
 
               stream_.set_option(websocket::stream_base::decorator(
-                  [](websocket::request_type& req) {
-                    req.set(http::field::user_agent,
-                            std::string(BOOST_BEAST_VERSION_STRING) + " websocket-client-coro");
-                  }));
+                  [](websocket::request_type& req) { req.set(http::field::user_agent, std::string(BOOST_BEAST_VERSION_STRING) + " websocket-client-coro"); }));
 
               co_await stream_.async_handshake(remote_addr_, session_options_ptr_->path, asio::use_awaitable);
-              AIMRT_TRACE("WebSocket cli session async handshake, path {}, remote addr {}.",
-                          session_options_ptr_->path, RemoteAddr());
+              AIMRT_TRACE("WebSocket cli session async handshake, path {}, remote addr {}.", session_options_ptr_->path, RemoteAddr());
 
               stream_.binary(session_options_ptr_->binary_mode);
 
@@ -244,11 +214,8 @@ class AsioWebSocketClient
                         while (!data_list_.empty()) {
                           auto data_itr = data_list_.begin();
 
-                          size_t write_data_size = co_await stream_.async_write(
-                              (*data_itr)->data(), boost::asio::use_awaitable);
-                          AIMRT_TRACE(
-                              "WebSocket cli session async write {} bytes to {}.",
-                              write_data_size, RemoteAddr());
+                          size_t write_data_size = co_await stream_.async_write((*data_itr)->data(), boost::asio::use_awaitable);
+                          AIMRT_TRACE("WebSocket cli session async write {} bytes to {}.", write_data_size, RemoteAddr());
                           data_list_.erase(data_itr);
                         }
 
@@ -258,9 +225,7 @@ class AsioWebSocketClient
                           co_await send_sig_timer_.async_wait(boost::asio::use_awaitable);
                           heartbeat_flag = true;
                         } catch (const std::exception& e) {
-                          AIMRT_TRACE(
-                              "WebSocket cli session timer canceled, remote addr {}, exception info: {}",
-                              RemoteAddr(), e.what());
+                          AIMRT_TRACE("WebSocket cli session timer canceled, remote addr {}, exception info: {}", RemoteAddr(), e.what());
                         }
 
                         if (heartbeat_flag) {
@@ -268,15 +233,11 @@ class AsioWebSocketClient
                           static const websocket::ping_data kEmptyPingData;
 
                           co_await stream_.async_ping(kEmptyPingData, boost::asio::use_awaitable);
-                          AIMRT_TRACE(
-                              "WebSocket cli session async ping to {} for heartbeat.",
-                              RemoteAddr());
+                          AIMRT_TRACE("WebSocket cli session async ping to {} for heartbeat.", RemoteAddr());
                         }
                       }
                     } catch (const std::exception& e) {
-                      AIMRT_TRACE(
-                          "WebSocket cli session send co get exception and exit, remote addr {}, exception info: {}",
-                          RemoteAddr(), e.what());
+                      AIMRT_TRACE("WebSocket cli session send co get exception and exit, remote addr {}, exception info: {}", RemoteAddr(), e.what());
                     }
 
                     Shutdown();
@@ -293,22 +254,15 @@ class AsioWebSocketClient
                       while (state_.load() == SessionState::kStart) {
                         auto msg_buf = std::make_shared<Streambuf>();
 
-                        size_t read_data_size = co_await stream_.async_read(
-                            *msg_buf, boost::asio::use_awaitable);
-                        AIMRT_TRACE(
-                            "WebSocket cli session async read {} bytes from {} for head.",
-                            read_data_size, RemoteAddr());
+                        size_t read_data_size = co_await stream_.async_read(*msg_buf, boost::asio::use_awaitable);
+                        AIMRT_TRACE("WebSocket cli session async read {} bytes from {} for head.", read_data_size, RemoteAddr());
 
                         if (msg_handle_ptr_) {
-                          boost::asio::post(
-                              *io_ptr_,
-                              [this, msg_buf]() { (*msg_handle_ptr_)(msg_buf); });
+                          boost::asio::post(*io_ptr_, [this, msg_buf]() { (*msg_handle_ptr_)(msg_buf); });
                         }
                       }
                     } catch (const std::exception& e) {
-                      AIMRT_TRACE(
-                          "WebSocket cli session recv co get exception and exit, remote addr {}, exception info: {}",
-                          RemoteAddr(), e.what());
+                      AIMRT_TRACE("WebSocket cli session recv co get exception and exit, remote addr {}, exception info: {}", RemoteAddr(), e.what());
                     }
 
                     Shutdown();
@@ -318,9 +272,7 @@ class AsioWebSocketClient
                   boost::asio::detached);
 
             } catch (const std::exception& e) {
-              AIMRT_TRACE(
-                  "WebSocket cli session start co get exception and exit, remote addr {}, exception info: {}",
-                  RemoteAddr(), e.what());
+              AIMRT_TRACE("WebSocket cli session start co get exception and exit, remote addr {}, exception info: {}", RemoteAddr(), e.what());
               Shutdown();
             }
 
@@ -330,8 +282,7 @@ class AsioWebSocketClient
     }
 
     void Shutdown() {
-      if (std::atomic_exchange(&state_, SessionState::kShutdown) == SessionState::kShutdown)
-        return;
+      if (std::atomic_exchange(&state_, SessionState::kShutdown) == SessionState::kShutdown) return;
 
       auto self = shared_from_this();
       boost::asio::dispatch(session_socket_strand_, [this, self]() {
@@ -371,9 +322,7 @@ class AsioWebSocketClient
                 break;
             }
           } catch (const std::exception& e) {
-            AIMRT_TRACE(
-                "WebSocket cli session stop get exception at step {}, exception info: {}",
-                stop_step, e.what());
+            AIMRT_TRACE("WebSocket cli session stop get exception at step {}, exception info: {}", stop_step, e.what());
             ++stop_step;
           }
         }
@@ -383,17 +332,15 @@ class AsioWebSocketClient
     void SendMsg(const std::shared_ptr<Streambuf>& msg_buf_ptr) {
       // TODO: 分两种情况，还没建立连接时则先放在缓存中，建立连接后则直接发送
       auto self = shared_from_this();
-      boost::asio::dispatch(
-          session_socket_strand_,
-          [this, self, msg_buf_ptr]() {
-            if (state_.load() != SessionState::kStart) [[unlikely]] {
-              AIMRT_WARN("WebSocket cli session is closed, will not send current msg.");
-              return;
-            }
+      boost::asio::dispatch(session_socket_strand_, [this, self, msg_buf_ptr]() {
+        if (state_.load() != SessionState::kStart) [[unlikely]] {
+          AIMRT_WARN("WebSocket cli session is closed, will not send current msg.");
+          return;
+        }
 
-            data_list_.emplace_back(msg_buf_ptr);
-            send_sig_timer_.cancel();
-          });
+        data_list_.emplace_back(msg_buf_ptr);
+        send_sig_timer_.cancel();
+      });
     }
 
     const aimrt::common::util::LoggerWrapper& GetLogger() const { return *logger_ptr_; }
@@ -402,7 +349,7 @@ class AsioWebSocketClient
 
     bool IsRunning() const { return state_.load() == SessionState::kStart; }
 
-   private:
+  private:
     enum class SessionState : uint32_t {
       kPreInit,
       kInit,
@@ -433,7 +380,7 @@ class AsioWebSocketClient
     std::list<std::shared_ptr<Streambuf>> data_list_;
   };
 
- private:
+private:
   enum class State : uint32_t {
     kPreInit,
     kInit,
@@ -462,9 +409,8 @@ class AsioWebSocketClient
   std::shared_ptr<Session> session_ptr_;
 };
 
-class AsioWebSocketClientPool
-    : public std::enable_shared_from_this<AsioWebSocketClientPool> {
- public:
+class AsioWebSocketClientPool : public std::enable_shared_from_this<AsioWebSocketClientPool> {
+public:
   using IOCtx = boost::asio::io_context;
   using Strand = boost::asio::strand<IOCtx::executor_type>;
 
@@ -496,30 +442,21 @@ class AsioWebSocketClientPool
   AsioWebSocketClientPool& operator=(const AsioWebSocketClientPool&) = delete;
 
   void SetLogger(const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr) {
-    AIMRT_CHECK_ERROR_THROW(
-        state_.load() == State::kPreInit,
-        "Method can only be called when state is 'PreInit'.");
+    AIMRT_CHECK_ERROR_THROW(state_.load() == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
     logger_ptr_ = logger_ptr;
   }
 
   void Initialize(const Options& options) {
-    AIMRT_CHECK_ERROR_THROW(
-        std::atomic_exchange(&state_, State::kInit) == State::kPreInit,
-        "Method can only be called when state is 'PreInit'.");
+    AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kInit) == State::kPreInit, "Method can only be called when state is 'PreInit'.");
 
     options_ = Options::Verify(options);
   }
 
-  void Start() {
-    AIMRT_CHECK_ERROR_THROW(
-        std::atomic_exchange(&state_, State::kStart) == State::kInit,
-        "Method can only be called when state is 'Init'.");
-  }
+  void Start() { AIMRT_CHECK_ERROR_THROW(std::atomic_exchange(&state_, State::kStart) == State::kInit, "Method can only be called when state is 'Init'."); }
 
   void Shutdown() {
-    if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown)
-      return;
+    if (std::atomic_exchange(&state_, State::kShutdown) == State::kShutdown) return;
 
     auto self = shared_from_this();
     boost::asio::dispatch(mgr_strand_, [this, self]() {
@@ -529,8 +466,7 @@ class AsioWebSocketClientPool
     });
   }
 
-  Awaitable<std::shared_ptr<AsioWebSocketClient>> GetClient(
-      const AsioWebSocketClient::Options& client_options) {
+  Awaitable<std::shared_ptr<AsioWebSocketClient>> GetClient(const AsioWebSocketClient::Options& client_options) {
     return boost::asio::co_spawn(
         mgr_strand_,
         [this, &client_options]() -> Awaitable<std::shared_ptr<AsioWebSocketClient>> {
@@ -555,8 +491,7 @@ class AsioWebSocketClientPool
                 client_map_.erase(itr++);
             }
 
-            AIMRT_CHECK_WARN_THROW(client_map_.size() < options_.max_client_num,
-                                   "WebSocket client num reach the upper limit.");
+            AIMRT_CHECK_WARN_THROW(client_map_.size() < options_.max_client_num, "WebSocket client num reach the upper limit.");
           }
 
           auto client_ptr = std::make_shared<AsioWebSocketClient>(io_ptr_);
@@ -572,7 +507,7 @@ class AsioWebSocketClientPool
 
   const aimrt::common::util::LoggerWrapper& GetLogger() const { return *logger_ptr_; }
 
- private:
+private:
   enum class State : uint32_t {
     kPreInit,
     kInit,

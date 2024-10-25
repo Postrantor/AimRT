@@ -10,13 +10,11 @@
 namespace aimrt::examples::cpp::helloworld::helloworld_module {
 
 class HelloWorldModule : public aimrt::ModuleBase {
- public:
+public:
   HelloWorldModule() = default;
   ~HelloWorldModule() override = default;
 
-  ModuleInfo Info() const override {
-    return ModuleInfo{.name = "HelloWorldModule"};
-  }
+  ModuleInfo Info() const override { return ModuleInfo{.name = "HelloWorldModule"}; }
 
   bool Initialize(aimrt::CoreRef core) override;
 
@@ -24,10 +22,10 @@ class HelloWorldModule : public aimrt::ModuleBase {
 
   void Shutdown() override;
 
- private:
+private:
   auto GetLogger() { return core_.GetLogger(); }
 
- private:
+private:
   aimrt::CoreRef core_;
 };
 

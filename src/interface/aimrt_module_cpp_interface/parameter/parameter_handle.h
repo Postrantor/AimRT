@@ -13,17 +13,14 @@ namespace aimrt::parameter {
 using ParameterValReleaseCallback = util::Function<aimrt_function_parameter_val_release_callback_ops_t>;
 
 class ParameterHandleRef {
- public:
+public:
   ParameterHandleRef() = default;
-  explicit ParameterHandleRef(const aimrt_parameter_handle_base_t* base_ptr)
-      : base_ptr_(base_ptr) {}
+  explicit ParameterHandleRef(const aimrt_parameter_handle_base_t* base_ptr) : base_ptr_(base_ptr) {}
   ~ParameterHandleRef() = default;
 
   explicit operator bool() const { return (base_ptr_ != nullptr); }
 
-  const aimrt_parameter_handle_base_t* NativeHandle() const {
-    return base_ptr_;
-  }
+  const aimrt_parameter_handle_base_t* NativeHandle() const { return base_ptr_; }
 
   std::string GetParameter(std::string_view key) const {
     AIMRT_ASSERT(base_ptr_, "Reference is null.");
@@ -42,7 +39,7 @@ class ParameterHandleRef {
     base_ptr_->set_parameter(base_ptr_->impl, util::ToAimRTStringView(key), util::ToAimRTStringView(val));
   }
 
- private:
+private:
   const aimrt_parameter_handle_base_t* base_ptr_ = nullptr;
 };
 

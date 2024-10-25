@@ -7,19 +7,13 @@
 #include "rclcpp/rclcpp.hpp"
 
 class RosTestChannelSubscriber : public rclcpp::Node {
- public:
-  RosTestChannelSubscriber()
-      : Node("native_ros2_chn_subscriber") {
+public:
+  RosTestChannelSubscriber() : Node("native_ros2_chn_subscriber") {
     subscription_ = this->create_subscription<example_ros2::msg::RosTestMsg>(
-        "test_topic",
-        10,
-        [this](example_ros2::msg::RosTestMsg::UniquePtr msg) {
-          RCLCPP_INFO(get_logger(), "Heard msg:\n%s",
-                      example_ros2::msg::to_yaml(*msg).c_str());
-        });
+        "test_topic", 10, [this](example_ros2::msg::RosTestMsg::UniquePtr msg) { RCLCPP_INFO(get_logger(), "Heard msg:\n%s", example_ros2::msg::to_yaml(*msg).c_str()); });
   }
 
- private:
+private:
   rclcpp::Subscription<example_ros2::msg::RosTestMsg>::SharedPtr subscription_;
 };
 

@@ -13,7 +13,7 @@
 namespace aimrt::plugins::record_playback_plugin {
 
 class TypeSupportPkgLoader {
- public:
+public:
   TypeSupportPkgLoader() = default;
   ~TypeSupportPkgLoader() { UnLoadTypeSupportPkg(); }
 
@@ -28,7 +28,7 @@ class TypeSupportPkgLoader {
 
   auto& GetDynamicLib() { return dynamic_lib_; }
 
- private:
+private:
   std::string path_;
   aimrt::common::util::DynamicLib dynamic_lib_;
 

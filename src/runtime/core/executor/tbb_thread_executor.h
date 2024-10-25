@@ -12,7 +12,7 @@
 namespace aimrt::runtime::core::executor {
 
 class TBBThreadExecutor : public ExecutorBase {
- public:
+public:
   struct Options {
     uint32_t thread_num = 1;
     std::string thread_sched_policy;
@@ -27,9 +27,8 @@ class TBBThreadExecutor : public ExecutorBase {
     kShutdown,
   };
 
- public:
-  TBBThreadExecutor()
-      : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
+public:
+  TBBThreadExecutor() : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
   ~TBBThreadExecutor() override = default;
 
   void Initialize(std::string_view name, YAML::Node options_node) override;
@@ -45,9 +44,7 @@ class TBBThreadExecutor : public ExecutorBase {
 
   void Execute(aimrt::executor::Task&& task) noexcept override;
 
-  std::chrono::system_clock::time_point Now() const noexcept override {
-    return std::chrono::system_clock::now();
-  }
+  std::chrono::system_clock::time_point Now() const noexcept override { return std::chrono::system_clock::now(); }
   void ExecuteAt(std::chrono::system_clock::time_point tp, aimrt::executor::Task&& task) noexcept override;
 
   size_t CurrentTaskNum() noexcept override { return queue_task_num_.load(); }
@@ -57,7 +54,7 @@ class TBBThreadExecutor : public ExecutorBase {
   void SetLogger(const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr) { logger_ptr_ = logger_ptr; }
   const aimrt::common::util::LoggerWrapper& GetLogger() const { return *logger_ptr_; }
 
- private:
+private:
   std::string name_;
   Options options_;
   std::atomic<State> state_ = State::kPreInit;

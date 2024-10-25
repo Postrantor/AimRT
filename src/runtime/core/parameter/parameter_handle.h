@@ -14,9 +14,8 @@
 namespace aimrt::runtime::core::parameter {
 
 class ParameterHandle {
- public:
-  ParameterHandle()
-      : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
+public:
+  ParameterHandle() : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
   ~ParameterHandle() = default;
 
   ParameterHandle(const ParameterHandle&) = delete;
@@ -27,21 +26,14 @@ class ParameterHandle {
 
   std::shared_ptr<const std::string> GetParameter(std::string_view key);
   void SetParameter(std::string_view key, const std::shared_ptr<std::string>& value_ptr);
-  void SetParameter(std::string_view key, const std::string& value) {
-    SetParameter(key, std::make_shared<std::string>(value));
-  }
+  void SetParameter(std::string_view key, const std::string& value) { SetParameter(key, std::make_shared<std::string>(value)); }
   std::vector<std::string> ListParameter() const;
 
- private:
+private:
   std::shared_ptr<aimrt::common::util::LoggerWrapper> logger_ptr_;
 
   mutable std::mutex parameter_map_mutex_;
-  std::unordered_map<
-      std::string,
-      std::shared_ptr<std::string>,
-      aimrt::common::util::StringHash,
-      std::equal_to<>>
-      parameter_map_;
+  std::unordered_map<std::string, std::shared_ptr<std::string>, aimrt::common::util::StringHash, std::equal_to<>> parameter_map_;
 };
 
 }  // namespace aimrt::runtime::core::parameter

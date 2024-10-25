@@ -11,13 +11,11 @@
 namespace aimrt::examples::cpp::ros2_chn::normal_publisher_module {
 
 class NormalPublisherModule : public aimrt::ModuleBase {
- public:
+public:
   NormalPublisherModule() = default;
   ~NormalPublisherModule() override = default;
 
-  ModuleInfo Info() const override {
-    return ModuleInfo{.name = "NormalPublisherModule"};
-  }
+  ModuleInfo Info() const override { return ModuleInfo{.name = "NormalPublisherModule"}; }
 
   bool Initialize(aimrt::CoreRef core) override;
 
@@ -25,12 +23,12 @@ class NormalPublisherModule : public aimrt::ModuleBase {
 
   void Shutdown() override;
 
- private:
+private:
   auto GetLogger() { return core_.GetLogger(); }
 
   void MainLoop();
 
- private:
+private:
   aimrt::CoreRef core_;
   aimrt::executor::ExecutorRef executor_;
 

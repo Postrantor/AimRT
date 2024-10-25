@@ -15,7 +15,7 @@
 namespace aimrt::runtime::core::executor {
 
 class TimeWheelExecutor : public ExecutorBase {
- public:
+public:
   struct Options {
     std::string bind_executor;
     std::chrono::nanoseconds dt = std::chrono::microseconds(1000);
@@ -31,9 +31,8 @@ class TimeWheelExecutor : public ExecutorBase {
     kShutdown,
   };
 
- public:
-  TimeWheelExecutor()
-      : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
+public:
+  TimeWheelExecutor() : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
   ~TimeWheelExecutor() override = default;
 
   void Initialize(std::string_view name, YAML::Node options_node) override;
@@ -52,15 +51,14 @@ class TimeWheelExecutor : public ExecutorBase {
   std::chrono::system_clock::time_point Now() const noexcept override;
   void ExecuteAt(std::chrono::system_clock::time_point tp, aimrt::executor::Task&& task) noexcept override;
 
-  void RegisterGetExecutorFunc(
-      const std::function<aimrt::executor::ExecutorRef(std::string_view)>& get_executor_func);
+  void RegisterGetExecutorFunc(const std::function<aimrt::executor::ExecutorRef(std::string_view)>& get_executor_func);
 
   State GetState() const { return state_.load(); }
 
   void SetLogger(const std::shared_ptr<aimrt::common::util::LoggerWrapper>& logger_ptr) { logger_ptr_ = logger_ptr; }
   const aimrt::common::util::LoggerWrapper& GetLogger() const { return *logger_ptr_; }
 
- private:
+private:
   void TimerLoop();
 
   struct TaskWithTimestamp {
@@ -90,7 +88,7 @@ class TimeWheelExecutor : public ExecutorBase {
     }
   };
 
- private:
+private:
   std::string name_;
   Options options_;
   std::atomic<State> state_ = State::kPreInit;

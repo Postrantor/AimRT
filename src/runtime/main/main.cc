@@ -40,9 +40,7 @@ void SignalHandler(int sig) {
   raise(sig);
 };
 
-void PrintVersion() {
-  std::cout << "AimRT Version: " << util::GetAimRTVersion() << std::endl;
-}
+void PrintVersion() { std::cout << "AimRT Version: " << util::GetAimRTVersion() << std::endl; }
 
 void PrintUsage() {
   std::cout << "OVERVIEW: AimRT is a high-performance runtime framework for modern robotics.\n\n"
@@ -126,8 +124,7 @@ int32_t main(int32_t argc, char** argv) {
 
     global_core_ptr = nullptr;
   } catch (const std::exception& e) {
-    std::cout << "AimRT run with exception and exit. " << e.what()
-              << std::endl;
+    std::cout << "AimRT run with exception and exit. " << e.what() << std::endl;
     return -1;
   }
 

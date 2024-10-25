@@ -20,7 +20,7 @@
 namespace aimrt::runtime::core::executor {
 
 class AsioThreadExecutor : public ExecutorBase {
- public:
+public:
   struct Options {
     uint32_t thread_num = 1;
     std::string thread_sched_policy;
@@ -36,9 +36,8 @@ class AsioThreadExecutor : public ExecutorBase {
     kShutdown,
   };
 
- public:
-  AsioThreadExecutor()
-      : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
+public:
+  AsioThreadExecutor() : logger_ptr_(std::make_shared<aimrt::common::util::LoggerWrapper>()) {}
   ~AsioThreadExecutor() override = default;
 
   void Initialize(std::string_view name, YAML::Node options_node) override;
@@ -54,9 +53,7 @@ class AsioThreadExecutor : public ExecutorBase {
 
   void Execute(aimrt::executor::Task&& task) noexcept override;
 
-  std::chrono::system_clock::time_point Now() const noexcept override {
-    return std::chrono::system_clock::now();
-  }
+  std::chrono::system_clock::time_point Now() const noexcept override { return std::chrono::system_clock::now(); }
   void ExecuteAt(std::chrono::system_clock::time_point tp, aimrt::executor::Task&& task) noexcept override;
 
   size_t CurrentTaskNum() noexcept override { return queue_task_num_.load(); }
@@ -68,7 +65,7 @@ class AsioThreadExecutor : public ExecutorBase {
 
   asio::io_context* IOCTX() { return io_ptr_.get(); }
 
- private:
+private:
   std::string name_;
   Options options_;
   std::atomic<State> state_ = State::kPreInit;
@@ -79,9 +76,7 @@ class AsioThreadExecutor : public ExecutorBase {
   std::atomic_uint32_t queue_task_num_ = 0;
 
   std::unique_ptr<asio::io_context> io_ptr_;
-  std::unique_ptr<
-      asio::executor_work_guard<asio::io_context::executor_type>>
-      work_guard_ptr_;
+  std::unique_ptr<asio::executor_work_guard<asio::io_context::executor_type>> work_guard_ptr_;
 
   std::vector<std::thread::id> thread_id_vec_;
   std::list<std::thread> threads_;

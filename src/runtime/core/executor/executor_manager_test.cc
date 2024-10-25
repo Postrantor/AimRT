@@ -9,13 +9,10 @@
 namespace aimrt::runtime::core::executor {
 
 class ExecutorManagerTest : public ::testing::Test {
- protected:
-  void SetUp() override {
-  }
+protected:
+  void SetUp() override {}
 
-  void TearDown() override {
-    executor_manager_.Shutdown();
-  }
+  void TearDown() override { executor_manager_.Shutdown(); }
 
   ExecutorManager executor_manager_;
 };
@@ -49,8 +46,7 @@ executors:
 
   const auto *executor_manager = executor_manager_.GetExecutorManagerProxy(detail_info).NativeHandle();
 
-  const auto *executor_ptr = executor_manager->get_executor(
-      executor_manager->impl, aimrt::util::ToAimRTStringView("test_executor_1"));
+  const auto *executor_ptr = executor_manager->get_executor(executor_manager->impl, aimrt::util::ToAimRTStringView("test_executor_1"));
 
   ASSERT_NE(executor_manager_.GetExecutorManagerProxy(detail_info).NativeHandle(), nullptr);
   EXPECT_EQ(aimrt::util::ToStdStringView(executor_ptr->type(executor_ptr->impl)), "asio_thread");

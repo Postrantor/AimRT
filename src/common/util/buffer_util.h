@@ -27,14 +27,8 @@ inline void SetBufFromUint64(char *p, uint64_t n) {
 
 // Retrieve the uin64_t type from buf in the form of a small terminal
 inline uint64_t GetUint64FromBuf(const char *p) {
-  return (uint64_t)((uint8_t)(p[0])) +
-         ((uint64_t)((uint8_t)(p[1])) << 8) +
-         ((uint64_t)((uint8_t)(p[2])) << 16) +
-         ((uint64_t)((uint8_t)(p[3])) << 24) +
-         ((uint64_t)((uint8_t)(p[4])) << 32) +
-         ((uint64_t)((uint8_t)(p[5])) << 40) +
-         ((uint64_t)((uint8_t)(p[6])) << 48) +
-         ((uint64_t)((uint8_t)(p[7])) << 56);
+  return (uint64_t)((uint8_t)(p[0])) + ((uint64_t)((uint8_t)(p[1])) << 8) + ((uint64_t)((uint8_t)(p[2])) << 16) + ((uint64_t)((uint8_t)(p[3])) << 24) +
+         ((uint64_t)((uint8_t)(p[4])) << 32) + ((uint64_t)((uint8_t)(p[5])) << 40) + ((uint64_t)((uint8_t)(p[6])) << 48) + ((uint64_t)((uint8_t)(p[7])) << 56);
 }
 
 // Store the uint32_t type as a small terminal in buf
@@ -54,10 +48,7 @@ inline uint32_t GetUint32FromBuf(const char *p) {
   if constexpr (std::endian::native == std::endian::little) {
     return *((uint32_t *)p);
   } else {
-    return (uint32_t)((uint8_t)(p[0])) +
-           ((uint32_t)((uint8_t)(p[1])) << 8) +
-           ((uint32_t)((uint8_t)(p[2])) << 16) +
-           ((uint32_t)((uint8_t)(p[3])) << 24);
+    return (uint32_t)((uint8_t)(p[0])) + ((uint32_t)((uint8_t)(p[1])) << 8) + ((uint32_t)((uint8_t)(p[2])) << 16) + ((uint32_t)((uint8_t)(p[3])) << 24);
   }
 }
 
@@ -76,22 +67,15 @@ inline uint16_t GetUint16FromBuf(const char *p) {
   if constexpr (std::endian::native == std::endian::little) {
     return *((uint16_t *)p);
   } else {
-    return (uint16_t)((uint8_t)(p[0])) +
-           ((uint16_t)((uint8_t)(p[1])) << 8);
+    return (uint16_t)((uint8_t)(p[0])) + ((uint16_t)((uint8_t)(p[1])) << 8);
   }
 }
 
-enum class BufferLenType : size_t {
-  kUInt8 = 1,
-  kUInt16 = 2,
-  kUInt32 = 4,
-  kUInt64 = 8
-};
+enum class BufferLenType : size_t { kUInt8 = 1, kUInt16 = 2, kUInt32 = 4, kUInt64 = 8 };
 
 class BufferOperator {
- public:
-  BufferOperator(char *ptr, size_t len)
-      : start_(ptr), end_(start_ + len), cur_(start_) {}
+public:
+  BufferOperator(char *ptr, size_t len) : start_(ptr), end_(start_ + len), cur_(start_) {}
   ~BufferOperator() = default;
 
   BufferOperator(const BufferOperator &) = delete;
@@ -133,9 +117,7 @@ class BufferOperator {
     cur_ += len;
   }
 
-  void SetBuffer(std::span<const char> buffer) {
-    SetBuffer(buffer.data(), buffer.size());
-  }
+  void SetBuffer(std::span<const char> buffer) { SetBuffer(buffer.data(), buffer.size()); }
 
   void SetString(std::string_view s, BufferLenType len_type = BufferLenType::kUInt64) {
     size_t str_len = s.size();
@@ -176,20 +158,17 @@ class BufferOperator {
     cur_ += str_len;
   }
 
-  size_t GetRemainingSize() const {
-    return end_ - cur_;
-  }
+  size_t GetRemainingSize() const { return end_ - cur_; }
 
- private:
+private:
   char *start_;
   char *end_;
   char *cur_;
 };
 
 class ConstBufferOperator {
- public:
-  ConstBufferOperator(const char *ptr, size_t len)
-      : start_(ptr), end_(start_ + len), cur_(start_) {}
+public:
+  ConstBufferOperator(const char *ptr, size_t len) : start_(ptr), end_(start_ + len), cur_(start_) {}
 
   ~ConstBufferOperator() = default;
 
@@ -270,15 +249,11 @@ class ConstBufferOperator {
     return s;
   }
 
-  size_t GetRemainingSize() const {
-    return end_ - cur_;
-  }
+  size_t GetRemainingSize() const { return end_ - cur_; }
 
-  std::span<const char> GetRemainingBuffer() {
-    return GetBuffer(GetRemainingSize());
-  }
+  std::span<const char> GetRemainingBuffer() { return GetBuffer(GetRemainingSize()); }
 
- private:
+private:
   const char *const start_;
   const char *const end_;
   const char *cur_;

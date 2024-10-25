@@ -47,30 +47,21 @@ inline void ExportContext(const pybind11::object& m) {
       .def("ToString", &ContextRef::ToString);
 }
 
-inline bool PyRegisterPublishType(
-    aimrt::channel::PublisherRef& publisher_ref,
-    const std::shared_ptr<const PyTypeSupport>& msg_type_support) {
+inline bool PyRegisterPublishType(aimrt::channel::PublisherRef& publisher_ref, const std::shared_ptr<const PyTypeSupport>& msg_type_support) {
   static std::vector<std::shared_ptr<const PyTypeSupport>> py_ts_vec;
   py_ts_vec.emplace_back(msg_type_support);
 
   return publisher_ref.RegisterPublishType(msg_type_support->NativeHandle());
 }
 
-inline void PyPublishWithSerializationType(
-    aimrt::channel::PublisherRef& publisher_ref,
-    std::string_view msg_type,
-    std::string_view serialization_type,
-    const std::string& msg_buf) {
+inline void
+PyPublishWithSerializationType(aimrt::channel::PublisherRef& publisher_ref, std::string_view msg_type, std::string_view serialization_type, const std::string& msg_buf) {
   aimrt::channel::Context ctx;
   ctx.SetSerializationType(serialization_type);
   publisher_ref.Publish(msg_type, ctx, static_cast<const void*>(&msg_buf));
 }
 
-inline void PyPublishWithCtx(
-    aimrt::channel::PublisherRef& publisher_ref,
-    std::string_view msg_type,
-    const aimrt::channel::ContextRef& ctx_ref,
-    const std::string& msg_buf) {
+inline void PyPublishWithCtx(aimrt::channel::PublisherRef& publisher_ref, std::string_view msg_type, const aimrt::channel::ContextRef& ctx_ref, const std::string& msg_buf) {
   publisher_ref.Publish(msg_type, ctx_ref, static_cast<const void*>(&msg_buf));
 }
 
@@ -96,10 +87,7 @@ inline bool PySubscribeWithCtx(
 
   return subscriber_ref.Subscribe(
       msg_type_support->NativeHandle(),
-      [callback{std::move(callback)}](
-          const aimrt_channel_context_base_t* ctx_ptr,
-          const void* msg_ptr,
-          aimrt_function_base_t* release_callback_base) {
+      [callback{std::move(callback)}](const aimrt_channel_context_base_t* ctx_ptr, const void* msg_ptr, aimrt_function_base_t* release_callback_base) {
         aimrt::channel::SubscriberReleaseCallback release_callback(release_callback_base);
 
         const std::string& msg_buf = *static_cast<const std::string*>(msg_ptr);

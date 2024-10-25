@@ -9,10 +9,9 @@
 namespace aimrt::allocator {
 
 class AllocatorRef {
- public:
+public:
   AllocatorRef() = default;
-  explicit AllocatorRef(const aimrt_allocator_base_t* base_ptr)
-      : base_ptr_(base_ptr) {}
+  explicit AllocatorRef(const aimrt_allocator_base_t* base_ptr) : base_ptr_(base_ptr) {}
   ~AllocatorRef() = default;
 
   explicit operator bool() const { return (base_ptr_ != nullptr); }
@@ -24,7 +23,7 @@ class AllocatorRef {
     return base_ptr_->get_thread_local_buf(base_ptr_->impl, buf_size);
   }
 
- private:
+private:
   const aimrt_allocator_base_t* base_ptr_ = nullptr;
 };
 
